@@ -49,3 +49,10 @@ def test_style_contract_least_privilege(tmp_path, monkeypatch):
     assert "ملمح معتمد" in wrt and "مرشّح غير معتمد" not in wrt and runner.AUTHOR_ONLY_BEGIN in wrt
     assert "ملمح معتمد" not in runner.compose_system_prompt("AG-PUB", "essay")      # لا يقرأ MEM-AUTHOR
     assert "ملمح معتمد" not in runner.compose_system_prompt("AG-WRT", "academic")   # سجلّ آخر
+
+
+def test_front_matter_and_claim_tags_are_not_measured():
+    body = "[AUTHOR] كانت المدينة تستيقظ على صوت البحر، والباعة يفتحون دكاكينهم، والأطفال يركضون بين السكيك. " * 4
+    with_header = "---\nproject_id: X\nstep: S02\nagent: AG-WRT\n---\n\n# عنوان\n\n" + body
+    assert S.profile(with_header)["punct_per_1k"]["colon"] == 0
+    assert S.profile(with_header)["words"] == S.profile(body.replace("[AUTHOR] ", ""))["words"]

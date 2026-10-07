@@ -14,3 +14,5 @@ snapshot-*.tar.gz
 memory/author/private/
 # حزم البرومبت ومخرجات التشغيل قد تحوي مواد AUTHOR_ONLY
 projects/*/runs/
+# المشاريع (مسودات CONFIDENTIAL) لا تُرفع ما دام المستودع عاماً — اجعلوا المستودع خاصاً ثم احذفوا هذا السطر لتتبّعها
+projects/RKP-*/

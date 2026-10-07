@@ -95,8 +95,16 @@ def run_step(pid: str, step_id: str | None = None, live: bool = False) -> Path:
     protocol.post(msg, PROJECTS / pid)
     run_dir = PROJECTS / pid / "runs" / step["id"]
     run_dir.mkdir(parents=True, exist_ok=True)
+    # خطوة يطلب فيها المنسق قرار المؤلف (L4) = مهمة للمؤلف لا للنموذج
+    if agent == "AG-ORC" and step.get("human_approval") and step["task"].startswith("request_"):
+        agent = "HUMAN-AUTHOR"
     if agent in ("HUMAN-AUTHOR",):
-        (run_dir / "author_task.md").write_text(f"# مهمة للمؤلف\n\n{msg['SUBJECT']}\n\n{msg['CONTENT']}", encoding="utf-8")
+        prev = [s for s in plan["steps"] if s["status"] == "DONE" and (PROJECTS / pid / "runs" / s["id"] / "output.md").exists()]
+        latest = f"projects/{pid}/runs/{prev[-1]['id']}/output.md" if prev else "—"
+        (run_dir / "author_task.md").write_text(
+            f"# مهمة للمؤلف (L4)\n\n{msg['SUBJECT']}\n\n**آخر مُخرَج للمراجعة:** `{latest}`\n\n"
+            f"للاعتماد: `rkpos complete {pid} {step['id']} --actor HUMAN-AUTHOR --decision \"…\" --approved-file <الملف>`\n\n"
+            f"```yaml\n{msg['CONTENT']}```\n", encoding="utf-8")
         step["status"] = "AWAITING_AUTHOR"
         ST.save_plan(pid, plan)
         ST.refresh(pid)

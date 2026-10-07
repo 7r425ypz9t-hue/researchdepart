@@ -42,3 +42,15 @@ def test_check_manuscript_exit_codes(sandbox):
     f.write_text("[FACT] واقعة بلا مصدر.", encoding="utf-8")
     r = sandbox("check-manuscript", pid, str(f), ok=False)
     assert r.returncode == 2
+
+
+def test_request_author_approval_step_waits_for_author(sandbox):
+    import yaml
+    pid = yaml.safe_load(sandbox("new-project", "عمود", "--type", "op_ed").stdout)["project_id"]
+    root = sandbox.root / "projects" / pid
+    for step in ("S02", "S03", "S04"):
+        sandbox("complete", pid, step, "--actor", "AG-ORC")
+    out = sandbox("run-step", pid).stdout
+    assert "author_task.md" in out
+    st = yaml.safe_load((root / "state.yaml").read_text(encoding="utf-8"))
+    assert st["STATE"] == "AWAITING_AUTHOR" and st["WAITING_FOR"] == "HUMAN-AUTHOR"

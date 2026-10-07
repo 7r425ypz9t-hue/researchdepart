@@ -43,6 +43,8 @@ DIALECT = ["الفريج", "البرزة", "الميبر", "الصيرم", "ال
 
 def _clean(text: str) -> str:
     """يحذف العناوين والجداول، ويزيل التشكيل والتطويل وعلامات الاتجاه حتى لا تقطع الكلمات."""
+    text = re.sub(r"\A---\n.*?\n---\n", "", text, flags=re.S)          # ترويسة YAML
+    text = re.sub(r"\[(?:FACT|EBI|INTERP|HYP|AUTHOR|NEEDS-EVIDENCE)\]\s?", "", text)  # وسوم الادعاءات
     lines = [l for l in text.splitlines() if not HEADING.match(l)]
     t = "\n".join(lines)
     return re.sub(r"[\u064B-\u0652\u0640\u200e\u200f]", "", t)
