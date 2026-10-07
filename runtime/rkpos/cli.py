@@ -115,12 +115,13 @@ def main(argv=None) -> int:
         srcs = sources.load(PROJECTS / a.project / "research/sources.jsonl") + sources.load()
         rep = {"claims": claims.audit(text), "citations": citations.audit(text, srcs), "terminology": terms.check(text)}
         from . import stylometry
-        ref = stylometry.load_reference(stylometry.register_for(a.project))
+        reg = stylometry.register_for(a.project)
+        ref = stylometry.load_reference(reg)
         if ref:  # تنبيه أسلوبي لا يحجب البوابة (القرار للمحرر والمؤلف)
             prof = stylometry.profile(text)
             rep["style_deviation"] = stylometry.distance(prof, ref)
             assisted = stylometry.load_assisted_pole()
-            if assisted:
+            if assisted and reg in stylometry.POLE_REGISTERS:
                 rep["voice_pole"] = stylometry.pole(prof, ref, assisted)
         _p(rep); return 0 if rep["claims"]["passes"] and rep["citations"]["passes_qg4"] else 2
     if a.cmd == "select":
@@ -136,7 +137,7 @@ def main(argv=None) -> int:
             ref = stylometry.load_reference(a.reference)
             out["deviation"] = stylometry.distance(prof, ref) if ref else f"no reference '{a.reference}' in memory/author/private/"
             assisted = stylometry.load_assisted_pole()
-            if ref and assisted:
+            if ref and assisted and a.reference in stylometry.POLE_REGISTERS:
                 out["voice_pole"] = stylometry.pole(prof, ref, assisted)
         _p(out); return 0
     if a.cmd == "cost-report":

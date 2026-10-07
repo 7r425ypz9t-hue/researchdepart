@@ -95,6 +95,10 @@ def profile(text: str) -> dict:
         "comma_period_ratio": round(punct["comma"] / max(punct["period"], 1), 2),
         "connectives_per_1k": {k: _per_k(v, W) for k, v in conn.items()},
         "sentence_initial": {"wa": round(wa_initial / max(len(ss), 1), 3), "fa": round(fa_initial / max(len(ss), 1), 3)},
+        # تقريبي: كل كلمة تبدأ بواو أو فاء ملتصقة (يشمل كلمات أصلها الواو/الفاء — للمقارنة النسبية لا للعدّ النحوي)
+        "conjunction_joins_per_1k": {"wa": _per_k(len(re.findall(r"(?<!\S)و[\u0621-\u064A]{2,}", body)), W),
+                                     "fa": _per_k(len(re.findall(r"(?<!\S)ف[\u0621-\u064A]{2,}", body)), W)},
+        "words_per_comma": round(W / max(punct["comma"], 1), 1),
         "first_person_per_1k": {"singular": _per_k(len(re.findall(rf"(?<!\w){FIRST_SG}(?!\w)", body)), W),
                                 "plural": _per_k(len(re.findall(rf"(?<!\w){FIRST_PL}(?!\w)", body)), W)},
         "rhetorical_q_per_1k": _per_k(punct["question"], W),
@@ -132,6 +136,9 @@ def distance(sample: dict, reference: dict) -> dict:
 REGISTER_BY_TYPE = {"op_ed": "essay", "intellectual_book": "essay", "strategic_report": "essay",
                     "academic_book": "academic", "journal_article": "academic", "systematic_review": "academic",
                     "literature_review": "academic", "policy_study": "academic", "foresight_study": "academic"}
+
+
+POLE_REGISTERS = {"essay", "narrative"}  # القطب المُعان لا يُقارن به في السجل الأكاديمي (مرجعه نفسه)
 
 
 def register_for(project_id: str) -> str | None:
