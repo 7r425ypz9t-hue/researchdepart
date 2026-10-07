@@ -7,7 +7,7 @@ read:
   classification: INTERNAL
 - id: MEM-AUTHOR
   name_ar: ذاكرة المؤلف
-  path: memory/author/
+  path: memory/author/private/
   classification: AUTHOR_ONLY
 - id: ST-APPROVED
   name_ar: النص المعتمد

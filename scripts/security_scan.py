@@ -26,6 +26,7 @@ for f in files:
     for name, pat in PATTERNS.items():
         if re.search(pat, txt):
             hits.append(f"{f}: possible {name}")
+hits += [f"{f}: AUTHOR_ONLY path is tracked by git" for f in files if f.startswith("memory/author/private/")]
 if (ROOT / ".env").exists() and ".env" in files:
     hits.append(".env is tracked by git")
 sys.path.insert(0, str(ROOT / "runtime"))

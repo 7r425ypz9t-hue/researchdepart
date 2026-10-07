@@ -68,3 +68,24 @@ def test_templates_validate_against_schemas():
     assert R.validate(json.loads((t / "audit.example.json").read_text(encoding="utf-8")), "audit") == []
     assert R.validate(yaml.safe_load((t / "project_manifest.template.yaml").read_text(encoding="utf-8")), "project_manifest") == []
     assert R.validate(yaml.safe_load((t / "gate_decision.template.yaml").read_text(encoding="utf-8")), "gate_decision") == []
+
+
+def test_author_only_items_never_touch_tracked_files(tmp_path, monkeypatch):
+    from rkpos import knowledge as K, audit
+    monkeypatch.setattr(K, "CANDIDATES", tmp_path / "public/candidates.jsonl")
+    monkeypatch.setattr(K, "PRIVATE_CANDIDATES", tmp_path / "private/candidates.jsonl")
+    monkeypatch.setattr(K, "LAYER_FILES", {**K.LAYER_FILES, "MEM-AUTHOR": tmp_path / "private/items.jsonl"})
+    monkeypatch.setattr(K, "ROOT", tmp_path)
+    monkeypatch.setattr(audit, "LOGS", tmp_path / "logs")
+    item = {"Memory_ID": "MEM-STYLE-999999", "Type": "style_rule", "Project": None, "Created_By": "AG-KNW",
+            "Created_Date": "2026-10-07", "Confidence": "HIGH", "Source": "test", "Version": 1,
+            "Access_Level": "AUTHOR_ONLY", "Content": "سر"}
+    K.propose(item)
+    assert not (tmp_path / "public/candidates.jsonl").exists()
+    with pytest.raises(PermissionError):
+        K.promote("MEM-STYLE-999999", "MEM-AUTHOR", "AG-KNW")
+    with pytest.raises(PermissionError):
+        K.promote("MEM-STYLE-999999", "MEM-INSTITUTIONAL", "HUMAN-AUTHOR")
+    K.promote("MEM-STYLE-999999", "MEM-AUTHOR", "HUMAN-AUTHOR")
+    assert (tmp_path / "private/items.jsonl").exists()
+    assert "سر" not in (tmp_path / "logs/audit.jsonl").read_text(encoding="utf-8")

@@ -6,9 +6,12 @@ from . import audit, registry as R
 from .paths import ROOT
 
 CANDIDATES = ROOT / "knowledge-base/candidates/candidates.jsonl"
+# مواد AUTHOR_ONLY لا تمر بأي ملف متتبع في git — مسارها الخاص مستثنى في .gitignore
+PRIVATE_DIR = ROOT / "memory/author/private"
+PRIVATE_CANDIDATES = PRIVATE_DIR / "candidates.jsonl"
 LAYER_FILES = {
     "MEM-INSTITUTIONAL": ROOT / "knowledge-base/institutional/items.jsonl",
-    "MEM-AUTHOR": ROOT / "memory/author/items.jsonl",
+    "MEM-AUTHOR": PRIVATE_DIR / "items.jsonl",
     "MEM-RESEARCH": ROOT / "knowledge-base/research/items.jsonl",
     "MEM-EDITORIAL": ROOT / "knowledge-base/editorial/items.jsonl",
 }
@@ -24,22 +27,29 @@ def _append(p, obj):
         f.write(json.dumps(obj, ensure_ascii=False) + "\n")
 
 
+def _candidates_file(item: dict):
+    return PRIVATE_CANDIDATES if item.get("Access_Level") == "AUTHOR_ONLY" else CANDIDATES
+
+
 def propose(item: dict) -> dict:
     item = {**item, "Layer": "ST-KB-CANDIDATES", "Verified": False, "Approved_By": None}
     errs = R.validate(item, "memory_item")
     if errs:
         raise ValueError(errs)
-    _append(CANDIDATES, item)
-    audit.log(item["Created_By"], "kb_propose", project=item.get("Project"), files_changed=[str(CANDIDATES.relative_to(ROOT))])
+    target = _candidates_file(item)
+    _append(target, item)
+    audit.log(item["Created_By"], "kb_propose", project=item.get("Project"), files_changed=[str(target.relative_to(ROOT))])
     return item
 
 
 def promote(memory_id: str, target_layer: str, approved_by: str) -> dict:
-    cands = {c["Memory_ID"]: c for c in _read(CANDIDATES)}
+    cands = {c["Memory_ID"]: c for c in _read(CANDIDATES) + _read(PRIVATE_CANDIDATES)}
     if memory_id not in cands:
         raise KeyError(memory_id)
     if target_layer in ("MEM-INSTITUTIONAL", "MEM-AUTHOR") and approved_by != "HUMAN-AUTHOR":
         raise PermissionError("promotion to institutional/author memory requires HUMAN-AUTHOR (L4)")
+    if cands[memory_id].get("Access_Level") == "AUTHOR_ONLY" and target_layer != "MEM-AUTHOR":
+        raise PermissionError("AUTHOR_ONLY items may only be promoted to MEM-AUTHOR")
     item = {**cands[memory_id], "Layer": target_layer, "Verified": True, "Approved_By": approved_by,
             "Version": cands[memory_id]["Version"] + 1}
     errs = R.validate(item, "memory_item")

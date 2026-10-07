@@ -7,7 +7,7 @@ read:
   classification: CONFIDENTIAL
 - id: MEM-AUTHOR
   name_ar: ذاكرة المؤلف
-  path: memory/author/
+  path: memory/author/private/
   classification: AUTHOR_ONLY
 - id: MEM-EDITORIAL
   name_ar: الذاكرة التحريرية

@@ -3,7 +3,7 @@ agent_id: AG-RQA
 read:
 - id: MEM-AUTHOR
   name_ar: ذاكرة المؤلف
-  path: memory/author/
+  path: memory/author/private/
   classification: AUTHOR_ONLY
 - id: MEM-PROJECT
   name_ar: ذاكرة المشروع

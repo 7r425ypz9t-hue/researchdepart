@@ -11,7 +11,7 @@ read:
   classification: INTERNAL
 - id: MEM-AUTHOR
   name_ar: ذاكرة المؤلف
-  path: memory/author/
+  path: memory/author/private/
   classification: AUTHOR_ONLY
 - id: ST-REVIEWS
   name_ar: المراجعات والتحكيم

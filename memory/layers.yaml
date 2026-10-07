@@ -8,7 +8,7 @@ layers:
   - id: MEM-AUTHOR
     name_ar: ذاكرة المؤلف
     content: [الأسلوب والبصمة, المصطلحات المعتمدة, الاختيارات الفكرية المثبتة, المواقف المعتمدة (AUTHOR), الخطوط الحمراء]
-    path: memory/author/
+    path: memory/author/private/   # غير متتبع في git (AUTHOR_ONLY)
     classification: AUTHOR_ONLY
     write_policy: HUMAN-AUTHOR فقط (الوكلاء يقترحون عبر ST-KB-CANDIDATES)
     retention: دائمة

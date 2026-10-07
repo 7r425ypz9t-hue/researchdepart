@@ -3,7 +3,7 @@ agent_id: AG-THR
 read:
 - id: MEM-AUTHOR
   name_ar: ذاكرة المؤلف
-  path: memory/author/
+  path: memory/author/private/
   classification: AUTHOR_ONLY
 - id: MEM-RESEARCH
   name_ar: الذاكرة البحثية
