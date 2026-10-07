@@ -15,10 +15,15 @@
   rkpos cost-report [--project RKP-...]
   rkpos dashboard
   rkpos eval AG-WRT [--live]
+  rkpos run-step RKP-2026-0001 --live --engine claude_code
+  rkpos activate AG-WRT "اكتب مسودة عمود عن…" [--register essay] [--project RKP-…] [--engine claude_code]
+  rkpos panel                 # لوحة التحكم المحلية
+  rkpos install-icon [--remove]
 """
 from __future__ import annotations
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -27,6 +32,26 @@ import yaml
 
 def _p(obj):
     print(yaml.safe_dump(obj, allow_unicode=True, sort_keys=False) if not isinstance(obj, str) else obj)
+
+
+def load_env() -> None:
+    """يقرأ .env من جذر المستودع (غير متتبع) دون أن يطغى على متغيرات البيئة القائمة."""
+    from .paths import ROOT
+    f = ROOT / ".env"
+    if not f.exists():
+        return
+    for line in f.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        v = v.strip()
+        if v[:1] in ("'", '"') and v[-1:] == v[:1]:
+            v = v[1:-1]
+        else:
+            v = v.split(" #", 1)[0].strip()
+        if v and k.strip() not in os.environ:
+            os.environ[k.strip()] = v
 
 
 def main(argv=None) -> int:
@@ -51,6 +76,7 @@ def main(argv=None) -> int:
 
     s = sub.add_parser("status"); s.add_argument("project")
     r = sub.add_parser("run-step"); r.add_argument("project"); r.add_argument("--step"); r.add_argument("--live", action="store_true")
+    r.add_argument("--engine", choices=["auto", "claude_code", "api", "manual"], help="محرّك التشغيل الحي")
     ro = sub.add_parser("record-output"); ro.add_argument("project"); ro.add_argument("step"); ro.add_argument("file")
     c = sub.add_parser("complete"); c.add_argument("project"); c.add_argument("step"); c.add_argument("--actor", required=True)
     c.add_argument("--decision"); c.add_argument("--approved-file")
@@ -65,9 +91,18 @@ def main(argv=None) -> int:
     cr = sub.add_parser("cost-report"); cr.add_argument("--project")
     sub.add_parser("dashboard")
     ev = sub.add_parser("eval"); ev.add_argument("agent", nargs="?"); ev.add_argument("--live", action="store_true")
+    ac = sub.add_parser("activate", help="تفعيل وكيل مباشرة بتكليف من المؤلف")
+    ac.add_argument("agent"); ac.add_argument("task"); ac.add_argument("--register", choices=["essay", "narrative", "academic"])
+    ac.add_argument("--project"); ac.add_argument("--context", default="")
+    ac.add_argument("--engine", default="manual", choices=["auto", "claude_code", "api", "manual"])
+    pa = sub.add_parser("panel", help="لوحة التحكم المحلية (127.0.0.1)")
+    pa.add_argument("--port", type=int, default=0); pa.add_argument("--no-browser", action="store_true")
+    pa.add_argument("--new", action="store_true", help="لا تُعِد استعمال لوحة تعمل مسبقاً")
+    ic = sub.add_parser("install-icon", help="أيقونة «مداد» على سطح المكتب"); ic.add_argument("--remove", action="store_true")
     mp = sub.add_parser("memory-promote"); mp.add_argument("memory_id"); mp.add_argument("--layer", required=True); mp.add_argument("--approved-by", required=True)
 
     a = ap.parse_args(argv)
+    load_env()
 
     if a.cmd == "validate":
         from . import registry, generate
@@ -95,7 +130,7 @@ def main(argv=None) -> int:
         _p(state.load(a.project)); return 0
     if a.cmd == "run-step":
         from . import runner
-        _p(f"→ {runner.run_step(a.project, a.step, live=a.live)}"); return 0
+        _p(f"→ {runner.run_step(a.project, a.step, live=a.live or bool(a.engine), engine=a.engine)}"); return 0
     if a.cmd == "record-output":
         from . import runner
         _p(f"→ {runner.record_output(a.project, a.step, Path(a.file))}"); return 0
@@ -155,6 +190,18 @@ def main(argv=None) -> int:
             return 0
         errs = [e for i in ids for e in evals.offline_check(i)]
         _p("\n".join(errs) if errs else f"✓ {len(ids)} test suite(s) structurally valid"); return 1 if errs else 0
+    if a.cmd == "activate":
+        from . import runner
+        r = runner.run_adhoc(a.agent, a.task, register=a.register, project=a.project, context=a.context, engine=a.engine)
+        if r["output"]:
+            print(r["output"])
+        _p({k: r[k] for k in ("run_id", "dir", "model", "warnings", "usd")}); return 0
+    if a.cmd == "panel":
+        from .panel import server
+        server.serve(port=a.port, open_browser=not a.no_browser, reuse=not a.new); return 0
+    if a.cmd == "install-icon":
+        from .panel import desktop
+        _p({"installed" if not a.remove else "removed": desktop.install(remove=a.remove)}); return 0
     if a.cmd == "memory-promote":
         from . import knowledge
         _p(knowledge.promote(a.memory_id, a.layer, a.approved_by)); return 0

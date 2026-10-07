@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>مداد</title>
+  <rect x="8" y="8" width="240" height="240" rx="48" fill="#1F4E79" stroke="#B8860B" stroke-width="8"/>
+  <path d="M128 40 L178.8 131.9 A58 58 0 1 1 77.2 131.9 Z" fill="#B8860B"/>
+  <circle cx="128" cy="128" r="11" fill="#1F4E79"/>
+  <rect x="124.5" y="136" width="7" height="58" rx="3.5" fill="#1F4E79"/>
+  <path d="M103.9 194.4 A42 42 0 0 1 87.4 170.9" fill="none" stroke="#F3E2B5" stroke-width="6" stroke-linecap="round" opacity=".75"/>
+</svg>

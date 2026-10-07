@@ -89,7 +89,7 @@
 | 39 | Deployment Checklist | [phase-5/risk-roadmap-deployment.md §٥.٣](phase-5/risk-roadmap-deployment.md) |
 | 40 | دليل تشغيل الإدارة | [phase-5/operations-manual.md](phase-5/operations-manual.md) |
 
-ملحقات: سلسلة القيمة الكاملة [phase-1/03-value-chain.md](phase-1/03-value-chain.md) · معمارية الوكلاء [phase-1/06-agent-architecture.md](phase-1/06-agent-architecture.md) · هندسة الوكلاء [phase-2/README.md](phase-2/README.md) · بروتوكول الفريق الأحمر [governance/red_team_protocol.md](../governance/red_team_protocol.md) · حل النزاع [governance/conflict_resolution.md](../governance/conflict_resolution.md).
+ملحقات: **لوحة التحكم وأيقونة سطح المكتب** [phase-5/control-panel.md](phase-5/control-panel.md) · سلسلة القيمة الكاملة [phase-1/03-value-chain.md](phase-1/03-value-chain.md) · معمارية الوكلاء [phase-1/06-agent-architecture.md](phase-1/06-agent-architecture.md) · هندسة الوكلاء [phase-2/README.md](phase-2/README.md) · بروتوكول الفريق الأحمر [governance/red_team_protocol.md](../governance/red_team_protocol.md) · حل النزاع [governance/conflict_resolution.md](../governance/conflict_resolution.md).
 
 ## ٥. التكامل مع منظومة المؤلف القائمة
 

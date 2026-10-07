@@ -10,8 +10,11 @@ rules:
   - "إذا كان نموذج T4 هو نفس نموذج AG-WRT في المشروع ← يختار المحوّل أول بديل مختلف المزود، وإن تعذر يسجل تحذير INDEPENDENCE_DEGRADED"
   - "المهام AUTHOR_ONLY تُوجَّه إلى local أو إلى مزود معتمد بموافقة"
   - "تغيير النموذج لأي وكيل يستلزم تشغيل اختبارات الانحدار (WF-AGENT-CHANGE)"
+  - "المحرّك (RKPOS_ENGINE أو --engine أو اختيار اللوحة): auto = مفاتيح API ثم Claude Code ثم اليدوي؛ claude_code = نماذج Anthropic في الفئة عبر أداة Claude Code أولاً؛ api = المفاتيح وحدها؛ manual = حزمة برومبت"
+  - "Claude Code من عائلة anthropic في قاعدة الاستقلال: لا يُعدّ مراجعاً مستقلاً عن كاتب يعمل بنموذج Anthropic"
 providers:
   anthropic: {env_key: ANTHROPIC_API_KEY, adapter: rkpos.adapters.anthropic_adapter}
   openai: {env_key: OPENAI_API_KEY, adapter: rkpos.adapters.openai_adapter}
   google: {env_key: GOOGLE_API_KEY, adapter: rkpos.adapters.google_adapter}
   local: {env_key: LOCAL_LLM_BASE_URL, adapter: rkpos.adapters.local_adapter}
+  claude_code: {env_key: RKPOS_CLAUDE_BIN, optional_env: true, adapter: rkpos.adapters.claude_code_adapter, note: "يكفي أن يكون الأمر claude في PATH ومسجّل الدخول؛ لا مفتاح في المستودع"}

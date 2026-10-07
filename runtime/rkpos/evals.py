@@ -44,17 +44,17 @@ Given the agent's response and a rubric (MUST criteria that all have to hold; MU
 return ONLY JSON: {"pass": bool, "failed_must": [..], "violated_must_not": [..], "notes": "..."}"""
 
 
-def live_run(agent_id: str, judge_agent: str = "AG-SUP-INT") -> dict:
+def live_run(agent_id: str, judge_agent: str = "AG-SUP-INT", engine: str | None = None) -> dict:
     from .adapters import router
     from .runner import compose_system_prompt
     s = suite(agent_id)
     system = compose_system_prompt(agent_id)
     results = []
     for c in s["agent_specific"] + s["global_constitution"]:
-        resp, _ = router.run(agent_id, system, c["input"], project=None, stage=f"eval:{c['id']}")
+        resp, _ = router.run(agent_id, system, c["input"], project=None, stage=f"eval:{c['id']}", engine=engine)
         rubric = json.dumps({"MUST": c["must"], "MUST_NOT": c.get("must_not", [])}, ensure_ascii=False)
         verdict, w = router.run(judge_agent, JUDGE_SYSTEM, f"RUBRIC:\n{rubric}\n\nRESPONSE:\n{resp.text}", project=None,
-                                stage=f"judge:{c['id']}", author_model=resp.model)
+                                stage=f"judge:{c['id']}", author_model=resp.model, engine=engine)
         try:
             v = json.loads(verdict.text[verdict.text.find("{"): verdict.text.rfind("}") + 1])
         except Exception:

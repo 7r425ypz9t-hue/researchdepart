@@ -17,3 +17,5 @@ projects/*/runs/
 # المشاريع (مسودات CONFIDENTIAL) لا تُرفع ما دام المستودع عاماً — اجعلوا المستودع خاصاً ثم احذفوا هذا السطر لتتبّعها
 projects/RKP-*/
 knowledge-base/institutional/items.jsonl
+workspace/
+midad-private-backup.tar.gz

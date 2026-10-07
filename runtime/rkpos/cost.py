@@ -18,9 +18,13 @@ def price(model: str) -> dict | None:
 
 
 def record(model: str, input_tokens: int, output_tokens: int, project: str | None, agent: str,
-           stage: str | None = None, path=EVENTS) -> dict:
+           stage: str | None = None, path=EVENTS, usd: float | None = None) -> dict:
+    """usd: كلفة أبلغ بها المحرّك نفسه (Claude Code) تُقدَّم على الحساب من جدول الأسعار."""
     p = price(model)
-    usd = None if p is None else round(input_tokens / 1e6 * p["input_per_mtok"] + output_tokens / 1e6 * p["output_per_mtok"], 6)
+    if usd is not None:
+        usd = round(float(usd), 6)
+    else:
+        usd = None if p is None else round(input_tokens / 1e6 * p["input_per_mtok"] + output_tokens / 1e6 * p["output_per_mtok"], 6)
     ev = {"ts": now_iso(), "model": model, "input_tokens": input_tokens, "output_tokens": output_tokens,
           "usd": usd, "estimate": usd is None, "project": project, "agent": agent, "stage": stage}
     path.parent.mkdir(parents=True, exist_ok=True)

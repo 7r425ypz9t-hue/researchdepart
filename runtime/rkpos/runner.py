@@ -84,7 +84,7 @@ def build_task(pid: str, step: dict) -> tuple[dict, dict]:
     return pkg, msg
 
 
-def run_step(pid: str, step_id: str | None = None, live: bool = False) -> Path:
+def run_step(pid: str, step_id: str | None = None, live: bool = False, engine: str | None = None) -> Path:
     plan = ST.plan(pid)
     step = _find_step(plan, step_id)
     agent = step.get("assigned_agent", step.get("agent"))
@@ -116,7 +116,7 @@ def run_step(pid: str, step_id: str | None = None, live: bool = False) -> Path:
     out_path = run_dir / "prompt.md"
     if live:
         from .adapters import router
-        comp, warnings = router.run(agent, system, user, pid, stage=step["id"])
+        comp, warnings = router.run(agent, system, user, pid, stage=step["id"], engine=engine)
         (run_dir / "warnings.txt").write_text("\n".join(warnings), encoding="utf-8")
         if comp.text:
             (run_dir / "output.md").write_text(comp.text, encoding="utf-8")
@@ -124,6 +124,8 @@ def run_step(pid: str, step_id: str | None = None, live: bool = False) -> Path:
             step["status"] = "AWAITING_AUTHOR" if step.get("human_approval") else "IN_REVIEW"
         elif comp.refused:
             (run_dir / "refusal.txt").write_text(comp.stop_reason or "refusal", encoding="utf-8")
+        else:  # المحرّك اليدوي: الحزمة جاهزة للنسخ
+            step["status"] = "IN_PROGRESS"
         audit.log(agent, f"run_step:{step['task']}", project=pid, files_changed=[str(out_path.relative_to(ROOT))],
                   model=comp.model)
     else:
@@ -183,3 +185,46 @@ def complete(pid: str, step_id: str, actor: str, decision_text: str | None = Non
     audit.log(actor, f"complete:{step_id}", project=pid, files_changed=files,
               decision=entry["id"] if entry else None, decision_level=step.get("decision_level"), approval=actor)
     return entry or {}
+
+
+WORKSPACE = ROOT / "workspace"  # تشغيلات خارج المشاريع — غير متتبعة (قد تحمل عقد الأسلوب)
+
+
+def run_adhoc(agent_id: str, task: str, register: str | None = None, project: str | None = None,
+              context: str = "", engine: str | None = "manual") -> dict:
+    """تفعيل وكيل مباشرة بتكليف من المؤلف خارج خطة المشروع (لوحة التحكم).
+    الضوابط نفسها: برومبت الوكيل + عقد الأسلوب إن كان يقرأ MEM-AUTHOR + الدستور؛ القرار L4 يبقى للمؤلف."""
+    from .ids import short_id
+    agents = R.agents()
+    if agent_id not in agents:
+        raise KeyError(agent_id)
+    if not task.strip():
+        raise ValueError("task is empty")
+    if project and not (PROJECTS / project / "manifest.yaml").exists():
+        raise KeyError(project)
+    if project and not register:
+        from .stylometry import register_for
+        register = register_for(project)
+    system = compose_system_prompt(agent_id, register)
+    msg = {"TYPE": "TASK", "FROM": "HUMAN-AUTHOR", "TO": agent_id, "MODE": "ad-hoc (control panel)",
+           "PROJECT": project, "REGISTER": register, "TASK": task.strip(), "CONTEXT": context.strip() or None,
+           "EXPECTED_OUTPUT": "RESULT وفق OUTPUT CONTRACT في برومبتك؛ ما يحتاج قراراً L4 يُرفع للمؤلف ولا يُحسم"}
+    user = f"TASK MESSAGE\n```yaml\n{yaml.safe_dump(msg, allow_unicode=True, sort_keys=False)}```\n"
+    rid = short_id("ADH")
+    run_dir = (PROJECTS / project / "runs" / rid) if project else (WORKSPACE / "adhoc" / f"{rid}-{agent_id}")
+    run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / "prompt.md").write_text(f"# SYSTEM\n\n{system}\n\n# USER\n\n{user}", encoding="utf-8")
+    out = {"run_id": rid, "dir": str(run_dir.relative_to(ROOT)), "system": system, "user": user,
+           "output": None, "model": None, "warnings": [], "usd": None}
+    if engine != "manual":
+        from .adapters import router
+        comp, warnings = router.run(agent_id, system, user, project, stage=rid, engine=engine)
+        out.update(model=comp.model, warnings=warnings, usd=comp.raw.get("total_cost_usd"))
+        if comp.text:
+            (run_dir / "output.md").write_text(comp.text, encoding="utf-8")
+            out["output"] = comp.text
+        elif comp.refused:
+            out["warnings"].append(f"REFUSED: {comp.stop_reason}")
+    audit.log(agent_id, f"adhoc:{rid}", project=project, files_changed=[out["dir"]], model=out["model"],
+              approval="HUMAN-AUTHOR")
+    return out

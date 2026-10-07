@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مِداد — لوحة التحكم</title>
+<link rel="icon" href="midad.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><img src="midad.svg" alt="" width="40" height="40"><div><b>مِداد</b><small>إدارة البحوث والدراسات والنشر — لوحة التحكم</small></div></div>
+  <div class="engine">
+    <label for="engine">المحرّك</label>
+    <select id="engine">
+      <option value="manual">يدوي — نسخ البرومبت إلى Claude</option>
+      <option value="claude_code">Claude Code على هذا الجهاز</option>
+      <option value="api">مفتاح API</option>
+      <option value="auto">تلقائي (API ثم Claude Code ثم يدوي)</option>
+    </select>
+    <span id="engine-state" class="pill">…</span>
+  </div>
+</header>
+<nav class="tabs" id="tabs">
+  <button data-tab="home" class="on">الرئيسة</button>
+  <button data-tab="projects">المشاريع</button>
+  <button data-tab="agents">الوكلاء</button>
+  <button data-tab="workflows">سير العمل</button>
+  <button data-tab="governance">الاعتمادات والذاكرة</button>
+  <button data-tab="tools">الأدوات والفحوص</button>
+  <button data-tab="log">السجل والكلفة</button>
+  <button data-tab="settings">الإعدادات</button>
+</nav>
+<main id="main"><p class="muted">جارٍ التحميل…</p></main>
+<div id="toast" class="toast" hidden></div>
+<div id="busy" class="busy" hidden><div><span class="spin"></span><p id="busy-text">يعمل الوكيل…</p></div></div>
+<script src="app.js"></script>
+</body>
+</html>

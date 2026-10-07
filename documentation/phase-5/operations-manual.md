@@ -9,6 +9,10 @@ cp .env.example .env              # واملأ ما تحتاجه فقط
 rkpos validate && pytest -q
 ```
 
+## ١ب. لوحة التحكم (الطريق الأسهل)
+أيقونة **«مداد»** على سطح المكتب تفتح لوحة محلية فيها كل ما في هذا الدليل من أوامر: المشاريع، وتفعيل أي وكيل، والاعتمادات، والذاكرة، والفحوص، والسجل والكلفة.
+التثبيت والمحرّكات وضمانات الأمان: [control-panel.md](control-panel.md). من الطرفية: `rkpos panel`.
+
 ## ٢. بدء مشروع
 ```bash
 rkpos new-project "حوكمة الذكاء الاصطناعي في القطاع الثقافي" \
@@ -23,7 +27,8 @@ rkpos new-project "حوكمة الذكاء الاصطناعي في القطاع 
 |---|---|
 | «أين وصلنا؟» (واصل) | `rkpos status RKP-…` ← اقرأ `NEXT_ACTION` |
 | تنفيذ الخطوة التالية (يدوياً) | `rkpos run-step RKP-…` ← الصق `runs/<step>/prompt.md` في Claude ← احفظ الرد ← `rkpos record-output RKP-… <step> out.md` |
-| تنفيذها آلياً | `rkpos run-step RKP-… --live` (يحتاج مفتاحاً) |
+| تنفيذها آلياً | `rkpos run-step RKP-… --engine claude_code` (حسابكم في Claude Code) أو `--live` (مفتاح API) |
+| تفعيل وكيل مباشرة | `rkpos activate AG-XXX "التكليف" [--register essay] [--project RKP-…] [--engine claude_code]` |
 | اعتماد خطوة/بوابة بصفتك المؤلف | `rkpos complete RKP-… <step> --actor HUMAN-AUTHOR --decision "…"` ← يولّد DC-xxx |
 | اعتماد نص نهائي لفصل | `rkpos complete RKP-… <step> --actor HUMAN-AUTHOR --approved-file edited/ch01.md` |
 | فحص مسودة | `rkpos check-manuscript RKP-… drafts/ch01.md` (وسوم · استشهادات · مصطلحات) |

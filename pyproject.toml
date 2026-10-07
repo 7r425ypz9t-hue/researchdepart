@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rkpos"
-version = "0.1.0"
+version = "0.5.0"
 description = "MIDAD — Research, Knowledge & Publishing Intelligence Unit (RKPIU/RKPOS) runtime"
 requires-python = ">=3.10"
 dependencies = ["PyYAML>=6.0", "jsonschema>=4.20"]
@@ -20,6 +20,9 @@ rkpos = "rkpos.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["runtime"]
+
+[tool.setuptools.package-data]
+"rkpos.panel" = ["static/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
