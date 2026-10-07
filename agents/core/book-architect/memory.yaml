@@ -1,0 +1,32 @@
+# GENERATED from agents/_specs/AG-BKA.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-BKA
+read:
+- id: MEM-AUTHOR
+  name_ar: ذاكرة المؤلف
+  path: memory/author/
+  classification: AUTHOR_ONLY
+- id: MEM-PROJECT
+  name_ar: ذاكرة المشروع
+  path: projects/<PID>/memory/
+  classification: CONFIDENTIAL
+- id: MEM-RESEARCH
+  name_ar: الذاكرة البحثية
+  path: knowledge-base/research/
+  classification: INTERNAL
+- id: ST-EVIDENCE
+  name_ar: سجل الأدلة (claims ledger)
+  path: projects/<PID>/evidence/claims.jsonl
+  classification: INTERNAL
+- id: ST-RESEARCH-NOTES
+  name_ar: ملاحظات البحث
+  path: projects/<PID>/research/
+  classification: INTERNAL
+write:
+- id: ST-OUTLINE
+  name_ar: الهيكل
+  path: projects/<PID>/outline.yaml
+  classification: CONFIDENTIAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

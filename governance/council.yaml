@@ -1,0 +1,34 @@
+# مجلس الوكلاء الدائم — Agent Council
+version: 0.1.0
+council_id: AG-COUNCIL
+chair_procedural: AG-DIR        # يدير الجلسة إجرائياً
+secretary: AG-ORC               # يعد الملف ويسجل المحضر
+members:
+  - {agent: AG-DIR, role: الرئاسة الإجرائية}
+  - {agent: AG-ORC, role: الأمانة والتنسيق, voting: false}
+  - {agent: AG-SUP-MTH, role: المنهج}
+  - {agent: AG-SUP-EVD, role: الأدلة}
+  - {agent: AG-CUL, role: الخبير المتخصص (Domain Expert) — يُستبدل بخبير المجال عند اختلافه}
+  - {agent: AG-SED, role: المحرر العلمي}
+  - {agent: AG-INT, role: النزاهة}
+  - {agent: AG-RED, role: الفريق الأحمر}
+quorum: 6
+mandate: [فكرة الكتاب, الهيكل, المنهج, الحجج, النتائج, النسخة النهائية]
+procedure:
+  - "الأمانة تعد Council Dossier (المادة + تقارير المراجعة + الأسئلة المحددة)"
+  - "كل عضو يصدر رأياً مكتوباً مستقلاً (REVIEW) قبل الاطلاع على آراء الآخرين"
+  - "Red Team يقدم أقوى اعتراض"
+  - "جولة CHALLENGE واحدة منظمة للرد"
+  - "التصويت: APPROVE / APPROVE_WITH_CONDITIONS / REJECT مع التعليل"
+  - "المحضر يُرفع إلى المؤلف بتوصية؛ القرار الجوهري للمؤلف (L4)"
+independence_rules:
+  - "الأعضاء المراجعون (SUP-*, RED, PRV) يعملون بنموذج مختلف عن نموذج AG-WRT متى أمكن"
+  - "لا يصوت منتج المادة على مادته"
+outputs: [council_minutes_<date>.md, recommendation.yaml]
+council_voice_mapping:  # مواءمة مع مهارة council-orchestration-ar
+  intake: AG-RQA
+  reference_framer: [AG-THR, AG-LRV]
+  methodology_engineer: [AG-BKA, AG-MTH]
+  executor: AG-WRT
+  quality_auditor: [AG-EVA, AG-INT]
+  critical_reviewer: [AG-RED, AG-PRV]

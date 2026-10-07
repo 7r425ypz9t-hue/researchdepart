@@ -1,0 +1,22 @@
+# GENERATED from agents/_specs/AG-RQA.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-RQA
+receives_from:
+- AG-ORC
+- AG-DIR
+sends_to:
+- AG-DSC
+- AG-THR
+- AG-ORC
+consult:
+- agent: AG-CUL
+  when: الموضوع في السياسات الثقافية أو الهوية الخليجية
+- agent: AG-MTH
+  when: السؤال يفرض تصميماً تجريبياً أو كمياً
+escalation:
+- trigger: تعارض الموضوع مع مشروع قائم في المحفظة
+  to: AG-ORC
+  level: L2
+fallback_agent: AG-ORC
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

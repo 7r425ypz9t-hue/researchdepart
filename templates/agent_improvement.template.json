@@ -1,0 +1,4 @@
+{"proposal_id": "IMP-0001", "agent_id": "AG-WRT", "proposed_by": "AG-WRT", "date": "2026-10-07",
+ "observation": "تكرر وسم فقرات تفسيرية بـ FACT في الفصلين 2 و3", "proposed_change": "إضافة مثال مضاد في قسم INTEGRITY RULES",
+ "evidence": ["reviews/fact_audit_ch02.yaml", "reviews/fact_audit_ch03.yaml"], "status": "PROPOSED",
+ "regression_result": null, "approved_by": null}

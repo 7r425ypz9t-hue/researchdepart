@@ -1,0 +1,18 @@
+# GENERATED from agents/_specs/AG-WCH.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-WCH
+rbac_role: role:utility:research-watch
+allowed:
+- الاستعلام المجدول
+- كتابة التوصيات
+prohibited:
+- تعديل أي مخطوط
+- إضافة مصادر VERIFIED
+human_approval_required: []
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/watch/
+external_publish: false
+can_modify_own_prompt: false

@@ -1,0 +1,22 @@
+% قالب Pandoc/XeLaTeX مبسط لكتاب عربي — يمكن استبداله بقالب الناشر
+\documentclass[12pt,a5paper,twoside]{book}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{arabic}
+\setotherlanguage{english}
+\newfontfamily\arabicfont[Script=Arabic,Scale=1.05]{$if(mainfont)$$mainfont$$else$Noto Naskh Arabic$endif$}
+\usepackage{xcolor}
+\definecolor{midadblue}{HTML}{1F4E79}
+\definecolor{midadgold}{HTML}{B8860B}
+\usepackage[margin=2cm]{geometry}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=midadblue,urlcolor=midadblue}
+\usepackage{longtable,booktabs,array}
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+$if(title)$\title{$title$}$endif$
+$if(author)$\author{$for(author)$$author$$sep$ \and $endfor$}$endif$
+\begin{document}
+$if(title)$\maketitle$endif$
+$if(toc)$\tableofcontents$endif$
+$body$
+\end{document}

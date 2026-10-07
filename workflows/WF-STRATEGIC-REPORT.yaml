@@ -1,0 +1,19 @@
+workflow_id: WF-STRATEGIC-REPORT
+name_ar: تقرير استراتيجي
+version: 0.1.0
+project_types: [strategic_report]
+operating_model_min: B
+citation_style: APA7
+steps:
+  - {id: S01, agent: AG-ORC, task: initialize_project_with_client_brief, decision_level: L1}
+  - {id: S02, agent: AG-RQA, task: define_strategic_questions, gate: QG0, decision_level: L4, human_approval: true}
+  - {id: S03, agent: AG-DSC, task: discover_sources, decision_level: L1}
+  - {id: S04, agent: AG-SRC, task: verify_sources, decision_level: L1}
+  - {id: S05, agent: AG-LRV, task: evidence_synthesis, gate: QG1, decision_level: L2}
+  - {id: S06, agent: AG-DAT, task: indicator_dashboard_analysis, optional_if: "not project.has_data", decision_level: L1}
+  - {id: S07, agent: AG-POL, task: strategic_options_and_scenarios, gate: QG2, decision_level: L2}
+  - {id: S08, agent: AG-BKA, task: report_structure_exec_summary_first, decision_level: L4, human_approval: true}
+  - {id: S09, uses: WF-CHAPTER-CYCLE, foreach: outline.sections}
+  - {id: S10, agent: AG-VIS, task: infographics, decision_level: L1}
+  - {id: S11, agent: AG-PUB, task: prepare_final_files, gate: QG6, decision_level: L4, human_approval: true}
+  - {id: S12, uses: WF-PROJECT-CLOSE}

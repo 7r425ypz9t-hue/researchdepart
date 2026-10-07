@@ -1,0 +1,22 @@
+# GENERATED from agents/_specs/AG-SUP-EVD.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SUP-EVD
+receives_from:
+- AG-ORC
+- AG-LRV
+- AG-EVA
+- AG-SRC
+sends_to:
+- AG-ORC
+- AG-DSC
+- AG-COUNCIL
+consult:
+- agent: AG-SRC
+  when: شك في حالة تحقق مصدر
+escalation:
+- trigger: دليل مركزي ثبت سحبه (retraction)
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: HUMAN-AUTHOR
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: REVIEW

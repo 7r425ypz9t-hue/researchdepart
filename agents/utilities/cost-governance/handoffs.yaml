@@ -1,0 +1,19 @@
+# GENERATED from agents/_specs/AG-CST.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-CST
+receives_from:
+- AG-ORC
+sends_to:
+- AG-ORC
+- HUMAN-AUTHOR
+consult: []
+escalation:
+- trigger: 90% من الحد
+  to: AG-ORC
+  level: L2
+- trigger: تجاوز الحد
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: AG-ORC
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

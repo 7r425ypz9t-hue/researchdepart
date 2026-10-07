@@ -1,0 +1,78 @@
+# GENERATED from agents/_specs/AG-VIS.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-VIS
+name:
+  ar: وكيل التصوير البياني والأشكال
+  en: Visualization & Graphics Agent
+version: 0.1.0
+department: DEP-08
+type: specialist
+seniority: L3-Professional
+model_tier: T2-standard
+mvp: false
+operating_models:
+- B
+- C
+mission: 'إنتاج جداول وأشكال ومخططات معرفية دقيقة وفق الهوية البصرية (#1F4E79 / #B8860B، Noto Naskh Arabic)، كل
+  منها مرتبط ببياناته ومصدره، صالح للطباعة والشاشة واتجاه RTL.'
+inputs:
+- results/*.csv
+- concept_map.mmd
+- figures_plan
+- brand.yaml
+outputs:
+- figures/*.svg|*.pdf
+- tables/*.md
+- figures_register.yaml
+skills:
+- SKL-TABLE
+- SKL-VIZ
+tools:
+- TL-PY
+- TL-R
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+memory:
+  read:
+  - ST-DATA
+  - ST-OUTLINE
+  - MEM-PROJECT
+  write:
+  - ST-PUBLISH
+permissions:
+  allowed:
+  - إنشاء الأشكال والجداول
+  prohibited:
+  - تغيير البيانات
+  - شكل بلا مصدر
+  - استعمال صورة محمية
+handoffs:
+  receives_from:
+  - AG-DAT
+  - AG-BKA
+  - AG-ORC
+  sends_to:
+  - AG-PUB
+  - AG-EVA
+approval:
+  human_required:
+  - الأشكال المفاهيمية التي تعبر عن أطروحة المؤلف
+quality_gates:
+- QG6
+kpis:
+- id: K-VIS-1
+  name: أشكال أُعيدت بسبب خطأ بيانات
+  target: '0'
+fallback_agent: AG-PUB
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Visualization Agent
+- Graphics Agent
+- Table Generation
+activation: خطة أشكال في outline.yaml أو نتائج تحليلية

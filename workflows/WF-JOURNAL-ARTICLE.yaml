@@ -1,0 +1,17 @@
+workflow_id: WF-JOURNAL-ARTICLE
+name_ar: مقال علمي محكّم
+version: 0.1.0
+project_types: [journal_article]
+operating_model_min: A
+citation_style: APA7
+steps:
+  - {id: S01, agent: AG-ORC, task: initialize_project_with_target_journal, decision_level: L1}
+  - {id: S02, agent: AG-RQA, task: define_scope, gate: QG0, decision_level: L4, human_approval: true}
+  - {id: S03, agent: AG-DSC, task: discover_sources, decision_level: L1}
+  - {id: S04, agent: AG-SRC, task: verify_sources, decision_level: L1}
+  - {id: S05, agent: AG-LRV, task: synthesize_literature, gate: QG1, decision_level: L2}
+  - {id: S06, agent: AG-MTH, task: design_method, gate: QG2, optional_if: "not project.has_data", decision_level: L2}
+  - {id: S07, agent: AG-DAT, task: analyze_data, optional_if: "not project.has_data", decision_level: L1}
+  - {id: S08, uses: WF-CHAPTER-CYCLE, foreach: article.sections_as_one_unit}
+  - {id: S09, agent: AG-PUB, task: format_to_journal_guidelines, outputs: [submission.docx, cover_letter.md], gate: QG6, decision_level: L4, human_approval: true}
+  - {id: S10, uses: WF-PROJECT-CLOSE}

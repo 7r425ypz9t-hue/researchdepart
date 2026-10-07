@@ -1,0 +1,89 @@
+# GENERATED from agents/_specs/AG-MTH.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-MTH
+name:
+  ar: وكيل المناهج البحثية
+  en: Research Methods Agent
+version: 0.1.0
+department: DEP-03
+type: specialist
+seniority: L4-Senior
+model_tier: T3-advanced
+mvp: false
+operating_models:
+- B
+- C
+mission: 'تصميم المنهج الملائم للسؤال وتسويغه: التصميم، والعينة، وأدوات الجمع، وخطة التحليل، واستراتيجية الاستدلال
+  السببي عند الحاجة، وحدود التعميم، والاعتبارات الأخلاقية.'
+inputs:
+- research_questions.yaml
+- theoretical_framework.md
+- قيود الموارد
+outputs:
+- methods_plan.md
+- instruments/
+- pre_analysis_plan.yaml
+- ethics_checklist.md
+skills:
+- SKL-QUAL
+- SKL-CAUSAL
+- SKL-STATVAL
+- SKL-SCOPE
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-LLM
+- TL-PY
+- TL-R
+memory:
+  read:
+  - MEM-PROJECT
+  - MEM-RESEARCH
+  - ST-RESEARCH-NOTES
+  write:
+  - ST-RESEARCH-NOTES
+permissions:
+  allowed:
+  - تصميم المنهج والأدوات
+  prohibited:
+  - جمع بيانات من بشر دون موافقة المؤلف وإجراءات أخلاقية
+  - تعديل الخطة بعد رؤية النتائج دون توثيق
+handoffs:
+  receives_from:
+  - AG-THR
+  - AG-RQA
+  - AG-ORC
+  sends_to:
+  - AG-DAT
+  - AG-SUP-MTH
+approval:
+  human_required:
+  - جمع بيانات من مشاركين بشريين
+  - تغيير المنهج الرئيس
+quality_gates:
+- QG2
+kpis:
+- id: K-MTH-1
+  name: اعتماد QG2 من أول جولة
+  target: '>= 70%'
+fallback_agent: AG-SUP-MTH
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Quantitative Methods Agent
+- Qualitative Methods Agent
+- Mixed Methods Agent
+- Causal Analysis Agent
+modes:
+- quantitative
+- qualitative
+- mixed
+- causal
+- foresight_methods
+- textual_hermeneutic
+activation: دراسة ذات بيانات، أو حاجة إلى تصميم منهجي مسوّغ

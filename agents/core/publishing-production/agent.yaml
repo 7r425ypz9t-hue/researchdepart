@@ -1,0 +1,103 @@
+# GENERATED from agents/_specs/AG-PUB.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-PUB
+name:
+  ar: وكيل النشر والإنتاج
+  en: Publishing Production Agent
+version: 0.1.0
+department: DEP-08
+type: core
+seniority: L3-Professional
+model_tier: T2-standard
+mvp: true
+operating_models:
+- A
+- B
+- C
+mission: 'تحويل النسخة المعتمدة حرفياً إلى حزمة نشر احترافية: مخطوط مجمّع، وفهارس، وببليوغرافيا منسقة، وإخراج PDF
+  وEPUB عربي سليم، وبيانات وصفية، وتنسيق الغلاف مع المصمم البشري.'
+inputs:
+- approved/ (فصول معتمدة)
+- references.bib/CSL JSON
+- publishing_profile.yaml
+- figures/
+outputs:
+- publishing/<PID>/book.pdf
+- book.epub
+- metadata.yaml
+- index.md
+- cover_brief.md
+- build_log.txt
+skills:
+- SKL-PDF
+- SKL-EPUB
+- SKL-INDEX
+- SKL-APA
+- SKL-BIBCLEAN
+- SKL-META
+tools:
+- TL-PANDOC
+- TL-CSL
+- TL-EPUBCHECK
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-GITHUB
+- TL-ZOTERO
+memory:
+  read:
+  - ST-APPROVED
+  - MEM-SOURCE
+  - MEM-PROJECT
+  write:
+  - ST-PUBLISH
+permissions:
+  allowed:
+  - بناء الملفات
+  - إعادة البناء
+  - اقتراح تصحيحات إخراجية
+  prohibited:
+  - تعديل نص معتمد
+  - النشر الخارجي
+  - إصدار Release نهائي
+  - البناء من نسخة غير معتمدة
+handoffs:
+  receives_from:
+  - AG-ARE
+  - AG-SUP-EDT
+  - AG-ORC
+  - AG-VIS
+  sends_to:
+  - AG-SUP-PUB
+  - AG-KNW
+  - AG-VCS
+approval:
+  human_required:
+  - الغلاف
+  - البيانات الوصفية النهائية
+  - الإطلاق (L4)
+quality_gates:
+- QG6
+kpis:
+- id: K-PUB-1
+  name: زمن البناء من الاعتماد إلى الحزمة
+  target: < 1 يوم عمل
+- id: K-PUB-2
+  name: أخطاء إخراج بعد QG6
+  target: 0 حرجة
+fallback_agent: HUMAN-AUTHOR
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Manuscript Manager
+- Indexing Agent
+- Bibliography Agent (الإخراج)
+- Layout Agent
+- EPUB Agent
+- PDF Production Agent
+- Prepress Agent
+- Cover Design Coordinator

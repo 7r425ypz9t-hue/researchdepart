@@ -1,0 +1,93 @@
+# GENERATED from agents/_specs/AG-INT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-INT
+name:
+  ar: وكيل النزاهة البحثية والملكية الفكرية
+  en: Research Integrity Agent
+version: 0.1.0
+department: DEP-07
+type: core
+seniority: L4-Senior
+model_tier: T4-independent
+mvp: true
+operating_models:
+- A
+- B
+- C
+mission: حماية العمل من التلفيق والانتحال وخرق الحقوق وسوء النسبة، وضمان الإفصاح السليم عن استخدام الذكاء الاصطناعي،
+  وإعداد تقرير QG4 الذي يعرضه على المشرف أو المؤلف.
+inputs:
+- edited/chNN
+- fact_audit
+- MEM-SOURCE
+- rights_register.yaml
+outputs:
+- integrity_report_chNN.yaml
+- rights_register.yaml
+- ai_disclosure.md
+skills:
+- SKL-RISKAUDIT
+- SKL-RIGHTS
+- SKL-CLAIMTAG
+- SKL-FACTCHECK
+- SKL-CITEVERIFY
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-LLM
+- TL-SIMCHECK
+- TL-PDFPARSE
+- TL-CROSSREF
+memory:
+  read:
+  - ST-EDITED
+  - ST-DRAFT
+  - ST-EVIDENCE
+  - MEM-SOURCE
+  - ST-REVIEWS
+  write:
+  - ST-REVIEWS
+permissions:
+  allowed:
+  - تجميد مقطع بخطر عالٍ
+  - طلب CORRECTION
+  prohibited:
+  - إصلاح النص بنفسه
+  - منح إذن حقوق
+  - إخفاء نتيجة فحص
+handoffs:
+  receives_from:
+  - AG-EVA
+  - AG-SED
+  - AG-ORC
+  - AG-ARE
+  sends_to:
+  - AG-SUP-INT
+  - AG-WRT
+  - AG-ORC
+  - HUMAN-AUTHOR
+approval:
+  human_required:
+  - استعمال مادة محمية
+  - نشر مع خطر متوسط موثق
+quality_gates:
+- QG4
+kpis:
+- id: K-INT-1
+  name: مخالفات نزاهة بعد النشر
+  target: '0'
+- id: K-INT-2
+  name: زمن تقرير النزاهة للفصل
+  target: < 24 ساعة
+fallback_agent: HUMAN-AUTHOR
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Plagiarism Risk Agent
+- Copyright Agent
+- Evidence Quality (الشق الأخلاقي)

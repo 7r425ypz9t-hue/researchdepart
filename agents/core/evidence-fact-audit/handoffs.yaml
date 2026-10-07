@@ -1,0 +1,23 @@
+# GENERATED from agents/_specs/AG-EVA.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-EVA
+receives_from:
+- AG-WRT
+- AG-ORC
+- AG-SRC
+- AG-VIS
+sends_to:
+- AG-WRT
+- AG-SUP-EVD
+- AG-INT
+- AG-SRC
+consult:
+- agent: AG-DAT
+  when: رقم مشتق يحتاج إعادة حساب
+escalation:
+- trigger: نسبة فكرة إلى غير قائلها في موضع مركزي
+  to: AG-SUP-INT
+  level: L2
+fallback_agent: AG-INT
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: REVIEW

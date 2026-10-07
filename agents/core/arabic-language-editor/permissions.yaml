@@ -1,0 +1,22 @@
+# GENERATED from agents/_specs/AG-ARE.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-ARE
+rbac_role: role:core:arabic-language-editor
+allowed:
+- التصويب اللغوي المباشر
+- اقتراح مصطلحات
+prohibited:
+- تغيير المضمون
+- اعتماد مصطلح جديد في المسرد (يقترح فقط)
+- تبسيط السجل
+human_approval_required:
+- إضافة مصطلح إلى المسرد المعتمد
+max_autonomous_level: L1
+data_classes_readable:
+- AUTHOR_ONLY
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/manuscript/edited/
+- knowledge-base/candidates/
+external_publish: false
+can_modify_own_prompt: false

@@ -1,0 +1,15 @@
+# جدول الأسعار لكل مليون رمز (USD).
+# مصدر أسعار Anthropic: مرجع Claude API المرفق بالأداة (نسخة مخزنة بتاريخ 2026-10-06) — يُعاد التحقق من صفحة الأسعار الرسمية قبل الاعتماد المالي.
+# القيم null تعني "غير محدد بعد"؛ عندها يسجل cost.py الكلفة تقديراً ESTIMATE بلا رقم.
+version: 0.1.0
+last_verified: "2026-10-06"
+models:
+  anthropic:claude-haiku-5-5:  {input_per_mtok: 0.10, output_per_mtok: 0.50, note: "حتى 100K رمز إدخال؛ أعلى من ذلك 0.50/2.50"}
+  anthropic:claude-sonnet-5-5: {input_per_mtok: 2.00, output_per_mtok: 10.00}
+  anthropic:claude-opus-5-5:   {input_per_mtok: 4.00, output_per_mtok: 20.00}
+  openai:ADVANCED_MODEL:       {input_per_mtok: null, output_per_mtok: null}
+  openai:STANDARD_MODEL:       {input_per_mtok: null, output_per_mtok: null}
+  openai:ECONOMY_MODEL:        {input_per_mtok: null, output_per_mtok: null}
+  google:ADVANCED_MODEL:       {input_per_mtok: null, output_per_mtok: null}
+  google:STANDARD_MODEL:       {input_per_mtok: null, output_per_mtok: null}
+  local:LOCAL_SMALL:           {input_per_mtok: 0, output_per_mtok: 0}

@@ -1,0 +1,12 @@
+# سجل نزاع (WF-CONFLICT-RESOLUTION)
+dispute_id: DSP-0001
+project_id: RKP-2026-0001
+parties: [AG-RED, AG-WRT]
+subject: ""
+position_a: {agent: AG-RED, claim: "", evidence: []}
+position_b: {agent: AG-WRT, claim: "", evidence: []}
+routed_to_supervisor: AG-SUP-MTH
+supervisor_ruling: null
+council_ruling: null
+substantive: false        # true ← يحال للمؤلف L4
+author_decision: null

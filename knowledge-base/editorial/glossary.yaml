@@ -1,0 +1,8 @@
+# المسرد المعتمد — يُضاف إليه بموافقة المؤلف فقط (AG-ARE/AG-TRN يقترحون عبر ST-KB-CANDIDATES)
+version: 0.1.0
+terms:
+  - {ar: "السياسات الثقافية", en: "cultural policy", avoid: ["السياسة الثقافيه"], note: "الجمع عند الإشارة إلى المجال"}
+  - {ar: "الحوكمة الثقافية", en: "cultural governance", avoid: ["الحوكمه الثقافيه", "الحاكمية الثقافية"]}
+  - {ar: "الصناعات الإبداعية", en: "creative industries", avoid: ["الصناعات الخلاقة"]}
+  - {ar: "التراث الثقافي غير المادي", en: "intangible cultural heritage", avoid: ["التراث اللامادي"]}
+  - {ar: "الذكاء الاصطناعي", en: "artificial intelligence", avoid: ["الذكاء الصناعي"]}

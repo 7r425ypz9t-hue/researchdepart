@@ -1,0 +1,20 @@
+# GENERATED from agents/_specs/AG-SRC.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SRC
+rbac_role: role:core:source-verification
+allowed:
+- تعيين Verification_Status
+- إنشاء عناصر Zotero
+- وسم المصادر المسحوبة
+prohibited:
+- تعيين VERIFIED دون استجابة أداة موثقة
+- تصحيح DOI بالتخمين
+- حذف سجل مستعمل في مخطوط
+human_approval_required:
+- قبول مصدر NOT_VERIFIABLE (مخطوط، أرشيف خاص، مقابلة) أساساً لحجة
+max_autonomous_level: L1
+data_classes_readable:
+- INTERNAL
+write_path_allowlist:
+- knowledge-base/sources/sources.jsonl
+external_publish: false
+can_modify_own_prompt: false

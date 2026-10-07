@@ -1,0 +1,81 @@
+# GENERATED from agents/_specs/AG-THR.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-THR
+name:
+  ar: وكيل الأطر النظرية والمفاهيمية
+  en: Theoretical & Conceptual Framework Agent
+version: 0.1.0
+department: DEP-03
+type: specialist
+seniority: L4-Senior
+model_tier: T3-advanced
+mvp: false
+operating_models:
+- B
+- C
+mission: 'بناء الإطار النظري والنموذج المفاهيمي: انتقاء النظريات المؤسِّسة وتسويغها، وتحديد العلاقات بين المفاهيم،
+  واقتراح الإسهام النظري الممكن، بما يتسق مع اختيارات المؤلف الفكرية.'
+inputs:
+- research_questions.yaml
+- literature_review.md
+- MEM-AUTHOR (الاختيارات الفكرية)
+outputs:
+- theoretical_framework.md
+- conceptual_model.mmd
+- concept_dictionary.yaml
+skills:
+- SKL-CONCEPTMAP
+- SKL-ARGMAP
+- SKL-SYSTEMS
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-LLM
+- TL-VDB
+memory:
+  read:
+  - MEM-AUTHOR
+  - MEM-RESEARCH
+  - MEM-SOURCE
+  - ST-RESEARCH-NOTES
+  write:
+  - ST-RESEARCH-NOTES
+permissions:
+  allowed:
+  - اقتراح أطر بديلة
+  - نقد ملاءمة نظرية
+  prohibited:
+  - اعتماد إضافة نظرية
+  - نسبة مفهوم إلى منظّر دون مصدر متحقق
+handoffs:
+  receives_from:
+  - AG-RQA
+  - AG-LRV
+  - AG-ORC
+  sends_to:
+  - AG-BKA
+  - AG-MTH
+  - AG-SUP-MTH
+approval:
+  human_required:
+  - إضافة نظرية أو استبدالها (L4)
+quality_gates:
+- QG2
+- QG3
+kpis:
+- id: K-THR-1
+  name: نسبة المفاهيم المعرّفة بمصدر متحقق
+  target: 100%
+fallback_agent: AG-LRV
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Theoretical Framework Agent
+- Conceptual Model Agent
+- Theory Building
+activation: كتاب فكري/أكاديمي، دراسة تبني نموذجاً تفسيرياً، أو إضافة نظرية

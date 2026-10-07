@@ -1,0 +1,82 @@
+# GENERATED from agents/_specs/AG-VCS.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-VCS
+name:
+  ar: وكيل الإصدارات والمستودع
+  en: Version & Repository Agent
+version: 0.1.0
+department: DEP-10
+type: utility
+seniority: L2-Associate
+model_tier: T1-economy
+mvp: false
+operating_models:
+- B
+- C
+mission: إدارة الإصدارات والفروع والوسوم وسجل التغييرات والنسخ الاحتياطي، بحيث يمكن استرجاع أي نسخة من أي مخرج،
+  ولا يضيع تعديل.
+inputs:
+- أحداث تغيير الملفات
+- قرارات الاعتماد
+outputs:
+- commits
+- tags
+- CHANGELOG.md
+- backup_report.md
+skills:
+- SKL-VERSION
+tools:
+- TL-GITHUB
+- TL-GDRIVE
+- TL-FS
+- TL-AUDIT
+- TL-MSG
+memory:
+  read:
+  - ST-STATE
+  - ST-DECISIONS
+  - ST-AUDIT
+  write:
+  - ST-ARCHIVE
+  - ST-AUDIT
+permissions:
+  allowed:
+  - commit
+  - tag لإصدارات < v1.0
+  - PR
+  - نسخ احتياطي
+  prohibited:
+  - force-push
+  - حذف فروع محمية
+  - وسم v1.0 دون موافقة
+  - دمج PR دون مراجعة
+handoffs:
+  receives_from:
+  - AG-ORC
+  - AG-PUB
+  - AG-KNW
+  sends_to:
+  - AG-ORC
+approval:
+  human_required:
+  - Release v1.0
+  - حذف أي إصدار
+quality_gates:
+- QG7
+kpis:
+- id: K-VCS-1
+  name: نجاح النسخ الاحتياطي
+  target: 100%
+fallback_agent: HUMAN-AUTHOR
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- GitHub Agent
+- Version Control Agent
+- Backup Agent
+- Manuscript Manager (الإصدارات)
+mvp_note: في MVP تُنفَّذ وظائفه بسكربتات rkpos وGitHub Actions دون وكيل LLM

@@ -1,0 +1,24 @@
+# GENERATED from agents/_specs/AG-VIS.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-VIS
+read:
+- id: ST-DATA
+  name_ar: البيانات
+  path: projects/<PID>/data/
+  classification: CONFIDENTIAL
+- id: ST-OUTLINE
+  name_ar: الهيكل
+  path: projects/<PID>/outline.yaml
+  classification: CONFIDENTIAL
+- id: MEM-PROJECT
+  name_ar: ذاكرة المشروع
+  path: projects/<PID>/memory/
+  classification: CONFIDENTIAL
+write:
+- id: ST-PUBLISH
+  name_ar: مخرجات النشر
+  path: publishing/<PID>/
+  classification: INTERNAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

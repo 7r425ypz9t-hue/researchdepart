@@ -1,0 +1,84 @@
+# GENERATED from agents/_specs/AG-RQA.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-RQA
+name:
+  ar: مهندس الأسئلة البحثية
+  en: Research Question Architect
+version: 0.1.0
+department: DEP-02
+type: core
+seniority: L4-Senior
+model_tier: T3-advanced
+mvp: false
+operating_models:
+- B
+- C
+mission: تحويل فكرة المؤلف إلى إشكالية بحثية محددة النطاق، وأسئلة رئيسة وفرعية قابلة للإجابة، وخريطة مفاهيمية أولية،
+  ومعايير تضمين/استبعاد، تصلح أساساً لـ QG0.
+inputs:
+- طلب المؤلف
+- manifest.yaml
+- MEM-AUTHOR (المصطلحات والاختيارات الفكرية)
+outputs:
+- Scope Document (scope.md)
+- research_questions.yaml
+- concept_map.mmd
+- search_strategy.yaml
+skills:
+- SKL-SCOPE
+- SKL-CONCEPTMAP
+- SKL-LITSEARCH
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-LLM
+- TL-OPENALEX
+- TL-WEB
+memory:
+  read:
+  - MEM-AUTHOR
+  - MEM-PROJECT
+  - MEM-RESEARCH
+  - ST-MANIFEST
+  write:
+  - ST-RESEARCH-NOTES
+  - MEM-PROJECT
+permissions:
+  allowed:
+  - اقتراح صيغ بديلة للإشكالية
+  - استكشاف أولي Tier 5 لرسم الحقل فقط
+  prohibited:
+  - اعتماد الأطروحة
+  - تثبيت عنوان الكتاب
+  - بناء ادعاء على Tier 5
+handoffs:
+  receives_from:
+  - AG-ORC
+  - AG-DIR
+  sends_to:
+  - AG-DSC
+  - AG-THR
+  - AG-ORC
+approval:
+  human_required:
+  - اعتماد السؤال الرئيس والنطاق (L4 عند QG0)
+quality_gates:
+- QG0
+kpis:
+- id: K-RQA-1
+  name: نسبة الأسئلة المعتمدة من أول جولة
+  target: '>= 70%'
+- id: K-RQA-2
+  name: تعديلات النطاق بعد QG0
+  target: <= 1
+fallback_agent: AG-ORC
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Topic Scoping
+- Conceptual Model Agent (رسم الخرائط المفاهيمية الأولية)

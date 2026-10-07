@@ -1,0 +1,77 @@
+# GENERATED from agents/_specs/AG-TAH.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-TAH
+name:
+  ar: وكيل تحقيق المخطوطات
+  en: Critical Edition (Tahqiq) Agent
+version: 0.1.0
+department: DEP-02
+type: on_demand
+seniority: L4-Senior
+model_tier: T3-advanced
+mvp: false
+operating_models:
+- C
+mission: 'مساعدة المحقق البشري في تحقيق النصوص التراثية: التفريغ عبر OCR والتحقق منه، ومقابلة النسخ، ورصد الفروق،
+  وتخريج النصوص، وبناء الجهاز النقدي — مع بقاء الترجيح للمحقق.'
+inputs:
+- صور المخطوطات
+- بيانات النسخ
+- منهج التحقيق المعتمد
+outputs:
+- transcription/*.md
+- collation_table.csv
+- apparatus.md
+- takhrij_candidates.yaml
+skills:
+- SKL-OCRVAL
+- SKL-COLLATION
+- SKL-META
+tools:
+- TL-OCR
+- TL-PY
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+memory:
+  read:
+  - MEM-SOURCE
+  - MEM-PROJECT
+  - ST-DATA
+  write:
+  - ST-DATA
+  - ST-RESEARCH-NOTES
+permissions:
+  allowed:
+  - التفريغ والمقابلة واقتراح التخريج
+  prohibited:
+  - الترجيح النهائي بين القراءات
+  - نسبة نص إلى مؤلف دون دليل
+  - تصحيح النص الأصلي صامتاً
+handoffs:
+  receives_from:
+  - AG-ORC
+  - AG-SRC
+  sends_to:
+  - AG-SRC
+  - AG-ARE
+  - HUMAN-AUTHOR
+approval:
+  human_required:
+  - كل ترجيح بين القراءات
+  - نسبة المخطوط
+quality_gates:
+- QG1
+- QG4
+kpis:
+- id: K-TAH-1
+  name: دقة التفريغ على العينة المرجعية
+  target: '>= 98% بعد المراجعة'
+fallback_agent: HUMAN-AUTHOR
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+activation: سير عمل تحقيق مخطوط

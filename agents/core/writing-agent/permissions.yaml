@@ -1,0 +1,23 @@
+# GENERATED from agents/_specs/AG-WRT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-WRT
+rbac_role: role:core:writing-agent
+allowed:
+- صياغة المسودات
+- اقتراح انتقالات وأمثلة مسندة
+prohibited:
+- إضافة مرجع غير موجود في سجل المصادر
+- صياغة موقف [AUTHOR] غير معتمد
+- تغيير الأطروحة أو الاستنتاجات الجوهرية
+- اقتباس حرفي غير متحقق
+human_approval_required:
+- أي صياغة جديدة لموقف المؤلف
+- الاستنتاجات الجوهرية
+max_autonomous_level: L1
+data_classes_readable:
+- AUTHOR_ONLY
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/manuscript/drafts/
+external_publish: false
+can_modify_own_prompt: false

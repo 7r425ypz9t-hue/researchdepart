@@ -1,0 +1,22 @@
+# GENERATED from agents/_specs/AG-LRV.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-LRV
+receives_from:
+- AG-DSC
+- AG-SRC
+- AG-ORC
+sends_to:
+- AG-THR
+- AG-BKA
+- AG-SUP-EVD
+- AG-WRT
+consult:
+- agent: AG-MTH
+  when: تقييم جودة دراسات تجريبية/كمية
+escalation:
+- trigger: الأدبيات تناقض أطروحة المؤلف جوهرياً
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: AG-DSC
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

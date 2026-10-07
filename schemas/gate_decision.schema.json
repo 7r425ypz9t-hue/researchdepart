@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "gate_decision.schema.json",
+  "title": "Quality Gate Decision",
+  "type": "object",
+  "required": [
+    "gate",
+    "project_id",
+    "decision",
+    "approver",
+    "criteria_checked",
+    "date"
+  ],
+  "properties": {
+    "gate": {
+      "enum": [
+        "QG0",
+        "QG1",
+        "QG2",
+        "QG3",
+        "QG4",
+        "QG5",
+        "QG6",
+        "QG7"
+      ]
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "APPROVED",
+        "CONDITIONAL",
+        "REJECTED"
+      ]
+    },
+    "approver": {
+      "type": "string"
+    },
+    "reviewer_model": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "criteria_checked": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "criterion",
+          "result"
+        ],
+        "properties": {
+          "criterion": {
+            "type": "string"
+          },
+          "result": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "N/A"
+            ]
+          },
+          "evidence": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "date": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

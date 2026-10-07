@@ -1,0 +1,56 @@
+# GENERATED from agents/_specs/AG-ORC.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-ORC
+read:
+- id: MEM-PROJECT
+  name_ar: ذاكرة المشروع
+  path: projects/<PID>/memory/
+  classification: CONFIDENTIAL
+- id: MEM-INSTITUTIONAL
+  name_ar: الذاكرة المؤسسية
+  path: knowledge-base/institutional/
+  classification: INTERNAL
+- id: ST-MANIFEST
+  name_ar: بيان المشروع
+  path: projects/<PID>/manifest.yaml
+  classification: CONFIDENTIAL
+- id: ST-STATE
+  name_ar: حالة المشروع
+  path: projects/<PID>/state.yaml
+  classification: CONFIDENTIAL
+- id: ST-DECISIONS
+  name_ar: سجل القرارات
+  path: projects/<PID>/decisions.yaml
+  classification: CONFIDENTIAL
+- id: ST-COST
+  name_ar: سجل الكلفة
+  path: logs/cost_events.jsonl
+  classification: INTERNAL
+- id: ST-REVIEWS
+  name_ar: المراجعات والتحكيم
+  path: projects/<PID>/reviews/
+  classification: CONFIDENTIAL
+write:
+- id: ST-MANIFEST
+  name_ar: بيان المشروع
+  path: projects/<PID>/manifest.yaml
+  classification: CONFIDENTIAL
+- id: ST-STATE
+  name_ar: حالة المشروع
+  path: projects/<PID>/state.yaml
+  classification: CONFIDENTIAL
+- id: ST-DECISIONS
+  name_ar: سجل القرارات
+  path: projects/<PID>/decisions.yaml
+  classification: CONFIDENTIAL
+- id: ST-AUDIT
+  name_ar: سجل التدقيق
+  path: logs/audit.jsonl
+  classification: INTERNAL
+- id: MEM-PROJECT
+  name_ar: ذاكرة المشروع
+  path: projects/<PID>/memory/
+  classification: CONFIDENTIAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

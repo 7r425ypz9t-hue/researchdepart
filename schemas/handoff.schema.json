@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "handoff.schema.json",
+  "title": "Handoff Package — حزمة التسليم",
+  "type": "object",
+  "required": [
+    "HANDOFF_ID",
+    "PROJECT_ID",
+    "FROM_AGENT",
+    "TO_AGENT",
+    "TASK",
+    "INPUT_FILES",
+    "CONTEXT",
+    "DECISIONS_ALREADY_MADE",
+    "UNRESOLVED_QUESTIONS",
+    "SOURCE_LIST",
+    "QUALITY_STATUS",
+    "DEADLINE",
+    "EXPECTED_OUTPUT"
+  ],
+  "properties": {
+    "HANDOFF_ID": {
+      "type": "string",
+      "pattern": "^HO-[0-9]{8}-[0-9a-f]{8}$"
+    },
+    "PROJECT_ID": {
+      "type": "string",
+      "pattern": "^RKP-[0-9]{4}-[0-9]{4}$"
+    },
+    "FROM_AGENT": {
+      "type": "string",
+      "pattern": "^(AG-[A-Z0-9-]+|HUMAN-[A-Z]+|ALL)$"
+    },
+    "TO_AGENT": {
+      "type": "string",
+      "pattern": "^(AG-[A-Z0-9-]+|HUMAN-[A-Z]+|ALL)$"
+    },
+    "TASK": {
+      "type": "string",
+      "minLength": 5
+    },
+    "INPUT_FILES": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "CONTEXT": {
+      "type": "string",
+      "minLength": 20,
+      "$comment": "لا يسمح بتسليم نص خام دون Context"
+    },
+    "DECISIONS_ALREADY_MADE": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "UNRESOLVED_QUESTIONS": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "SOURCE_LIST": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^SRC-[0-9]{6}$"
+      }
+    },
+    "QUALITY_STATUS": {
+      "type": "object",
+      "properties": {
+        "last_gate": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "NOT_STARTED",
+            "PENDING",
+            "APPROVED",
+            "CONDITIONAL",
+            "REJECTED"
+          ]
+        },
+        "open_issues": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "status"
+      ]
+    },
+    "DEADLINE": {
+      "type": "string",
+      "format": "date"
+    },
+    "EXPECTED_OUTPUT": {
+      "type": "string",
+      "minLength": 5
+    },
+    "WORKFLOW_STEP": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

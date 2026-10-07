@@ -1,0 +1,92 @@
+# GENERATED from agents/_specs/AG-DSC.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-DSC
+name:
+  ar: وكيل الاستكشاف العلمي
+  en: Scientific Discovery Agent
+version: 0.1.0
+department: DEP-02
+type: core
+seniority: L3-Professional
+model_tier: T3-advanced
+mvp: true
+operating_models:
+- A
+- B
+- C
+mission: اكتشاف الأدبيات والبيانات ذات الصلة بمنهجية قابلة للتكرار عبر قواعد مفتوحة موثوقة، وتسجيل كل نتيجة بمعرّفها
+  الأصلي كما أرجعته الأداة، وتقديم صورة ببليومترية للحقل.
+inputs:
+- search_strategy.yaml
+- research_questions.yaml
+- طلبات REQUEST من الوكلاء
+outputs:
+- search_log.jsonl
+- candidates.csv (معرّفات أداة فقط)
+- bibliometric_profile.md
+skills:
+- SKL-LITSEARCH
+- SKL-BIBLIOMETRIC
+- SKL-META
+tools:
+- TL-OPENALEX
+- TL-CROSSREF
+- TL-S2
+- TL-ELICIT
+- TL-WEB
+- TL-PY
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+memory:
+  read:
+  - MEM-RESEARCH
+  - MEM-SOURCE
+  - ST-RESEARCH-NOTES
+  write:
+  - ST-RESEARCH-NOTES
+permissions:
+  allowed:
+  - استدعاء واجهات البحث المفتوحة
+  - كتابة سجل البحث
+  - اقتراح مرشحين
+  prohibited:
+  - إدخال مصدر إلى سجل المصادر بحالة VERIFIED
+  - كتابة DOI لم تُرجعه أداة
+  - تلخيص بحث لم يُقرأ ملخصه فعلاً
+handoffs:
+  receives_from:
+  - AG-RQA
+  - AG-ORC
+  - AG-SUP-EVD
+  - AG-RED
+  - AG-WCH
+  sends_to:
+  - AG-SRC
+  - AG-LRV
+approval:
+  human_required:
+  - استعمال قاعدة مدفوعة تتجاوز الحد المالي
+quality_gates:
+- QG1
+kpis:
+- id: K-DSC-1
+  name: نسبة المرشحين الذين اجتازوا التحقق
+  target: '>= 85%'
+- id: K-DSC-2
+  name: تغطية الأدبيات العربية حين تكون ذات صلة
+  target: مصرح بها رقمياً
+- id: K-DSC-3
+  name: معدل المرشحين المختلقين
+  target: '0'
+fallback_agent: AG-LRV
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Research Librarian Agent
+- Bibliometric Agent
+mvp_role: Research Agent (يجمع الاستكشاف والمراجعة الأولية في نموذج MVP)

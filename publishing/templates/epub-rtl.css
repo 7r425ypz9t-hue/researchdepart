@@ -1,0 +1,8 @@
+html { direction: rtl; }
+body { font-family: "Noto Naskh Arabic", serif; line-height: 1.9; text-align: justify; }
+h1, h2, h3 { color: #1F4E79; }
+h1 { border-bottom: 2px solid #B8860B; padding-bottom: .3em; }
+blockquote { border-right: 4px solid #B8860B; border-left: 0; margin-right: 0; padding-right: 1em; color: #333; }
+table { border-collapse: collapse; width: 100%; }
+th { background: #1F4E79; color: #fff; }
+td, th { border: 1px solid #ccc; padding: .4em; }

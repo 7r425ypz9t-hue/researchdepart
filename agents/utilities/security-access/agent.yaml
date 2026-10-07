@@ -1,0 +1,69 @@
+# GENERATED from agents/_specs/AG-SEC.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SEC
+name:
+  ar: وكيل الأمن والصلاحيات
+  en: Security & Permissions Agent
+version: 0.1.0
+department: DEP-10
+type: utility
+seniority: L3-Professional
+model_tier: T2-standard
+mvp: false
+operating_models:
+- B
+- C
+mission: فرض أقل الامتيازات وRBAC وتصنيف البيانات وحماية الأسرار، ومراجعة سجلات الوصول، والإبلاغ عن أي خرق أو انحراف
+  عن مصفوفة الصلاحيات.
+inputs:
+- audit.jsonl
+- access logs
+- permissions matrix
+outputs:
+- security_report.md
+- violations.jsonl
+skills:
+- SKL-SECAUDIT
+tools:
+- TL-FS
+- TL-AUDIT
+- TL-MSG
+- TL-GITHUB
+memory:
+  read:
+  - ST-AUDIT
+  write:
+  - ST-AUDIT
+permissions:
+  allowed:
+  - تعليق صلاحية وكيل مؤقتاً عند خرق
+  - فتح تنبيه أمني
+  prohibited:
+  - قراءة محتوى الملفات المصنفة (يرى البيانات الوصفية فقط)
+  - منح صلاحيات
+handoffs:
+  receives_from:
+  - AG-AUT
+  - AG-ORC
+  - AG-KNW
+  sends_to:
+  - AG-ORC
+  - HUMAN-AUTHOR
+  - HUMAN-TECH
+approval:
+  human_required:
+  - منح أو توسيع أي صلاحية
+  - رفع التعليق
+quality_gates: []
+kpis:
+- id: K-SEC-1
+  name: حوادث أمنية
+  target: '0'
+fallback_agent: HUMAN-TECH
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+mvp_note: 'في MVP: فحص آلي في CI (secret scan + permissions lint)'

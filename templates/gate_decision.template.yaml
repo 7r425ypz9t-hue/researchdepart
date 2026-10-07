@@ -1,0 +1,12 @@
+gate: QG4
+project_id: RKP-2026-0001
+scope: ch03
+decision: CONDITIONAL          # APPROVED | CONDITIONAL | REJECTED
+approver: AG-SUP-INT
+reviewer_model: openai:ADVANCED_MODEL
+criteria_checked:
+  - {criterion: "صفر مراجع مختلقة", result: PASS, evidence: "citations.audit: missing=[] blocking=[]"}
+  - {criterion: "اقتباسات حرفية متحققة", result: FAIL, evidence: "ch03#p18 اقتباس دون صفحة"}
+conditions:
+  - "إضافة رقم الصفحة للاقتباس في ch03#p18 ثم إعادة الفحص"
+date: "2026-10-07T00:00:00+00:00"

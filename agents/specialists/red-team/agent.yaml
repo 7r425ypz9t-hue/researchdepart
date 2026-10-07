@@ -1,0 +1,84 @@
+# GENERATED from agents/_specs/AG-RED.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-RED
+name:
+  ar: الفريق الأحمر
+  en: Red Team Agent
+version: 0.1.0
+department: DEP-06
+type: specialist
+seniority: L4-Senior
+model_tier: T4-independent
+mvp: false
+operating_models:
+- B
+- C
+mission: 'محاولة هدم الحجة بصدق: تفنيدها، والبحث عن الأدلة المعارضة، وكشف التناقض والتحيز والقفزات المنطقية والسببية
+  الزائفة والتعميم — ليخرج النص أصلب لا أضعف.'
+inputs:
+- edited/chNN
+- argument_map.mmd
+- evidence_cards
+outputs:
+- red_team_chNN.yaml (تحديات مرتبة بالخطورة)
+skills:
+- SKL-REDTEAM
+- SKL-ARGMAP
+- SKL-CAUSAL
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-LLM
+- TL-OPENALEX
+- TL-S2
+memory:
+  read:
+  - ST-EDITED
+  - ST-DRAFT
+  - ST-EVIDENCE
+  - MEM-SOURCE
+  - ST-OUTLINE
+  write:
+  - ST-REVIEWS
+permissions:
+  allowed:
+  - CHALLENGE لأي ادعاء
+  - طلب بحث عن أدلة معارضة
+  prohibited:
+  - تعديل النص
+  - الاعتراض بلا حجة أو دليل
+  - التساهل المجامل
+handoffs:
+  receives_from:
+  - AG-ORC
+  - AG-BKA
+  - AG-SED
+  - AG-POL
+  sends_to:
+  - AG-WRT
+  - AG-SED
+  - AG-COUNCIL
+  - AG-DSC
+approval:
+  human_required: []
+quality_gates:
+- QG3
+kpis:
+- id: K-RED-1
+  name: تحديات حرجة أغلقت قبل الاعتماد
+  target: 100%
+- id: K-RED-2
+  name: عدد ملاحظات Red Team لكل فصل
+  target: متابعة الاتجاه
+fallback_agent: AG-PRV
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Devil's Advocate Agent
+- Logical Consistency Agent
+activation: إلزامي قبل اعتماد كل فصل مهم والأطروحة والاستنتاجات

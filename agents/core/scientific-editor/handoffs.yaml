@@ -1,0 +1,26 @@
+# GENERATED from agents/_specs/AG-SED.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SED
+receives_from:
+- AG-WRT
+- AG-EVA
+- AG-PRV
+- AG-RED
+- AG-ORC
+- AG-CUL
+- AG-SUP-EDT
+- AG-TRN
+sends_to:
+- AG-ARE
+- AG-WRT
+- AG-SUP-EDT
+consult:
+- agent: AG-THR
+  when: إعادة صياغة تمس مفهوماً نظرياً
+escalation:
+- trigger: ملاحظة تحكيم تطعن في الأطروحة
+  to: AG-COUNCIL
+  level: L3
+fallback_agent: AG-ARE
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

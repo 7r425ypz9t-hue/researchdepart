@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "claim.schema.json",
+  "title": "Claim Ledger Entry — سجل الادعاءات",
+  "type": "object",
+  "required": [
+    "claim_id",
+    "project_id",
+    "location",
+    "text",
+    "tag",
+    "status"
+  ],
+  "properties": {
+    "claim_id": {
+      "type": "string",
+      "pattern": "^C-[0-9]{4,6}$"
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "text": {
+      "type": "string"
+    },
+    "tag": {
+      "enum": [
+        "FACT",
+        "EBI",
+        "INTERP",
+        "HYP",
+        "AUTHOR"
+      ]
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source_id"
+        ],
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "pattern": "^SRC-[0-9]{6}$"
+          },
+          "locator": {
+            "type": "string"
+          },
+          "excerpt": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "UNCHECKED",
+        "SUPPORTED",
+        "PARTIAL",
+        "UNSUPPORTED",
+        "MISATTRIBUTED",
+        "UNVERIFIABLE_HERE"
+      ]
+    },
+    "checked_by": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "tag": {
+            "enum": [
+              "FACT",
+              "EBI"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "sources": {
+            "minItems": 1
+          }
+        },
+        "required": [
+          "sources"
+        ]
+      },
+      "$comment": "FACT وEBI يلزمهما مصدر"
+    }
+  ],
+  "additionalProperties": false
+}

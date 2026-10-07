@@ -1,0 +1,16 @@
+{
+  "HANDOFF_ID": "HO-20261007-1a2b3c4d",
+  "PROJECT_ID": "RKP-2026-0001",
+  "FROM_AGENT": "AG-WRT",
+  "TO_AGENT": "AG-EVA",
+  "TASK": "audit_claims_and_citations للفصل الأول",
+  "INPUT_FILES": ["projects/RKP-2026-0001/manuscript/drafts/ch01_v0.1.md"],
+  "CONTEXT": "الفصل الأول يؤسس مفهوم الحوكمة الثقافية ويمهد للأطروحة المعتمدة DC-002؛ المسودة موسومة بالكامل وفيها موضعان [NEEDS-EVIDENCE].",
+  "DECISIONS_ALREADY_MADE": ["DC-001: اعتماد الإشكالية والسؤال الرئيس", "DC-002: الأطروحة المركزية"],
+  "UNRESOLVED_QUESTIONS": ["هل يكفي مصدر Tier 3 للفقرة 7 أم يلزم بديل Tier 1-2؟"],
+  "SOURCE_LIST": ["SRC-000001", "SRC-000004"],
+  "QUALITY_STATUS": {"last_gate": "QG1", "status": "APPROVED", "open_issues": 2},
+  "DEADLINE": "2026-11-15",
+  "EXPECTED_OUTPUT": "fact_audit_ch01.yaml + citation_audit_ch01.yaml",
+  "WORKFLOW_STEP": "S09.C2"
+}

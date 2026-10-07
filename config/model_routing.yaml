@@ -1,0 +1,17 @@
+# Model Routing Policy — سياسة توجيه النماذج عبر طبقة المحوّل
+# الأسماء هنا معرفات منطقية؛ الربط بالمزود في providers. حدّث المعرفات من وثائق المزود عند التشغيل.
+version: 0.1.0
+tiers:
+  T1-economy:   {use_for: "تنسيق، تصنيف، استخراج بيانات وصفية، تتبع كلفة، رصد", primary: anthropic:claude-haiku-5-5, fallback: [openai:ECONOMY_MODEL, local:LOCAL_SMALL]}
+  T2-standard:  {use_for: "تحقق المصادر، الإنتاج، الأرشفة، الأتمتة", primary: anthropic:claude-sonnet-5-5, fallback: [google:STANDARD_MODEL, openai:STANDARD_MODEL]}
+  T3-advanced:  {use_for: "بحث، تحليل، تأليف، تحرير علمي، تنسيق", primary: anthropic:claude-opus-5-5, fallback: [openai:ADVANCED_MODEL, google:ADVANCED_MODEL]}
+  T4-independent: {use_for: "تحكيم، فريق أحمر، إشراف، تدقيق — يجب أن يختلف عن نموذج التأليف", primary: openai:ADVANCED_MODEL, fallback: [google:ADVANCED_MODEL, anthropic:claude-sonnet-5-5]}
+rules:
+  - "إذا كان نموذج T4 هو نفس نموذج AG-WRT في المشروع ← يختار المحوّل أول بديل مختلف المزود، وإن تعذر يسجل تحذير INDEPENDENCE_DEGRADED"
+  - "المهام AUTHOR_ONLY تُوجَّه إلى local أو إلى مزود معتمد بموافقة"
+  - "تغيير النموذج لأي وكيل يستلزم تشغيل اختبارات الانحدار (WF-AGENT-CHANGE)"
+providers:
+  anthropic: {env_key: ANTHROPIC_API_KEY, adapter: rkpos.adapters.anthropic_adapter}
+  openai: {env_key: OPENAI_API_KEY, adapter: rkpos.adapters.openai_adapter}
+  google: {env_key: GOOGLE_API_KEY, adapter: rkpos.adapters.google_adapter}
+  local: {env_key: LOCAL_LLM_BASE_URL, adapter: rkpos.adapters.local_adapter}

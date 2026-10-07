@@ -1,0 +1,21 @@
+# GENERATED from agents/_specs/AG-BKA.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-BKA
+receives_from:
+- AG-LRV
+- AG-THR
+- AG-ORC
+sends_to:
+- AG-WRT
+- AG-COUNCIL
+- AG-VIS
+consult:
+- agent: AG-RED
+  when: 'قبل عرض الهيكل على المجلس: اختبار القفزات المنطقية'
+escalation:
+- trigger: الأدلة لا تكفي لفصل مركزي
+  to: AG-SUP-EVD
+  level: L2
+fallback_agent: AG-ORC
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

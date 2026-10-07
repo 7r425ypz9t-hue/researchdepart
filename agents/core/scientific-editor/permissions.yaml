@@ -1,0 +1,22 @@
+# GENERATED from agents/_specs/AG-SED.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SED
+rbac_role: role:core:scientific-editor
+allowed:
+- تعديلات بنيوية مقترحة بالتتبّع
+- إعادة النص للكاتب
+prohibited:
+- تغيير المعنى أو الموقف أو الاستنتاج
+- حذف إحالات
+- إدخال مصادر
+human_approval_required:
+- حذف قسم أو نقل حجة بين الفصول
+max_autonomous_level: L1
+data_classes_readable:
+- AUTHOR_ONLY
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/manuscript/edited/
+- knowledge-base/editorial/
+external_publish: false
+can_modify_own_prompt: false

@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "message.schema.json",
+  "title": "Agent Message — رسالة بروتوكول",
+  "type": "object",
+  "required": [
+    "MESSAGE_ID",
+    "PROJECT_ID",
+    "TYPE",
+    "FROM",
+    "TO",
+    "TIMESTAMP",
+    "SUBJECT",
+    "CONTENT",
+    "ACTION_REQUIRED"
+  ],
+  "properties": {
+    "MESSAGE_ID": {
+      "type": "string",
+      "pattern": "^MSG-[0-9]{8}-[0-9a-f]{8}$"
+    },
+    "PROJECT_ID": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "TYPE": {
+      "enum": [
+        "TASK",
+        "RESULT",
+        "REVIEW",
+        "REQUEST",
+        "CHALLENGE",
+        "CORRECTION",
+        "ESCALATION",
+        "APPROVAL",
+        "REJECT"
+      ]
+    },
+    "FROM": {
+      "type": "string",
+      "pattern": "^(AG-[A-Z0-9-]+|HUMAN-[A-Z]+|ALL)$"
+    },
+    "TO": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^(AG-[A-Z0-9-]+|HUMAN-[A-Z]+|ALL)$"
+        },
+        {
+          "const": "AG-COUNCIL"
+        }
+      ]
+    },
+    "TIMESTAMP": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "SUBJECT": {
+      "type": "string",
+      "minLength": 3
+    },
+    "CONTENT": {
+      "type": "string"
+    },
+    "EVIDENCE": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ACTION_REQUIRED": {
+      "type": "string"
+    },
+    "IN_REPLY_TO": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "HANDOFF_ID": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "DECISION_LEVEL": {
+      "enum": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        null
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "TYPE": {
+            "enum": [
+              "REJECT",
+              "CHALLENGE",
+              "CORRECTION"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "EVIDENCE": {
+            "minItems": 1
+          }
+        },
+        "required": [
+          "EVIDENCE"
+        ]
+      },
+      "$comment": "الرفض والاعتراض والتصحيح يلزمها دليل"
+    }
+  ],
+  "additionalProperties": false
+}

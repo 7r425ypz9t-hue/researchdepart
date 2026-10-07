@@ -1,0 +1,23 @@
+# GENERATED from agents/_specs/AG-INT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-INT
+receives_from:
+- AG-EVA
+- AG-SED
+- AG-ORC
+- AG-ARE
+sends_to:
+- AG-SUP-INT
+- AG-WRT
+- AG-ORC
+- HUMAN-AUTHOR
+consult:
+- agent: AG-SRC
+  when: اشتباه في مصدر مختلق أو مسحوب
+escalation:
+- trigger: خطر انتحال عالٍ أو تلفيق
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: HUMAN-AUTHOR
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: REVIEW

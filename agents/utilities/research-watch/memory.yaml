@@ -1,0 +1,20 @@
+# GENERATED from agents/_specs/AG-WCH.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-WCH
+read:
+- id: MEM-PROJECT
+  name_ar: ذاكرة المشروع
+  path: projects/<PID>/memory/
+  classification: CONFIDENTIAL
+- id: MEM-SOURCE
+  name_ar: ذاكرة المصادر
+  path: knowledge-base/sources/sources.jsonl
+  classification: INTERNAL
+write:
+- id: ST-WATCH
+  name_ar: توصيات الرصد
+  path: projects/<PID>/watch/
+  classification: INTERNAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

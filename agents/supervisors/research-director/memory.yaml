@@ -1,0 +1,48 @@
+# GENERATED from agents/_specs/AG-DIR.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-DIR
+read:
+- id: MEM-AUTHOR
+  name_ar: ذاكرة المؤلف
+  path: memory/author/
+  classification: AUTHOR_ONLY
+- id: MEM-PROJECT
+  name_ar: ذاكرة المشروع
+  path: projects/<PID>/memory/
+  classification: CONFIDENTIAL
+- id: MEM-INSTITUTIONAL
+  name_ar: الذاكرة المؤسسية
+  path: knowledge-base/institutional/
+  classification: INTERNAL
+- id: MEM-RESEARCH
+  name_ar: الذاكرة البحثية
+  path: knowledge-base/research/
+  classification: INTERNAL
+- id: ST-DECISIONS
+  name_ar: سجل القرارات
+  path: projects/<PID>/decisions.yaml
+  classification: CONFIDENTIAL
+- id: ST-WATCH
+  name_ar: توصيات الرصد
+  path: projects/<PID>/watch/
+  classification: INTERNAL
+- id: ST-COST
+  name_ar: سجل الكلفة
+  path: logs/cost_events.jsonl
+  classification: INTERNAL
+write:
+- id: ST-DECISIONS
+  name_ar: سجل القرارات
+  path: projects/<PID>/decisions.yaml
+  classification: CONFIDENTIAL
+- id: MEM-PROJECT
+  name_ar: ذاكرة المشروع
+  path: projects/<PID>/memory/
+  classification: CONFIDENTIAL
+- id: ST-KB-CANDIDATES
+  name_ar: مرشحات المعرفة بانتظار الاعتماد
+  path: knowledge-base/candidates/
+  classification: INTERNAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

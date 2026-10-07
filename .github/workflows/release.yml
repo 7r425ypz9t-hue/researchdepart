@@ -1,0 +1,23 @@
+# إصدار مخرج مشروع: يُطلق بوسم يدوي بعد موافقة المؤلف (L4) — <PID>-v1.0
+name: release
+on:
+  push:
+    tags: ["RKP-*-v*"]
+jobs:
+  build-publication:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install publishing toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-xetex texlive-lang-arabic fonts-noto-core fonts-noto-extra epubcheck
+      - name: Build PDF/EPUB from approved manuscript
+        run: |
+          PID="${GITHUB_REF_NAME%-v*}"
+          bash scripts/build_publication.sh "$PID"
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: publishing/**/book.*
+          body_path: projects/${{ github.ref_name }}/CHANGELOG.md
+        continue-on-error: true

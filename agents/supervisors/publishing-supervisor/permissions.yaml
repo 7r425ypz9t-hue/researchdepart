@@ -1,0 +1,19 @@
+# GENERATED from agents/_specs/AG-SUP-PUB.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SUP-PUB
+rbac_role: role:supervisory:publishing-supervisor
+allowed:
+- اعتماد/رفض QG6 وQG7
+prohibited:
+- تعديل ملفات النشر
+- إطلاق Release
+human_approval_required:
+- كل إطلاق نهائي (L4)
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/reviews/
+- logs/audit.jsonl
+external_publish: false
+can_modify_own_prompt: false

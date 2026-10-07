@@ -1,0 +1,16 @@
+workflow_id: WF-CHAPTER-CYCLE
+name_ar: دورة الفصل (فرعي قابل لإعادة الاستخدام)
+version: 0.1.0
+project_types: [intellectual_book, academic_book, policy_study, strategic_report, foresight_study, journal_article, re_edition]
+description: تُستدعى لكل فصل/قسم عبر foreach. Draft → Audit → Red Team → Peer Review → Edit → Language → Integrity.
+steps:
+  - {id: C1, stage: drafting, agent: AG-WRT, task: draft_chapter, reviewer: AG-SED, skills: [SKL-STYLE, SKL-CLAIMTAG], inputs: [chapter_brief, evidence_cards], outputs: [drafts/chNN_v0.1.md], decision_level: L1}
+  - {id: C2, stage: fact_citation_check, agent: AG-EVA, task: audit_claims_and_citations, reviewer: AG-SUP-EVD, skills: [SKL-FACTCHECK, SKL-CITEVERIFY], outputs: [fact_audit_chNN.yaml], gate: null, decision_level: L1, on_fail: {action: return_to, step: C1, max_loops: 2, then: escalate}}
+  - {id: C3, stage: red_team, agent: AG-RED, task: challenge_arguments, reviewer: null, skills: [SKL-REDTEAM], outputs: [red_team_chNN.yaml], optional_if: "chapter.importance == 'minor'", decision_level: L1}
+  - {id: C4, stage: peer_review, agent: AG-PRV, task: blind_review, outputs: [peer_review_chNN.yaml], optional_if: "project.operating_model == 'A'", decision_level: L1}
+  - {id: C5, stage: revision, agent: AG-WRT, task: revise_per_reviews, reviewer: AG-SED, outputs: [drafts/chNN_v0.5.md, revision_response.md], decision_level: L1}
+  - {id: C6, stage: scientific_edit, agent: AG-SED, task: structural_edit, reviewer: AG-SUP-EDT, outputs: [edited/chNN_v0.6.md, review_log.yaml], gate: QG3, decision_level: L3, on_fail: {action: return_to, step: C5, max_loops: 2, then: council}}
+  - {id: C7, stage: language_edit, agent: AG-ARE, task: language_and_terminology, reviewer: AG-SUP-EDT, outputs: [edited/chNN_v0.8.md], decision_level: L1}
+  - {id: C8, stage: integrity, agent: AG-INT, task: integrity_check, reviewer: AG-SUP-INT, outputs: [integrity_report_chNN.yaml], gate: QG4, decision_level: L2, on_fail: {action: freeze_and_escalate, to: HUMAN-AUTHOR}}
+  - {id: C9, stage: editorial_gate, agent: AG-SUP-EDT, task: editorial_readiness, outputs: [gate_QG5_chNN.yaml], gate: QG5, decision_level: L2}
+  - {id: C10, stage: author_approval, agent: AG-ORC, task: request_author_approval, outputs: [approved/chNN_v0.9.md], decision_level: L4, human_approval: true}

@@ -1,0 +1,31 @@
+# GENERATED from agents/_specs/AG-ORC.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-ORC
+rbac_role: role:supervisory:research-orchestrator
+allowed:
+- إنشاء المشاريع والمجلدات وملفات الحالة
+- إسناد المهام وإلغاؤها وإعادة إسنادها
+- إيقاف سير العمل عند فشل بوابة أو تجاوز كلفة
+- طلب وكيل مؤقت عبر بروتوكول الوكيل المفقود
+prohibited:
+- تعديل نص المخطوط أو الحجج أو الاستنتاجات
+- اعتماد أي بوابة جودة بنفسه (الاعتماد للمشرفين/المؤلف)
+- تغيير عنوان العمل أو أطروحته أو هيكله المعتمد
+- النشر أو المشاركة الخارجية لأي ملف
+- تجاوز قرار مثبّت DC-xxx
+human_approval_required:
+- فتح مشروع جديد بميزانية أعلى من الحد الافتراضي
+- أي قرار من المستوى L4
+- تفعيل وكيل مؤقت جديد
+- تجاوز موعد نهائي معتمد
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/manifest.yaml
+- projects/<PID>/state.yaml
+- projects/<PID>/decisions.yaml
+- logs/audit.jsonl
+- projects/<PID>/memory/
+external_publish: false
+can_modify_own_prompt: false

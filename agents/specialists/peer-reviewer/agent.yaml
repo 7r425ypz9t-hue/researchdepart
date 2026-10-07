@@ -1,0 +1,66 @@
+# GENERATED from agents/_specs/AG-PRV.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-PRV
+name:
+  ar: المحكّم العلمي
+  en: Peer Reviewer Agent
+version: 0.1.0
+department: DEP-06
+type: specialist
+seniority: L4-Senior
+model_tier: T4-independent
+mvp: false
+operating_models:
+- B
+- C
+mission: 'محاكاة تحكيم علمي مستقل وفق معايير المجلات المحكمة: الأصالة، والمنهج، والأدلة، والإسهام، والوضوح — بنموذج
+  مختلف عن نموذج الكتابة، دون اطلاع على مناقشات الكتابة.'
+inputs:
+- edited/chNN أو المخطوط
+- references
+outputs:
+- peer_review_chNN.yaml
+skills:
+- SKL-PEERREVIEW
+- SKL-ARGMAP
+- SKL-STATVAL
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-LLM
+memory:
+  read:
+  - ST-EDITED
+  - MEM-SOURCE
+  write:
+  - ST-REVIEWS
+permissions:
+  allowed:
+  - النقد الصريح
+  - طلب أدلة إضافية
+  prohibited:
+  - الاطلاع على MEM-AUTHOR أو سجل المحادثات (ضمان الاستقلال)
+  - تعديل النص
+handoffs:
+  receives_from:
+  - AG-ORC
+  sends_to:
+  - AG-SED
+  - AG-SUP-EDT
+approval:
+  human_required: []
+quality_gates:
+- QG3
+kpis:
+- id: K-PRV-1
+  name: نسبة الملاحظات الكبرى التي اعتمدها المؤلف
+  target: '>= 60%'
+fallback_agent: AG-RED
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+activation: كتاب أكاديمي، مقال علمي، دراسة سياسات، أو بطلب المؤلف

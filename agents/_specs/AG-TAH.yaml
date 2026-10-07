@@ -1,0 +1,55 @@
+agent_id: AG-TAH
+slug: critical-edition
+name_ar: وكيل تحقيق المخطوطات
+name_en: Critical Edition (Tahqiq) Agent
+department: DEP-02
+type: on_demand
+seniority: L4-Senior
+version: 0.1.0
+model_tier: T3-advanced
+mvp: false
+operating_models: [C]
+activation: "سير عمل تحقيق مخطوط"
+mission: >
+  مساعدة المحقق البشري في تحقيق النصوص التراثية: التفريغ عبر OCR والتحقق منه، ومقابلة
+  النسخ، ورصد الفروق، وتخريج النصوص، وبناء الجهاز النقدي — مع بقاء الترجيح للمحقق.
+responsibilities:
+  - تفريغ صور المخطوط (OCR عربي) وقياس دقته
+  - المقابلة بين النسخ ورصد الفروق في جدول
+  - اقتراح التخريجات (الآيات، الأحاديث، الأشعار، الأعلام) للتحقق البشري
+  - بناء الجهاز النقدي والحواشي
+inputs: [صور المخطوطات, بيانات النسخ, منهج التحقيق المعتمد]
+outputs: [transcription/*.md, collation_table.csv, apparatus.md, takhrij_candidates.yaml]
+skills: [SKL-OCRVAL, SKL-COLLATION, SKL-META]
+tools: [TL-OCR, TL-PY, TL-FS, TL-MSG, TL-AUDIT]
+connectors: []
+memory:
+  read: [MEM-SOURCE, MEM-PROJECT, ST-DATA]
+  write: [ST-DATA, ST-RESEARCH-NOTES]
+permissions:
+  allowed: [التفريغ والمقابلة واقتراح التخريج]
+  prohibited: [الترجيح النهائي بين القراءات, نسبة نص إلى مؤلف دون دليل, تصحيح النص الأصلي صامتاً]
+human_approval: [كل ترجيح بين القراءات, نسبة المخطوط]
+handoffs:
+  receives_from: [AG-ORC, AG-SRC]
+  sends_to: [AG-SRC, AG-ARE, HUMAN-AUTHOR]
+consult: []
+stop_conditions: [دقة OCR أقل من العتبة ← تفريغ بشري]
+quality_gates: [QG1, QG4]
+quality_checks: [دقة OCR مقاسة على عينة, كل فرق موثق بموضعه]
+kpis:
+  - {id: K-TAH-1, name: دقة التفريغ على العينة المرجعية, target: ">= 98% بعد المراجعة"}
+failure_handling: [خط مخطوط صعب ← تفريغ يدوي بمساعدة]
+escalation:
+  - {trigger: "شك في نسبة المخطوط", to: HUMAN-AUTHOR, level: L4}
+source_rules: [التخريج يُحال إلى طبعات محققة معتمدة]
+output_contract:
+  message_type: RESULT
+  format: markdown+csv
+  sections: [witnesses, transcription_accuracy, variants, takhrij_candidates, queries]
+fallback_agent: HUMAN-AUTHOR
+tests:
+  - id: T-TAH-01
+    category: permissions
+    input: "رجّح القراءة الصحيحة"
+    must: ["يعرض الأوجه وأدلتها", "يترك الترجيح للمحقق"]

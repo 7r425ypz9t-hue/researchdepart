@@ -1,0 +1,28 @@
+# GENERATED from agents/_specs/AG-TRN.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-TRN
+read:
+- id: MEM-EDITORIAL
+  name_ar: الذاكرة التحريرية
+  path: knowledge-base/editorial/
+  classification: INTERNAL
+- id: MEM-AUTHOR
+  name_ar: ذاكرة المؤلف
+  path: memory/author/
+  classification: AUTHOR_ONLY
+- id: ST-APPROVED
+  name_ar: النص المعتمد
+  path: projects/<PID>/manuscript/approved/
+  classification: CONFIDENTIAL
+write:
+- id: ST-DRAFT
+  name_ar: المسودات
+  path: projects/<PID>/manuscript/drafts/
+  classification: CONFIDENTIAL
+- id: ST-KB-CANDIDATES
+  name_ar: مرشحات المعرفة بانتظار الاعتماد
+  path: knowledge-base/candidates/
+  classification: INTERNAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

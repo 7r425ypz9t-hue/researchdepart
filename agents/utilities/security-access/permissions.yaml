@@ -1,0 +1,19 @@
+# GENERATED from agents/_specs/AG-SEC.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SEC
+rbac_role: role:utility:security-access
+allowed:
+- تعليق صلاحية وكيل مؤقتاً عند خرق
+- فتح تنبيه أمني
+prohibited:
+- قراءة محتوى الملفات المصنفة (يرى البيانات الوصفية فقط)
+- منح صلاحيات
+human_approval_required:
+- منح أو توسيع أي صلاحية
+- رفع التعليق
+max_autonomous_level: L1
+data_classes_readable:
+- INTERNAL
+write_path_allowlist:
+- logs/audit.jsonl
+external_publish: false
+can_modify_own_prompt: false

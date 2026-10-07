@@ -1,0 +1,20 @@
+# GENERATED from agents/_specs/AG-LRV.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-LRV
+rbac_role: role:core:literature-review
+allowed:
+- استخلاص وتلخيص المصادر المتحقق منها
+- اقتراح فجوات
+prohibited:
+- الاستشهاد بمصدر غير VERIFIED
+- تلخيص نص لم يُتح
+- تعميم نتيجة دراسة واحدة
+human_approval_required:
+- بروتوكول المراجعة المنهجية قبل التنفيذ
+max_autonomous_level: L1
+data_classes_readable:
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/research/
+- projects/<PID>/evidence/claims.jsonl
+external_publish: false
+can_modify_own_prompt: false

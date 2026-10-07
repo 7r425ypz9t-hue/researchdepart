@@ -1,0 +1,23 @@
+# GENERATED from agents/_specs/AG-CUL.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-CUL
+receives_from:
+- AG-ORC
+- AG-RQA
+- AG-WRT
+- AG-POL
+- AG-SUP-EDT
+sends_to:
+- AG-WRT
+- AG-SED
+- AG-COUNCIL
+consult:
+- agent: AG-DSC
+  when: الحاجة لوثائق رسمية أو تقارير منظمات دولية
+escalation:
+- trigger: حساسية مؤسسية
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: AG-POL
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: REVIEW

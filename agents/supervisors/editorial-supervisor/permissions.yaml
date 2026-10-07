@@ -1,0 +1,21 @@
+# GENERATED from agents/_specs/AG-SUP-EDT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SUP-EDT
+rbac_role: role:supervisory:editorial-supervisor
+allowed:
+- اعتماد/رفض QG5
+- إعادة النص إلى AG-SED أو AG-ARE مع ملاحظات
+prohibited:
+- تحرير النص مباشرة
+- تجاوز ملاحظة تحكيم مفتوحة
+human_approval_required:
+- إغلاق ملاحظة تحكيم برفضها
+max_autonomous_level: L1
+data_classes_readable:
+- AUTHOR_ONLY
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/reviews/
+- logs/audit.jsonl
+external_publish: false
+can_modify_own_prompt: false

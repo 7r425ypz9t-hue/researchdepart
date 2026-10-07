@@ -1,0 +1,6 @@
+version: 0.1.0
+classes:
+  - {id: PUBLIC, desc: "منشور أو قابل للنشر", storage: "أي موقع", llm_external: allowed}
+  - {id: INTERNAL, desc: "عمل الوحدة غير المنشور", storage: "مستودع خاص + Drive مقيّد", llm_external: allowed}
+  - {id: CONFIDENTIAL, desc: "مسودات وبيانات مشاريع", storage: "مستودع خاص + Drive مقيّد + تشفير النسخ الاحتياطية", llm_external: "allowed مع مزود بسياسة عدم التدريب على البيانات"}
+  - {id: AUTHOR_ONLY, desc: "ذاكرة المؤلف، آراء غير معلنة، مراسلات", storage: "مسار مشفّر/مستودع منفصل", llm_external: "بموافقة صريحة أو نموذج محلي", external_services: forbidden}

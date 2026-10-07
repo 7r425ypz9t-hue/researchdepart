@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rkpos"
+version = "0.1.0"
+description = "MIDAD — Research, Knowledge & Publishing Intelligence Unit (RKPIU/RKPOS) runtime"
+requires-python = ">=3.10"
+dependencies = ["PyYAML>=6.0", "jsonschema>=4.20"]
+
+[project.optional-dependencies]
+anthropic = ["anthropic"]
+openai = ["openai"]
+google = ["google-genai"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+rkpos = "rkpos.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["runtime"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["runtime"]

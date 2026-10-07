@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "memory_item.schema.json",
+  "title": "Memory Item — عنصر ذاكرة",
+  "type": "object",
+  "required": [
+    "Memory_ID",
+    "Type",
+    "Layer",
+    "Project",
+    "Created_By",
+    "Created_Date",
+    "Verified",
+    "Confidence",
+    "Source",
+    "Version",
+    "Access_Level",
+    "Content"
+  ],
+  "properties": {
+    "Memory_ID": {
+      "type": "string",
+      "pattern": "^MEM-[A-Z]+-[0-9]{6}$"
+    },
+    "Type": {
+      "enum": [
+        "decision",
+        "method",
+        "best_source",
+        "error",
+        "lesson",
+        "template",
+        "term",
+        "improvement",
+        "concept",
+        "theory",
+        "style_rule",
+        "policy",
+        "quote"
+      ]
+    },
+    "Layer": {
+      "enum": [
+        "MEM-AUTHOR",
+        "MEM-PROJECT",
+        "MEM-RESEARCH",
+        "MEM-SOURCE",
+        "MEM-EDITORIAL",
+        "MEM-INSTITUTIONAL",
+        "ST-KB-CANDIDATES"
+      ]
+    },
+    "Project": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Created_By": {
+      "type": "string",
+      "pattern": "^(AG-[A-Z0-9-]+|HUMAN-[A-Z]+|ALL)$"
+    },
+    "Created_Date": {
+      "type": "string",
+      "format": "date"
+    },
+    "Verified": {
+      "type": "boolean"
+    },
+    "Confidence": {
+      "enum": [
+        "HIGH",
+        "MEDIUM",
+        "LOW"
+      ]
+    },
+    "Source": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Source_ID أو مرجع قرار DC-xxx أو ملف"
+    },
+    "Version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "Access_Level": {
+      "enum": [
+        "PUBLIC",
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "AUTHOR_ONLY"
+      ]
+    },
+    "Expiry": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "Approved_By": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Content": {
+      "type": "string",
+      "minLength": 1
+    },
+    "Tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "Layer": {
+            "enum": [
+              "MEM-INSTITUTIONAL",
+              "MEM-AUTHOR"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "Approved_By": {
+            "const": "HUMAN-AUTHOR"
+          },
+          "Verified": {
+            "const": true
+          }
+        },
+        "required": [
+          "Approved_By"
+        ]
+      },
+      "$comment": "لا تدخل الذاكرة المؤسسية/ذاكرة المؤلف إلا بعد اعتماد المؤلف"
+    }
+  ],
+  "additionalProperties": false
+}

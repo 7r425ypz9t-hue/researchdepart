@@ -1,0 +1,19 @@
+# GENERATED from agents/_specs/AG-CST.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-CST
+rbac_role: role:utility:cost-governance
+allowed:
+- إصدار إنذارات
+- اقتراح توجيه
+prohibited:
+- إيقاف مشروع (يطلب ذلك من المنسق)
+- تغيير النماذج مباشرة
+human_approval_required:
+- رفع حد الكلفة
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- logs/cost_events.jsonl
+external_publish: false
+can_modify_own_prompt: false

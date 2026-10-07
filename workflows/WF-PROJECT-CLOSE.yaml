@@ -1,0 +1,12 @@
+workflow_id: WF-PROJECT-CLOSE
+name_ar: إغلاق المشروع واستخلاص المعرفة (قاعدة عدم فقدان المعرفة)
+version: 0.1.0
+project_types: [all]
+steps:
+  - {id: K1, agent: AG-VCS, task: tag_and_backup_all_versions, outputs: [tags, backup_report.md], decision_level: L1}
+  - {id: K2, agent: AG-KNW, task: archive_project_with_checksums, outputs: [archive/], decision_level: L1}
+  - {id: K3, agent: AG-KNW, task: extract_knowledge, skills: [SKL-LESSONS], outputs: [kb_candidates.yaml, lessons_learned.md], decision_level: L1}
+  - {id: K4, agent: AG-SUP-PUB, task: archive_gate, gate: QG7, decision_level: L2}
+  - {id: K5, agent: AG-ORC, task: request_kb_promotion_approval, decision_level: L4, human_approval: true}
+  - {id: K6, agent: AG-KNW, task: promote_approved_items_and_reindex, decision_level: L1}
+  - {id: K7, agent: AG-ORC, task: evaluate_temporary_agents, decision_level: L4, human_approval: true, optional_if: "not project.temporary_agents"}

@@ -1,0 +1,83 @@
+# GENERATED from agents/_specs/AG-ARE.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-ARE
+name:
+  ar: المحرر اللغوي العربي
+  en: Arabic Language Editor
+version: 0.1.0
+department: DEP-06
+type: core
+seniority: L3-Professional
+model_tier: T3-advanced
+mvp: false
+operating_models:
+- B
+- C
+mission: 'ضبط العربية ضبطاً فصيحاً رصيناً: النحو والصرف والإملاء وعلامات الترقيم والأسلوب والاتساق المصطلحي، وفق
+  بصمة المؤلف ومسرده المعتمد، دون تسطيح السجل الأدبي.'
+inputs:
+- edited/chNN
+- glossary.yaml
+- MEM-AUTHOR (البصمة)
+- style_guide.md
+outputs:
+- language_edited/chNN.md
+- glossary_updates.yaml (مقترحة)
+- copyedit_report.md
+skills:
+- SKL-AREDIT
+- SKL-TERMS
+- SKL-STYLE
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-LLM
+- TL-GDOCS
+memory:
+  read:
+  - ST-EDITED
+  - MEM-AUTHOR
+  - MEM-EDITORIAL
+  write:
+  - ST-EDITED
+  - ST-KB-CANDIDATES
+permissions:
+  allowed:
+  - التصويب اللغوي المباشر
+  - اقتراح مصطلحات
+  prohibited:
+  - تغيير المضمون
+  - اعتماد مصطلح جديد في المسرد (يقترح فقط)
+  - تبسيط السجل
+handoffs:
+  receives_from:
+  - AG-SED
+  - AG-TRN
+  - AG-ORC
+  - AG-SUP-EDT
+  - AG-TAH
+  sends_to:
+  - AG-SUP-EDT
+  - AG-PUB
+approval:
+  human_required:
+  - إضافة مصطلح إلى المسرد المعتمد
+quality_gates:
+- QG5
+kpis:
+- id: K-ARE-1
+  name: أخطاء لغوية متبقية لكل 10 آلاف كلمة
+  target: <= 3
+fallback_agent: AG-SED
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Stylistic Editor
+- Copy Editor
+- Terminology Agent
+mvp_note: في MVP يعمل بوصفه مهارة SKL-AREDIT داخل AG-SED

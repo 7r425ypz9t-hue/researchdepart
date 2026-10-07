@@ -1,0 +1,24 @@
+workflow_id: WF-SYSTEMATIC-REVIEW
+name_ar: مراجعة منهجية (PRISMA 2020)
+version: 0.1.0
+project_types: [systematic_review]
+operating_model_min: B
+citation_style: APA7
+steps:
+  - {id: S01, agent: AG-ORC, task: initialize_project, decision_level: L1}
+  - {id: S02, agent: AG-RQA, task: define_review_question_pcc_pico, reviewer: AG-SUP-MTH, gate: QG0, decision_level: L4, human_approval: true}
+  - {id: S03, agent: AG-LRV, task: write_protocol, reviewer: AG-SUP-MTH, skills: [SKL-PRISMA], outputs: [protocol.md], decision_level: L4, human_approval: true}
+  - {id: S04, agent: AG-DSC, task: execute_registered_search, outputs: [search_log.jsonl], decision_level: L1}
+  - {id: S05, agent: AG-SRC, task: verify_and_deduplicate, decision_level: L1}
+  - {id: S06, agent: AG-LRV, task: screen_title_abstract_dual, reviewer: AG-SUP-EVD, outputs: [screening.csv], decision_level: L2}
+  - {id: S07, agent: AG-LRV, task: screen_full_text_and_extract, outputs: [extraction.csv], decision_level: L2}
+  - {id: S08, agent: AG-MTH, task: risk_of_bias_assessment, reviewer: AG-SUP-MTH, gate: QG2, decision_level: L2}
+  - {id: S09, agent: AG-DAT, task: synthesis_or_meta_analysis, optional_if: "not review.quantitative", decision_level: L1}
+  - {id: S10, agent: AG-LRV, task: prisma_flow_and_synthesis, gate: QG1, decision_level: L2}
+  - {id: S11, agent: AG-WRT, task: draft_review, decision_level: L1}
+  - {id: S12, agent: AG-EVA, task: audit_claims_and_citations, decision_level: L1}
+  - {id: S13, agent: AG-PRV, task: blind_review, gate: QG3, decision_level: L3}
+  - {id: S14, agent: AG-INT, task: integrity_check, gate: QG4, decision_level: L2}
+  - {id: S15, agent: AG-ARE, task: language_and_terminology, gate: QG5, decision_level: L2}
+  - {id: S16, agent: AG-ORC, task: request_final_approval, decision_level: L4, human_approval: true}
+  - {id: S17, uses: WF-PROJECT-CLOSE}

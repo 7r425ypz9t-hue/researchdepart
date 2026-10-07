@@ -1,0 +1,35 @@
+# GENERATED from agents/_specs/AG-CST.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-CST
+tools:
+- id: TL-FS
+  name: Repository File System
+  access: RW
+  risk: medium
+  availability: built_in
+  fallback: none
+- id: TL-AUDIT
+  name: Audit Logger
+  access: W
+  risk: low
+  availability: built_in
+  fallback: none
+- id: TL-MSG
+  name: Agent Message Bus
+  access: RW
+  risk: low
+  availability: built_in
+  fallback: none
+- id: TL-SQL
+  name: SQL Database
+  access: RW
+  risk: medium
+  availability: built_in (SQLite) / needs_install (PostgreSQL)
+  fallback: JSONL
+- id: TL-GSHEETS
+  name: Google Sheets
+  access: RW
+  risk: low
+  availability: platform
+  fallback: CSV
+connectors:
+- Google Sheets

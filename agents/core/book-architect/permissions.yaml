@@ -1,0 +1,22 @@
+# GENERATED from agents/_specs/AG-BKA.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-BKA
+rbac_role: role:core:book-architect
+allowed:
+- اقتراح الهيكل وبدائله
+- كتابة موجزات الفصول
+prohibited:
+- تغيير الأطروحة
+- حذف فصل معتمد
+- تثبيت العنوان
+human_approval_required:
+- اعتماد الهيكل (L4)
+- حذف/إضافة فصل (L4)
+max_autonomous_level: L1
+data_classes_readable:
+- AUTHOR_ONLY
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/outline.yaml
+external_publish: false
+can_modify_own_prompt: false

@@ -1,0 +1,36 @@
+# GENERATED from agents/_specs/AG-SUP-MTH.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SUP-MTH
+read:
+- id: MEM-PROJECT
+  name_ar: ذاكرة المشروع
+  path: projects/<PID>/memory/
+  classification: CONFIDENTIAL
+- id: MEM-RESEARCH
+  name_ar: الذاكرة البحثية
+  path: knowledge-base/research/
+  classification: INTERNAL
+- id: ST-DATA
+  name_ar: البيانات
+  path: projects/<PID>/data/
+  classification: CONFIDENTIAL
+- id: ST-RESEARCH-NOTES
+  name_ar: ملاحظات البحث
+  path: projects/<PID>/research/
+  classification: INTERNAL
+- id: ST-REVIEWS
+  name_ar: المراجعات والتحكيم
+  path: projects/<PID>/reviews/
+  classification: CONFIDENTIAL
+write:
+- id: ST-REVIEWS
+  name_ar: المراجعات والتحكيم
+  path: projects/<PID>/reviews/
+  classification: CONFIDENTIAL
+- id: ST-AUDIT
+  name_ar: سجل التدقيق
+  path: logs/audit.jsonl
+  classification: INTERNAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

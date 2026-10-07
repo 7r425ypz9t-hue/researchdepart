@@ -1,0 +1,22 @@
+workflow_id: WF-FORESIGHT
+name_ar: دراسة مستقبلية
+version: 0.1.0
+project_types: [foresight_study]
+operating_model_min: B
+citation_style: APA7
+steps:
+  - {id: S01, agent: AG-ORC, task: initialize_project, decision_level: L1}
+  - {id: S02, agent: AG-RQA, task: define_focal_question_and_horizon, gate: QG0, decision_level: L4, human_approval: true}
+  - {id: S03, agent: AG-DSC, task: horizon_scanning_sources, decision_level: L1}
+  - {id: S04, agent: AG-SRC, task: verify_sources, decision_level: L1}
+  - {id: S05, agent: AG-POL, task: drivers_and_signals_steep, reviewer: AG-SUP-EVD, gate: QG1, decision_level: L2}
+  - {id: S06, agent: AG-POL, task: systems_map, skills: [SKL-SYSTEMS], decision_level: L1}
+  - {id: S07, agent: AG-POL, task: build_scenarios, reviewer: AG-SUP-MTH, skills: [SKL-SCENARIO], outputs: [scenarios.yaml], gate: QG2, decision_level: L2}
+  - {id: S08, agent: AG-DAT, task: quantitative_projection_or_simulation, optional_if: "not project.has_data", decision_level: L1}
+  - {id: S09, agent: AG-RED, task: challenge_scenarios_plausibility, gate: QG3, decision_level: L3}
+  - {id: S10, agent: AG-WRT, task: draft_study, decision_level: L1}
+  - {id: S11, agent: AG-EVA, task: audit_claims_and_citations, decision_level: L1}
+  - {id: S12, agent: AG-INT, task: integrity_check, gate: QG4, decision_level: L2}
+  - {id: S13, agent: AG-ARE, task: language_and_terminology, gate: QG5, decision_level: L2}
+  - {id: S14, agent: AG-ORC, task: request_final_approval, decision_level: L4, human_approval: true}
+  - {id: S15, uses: WF-PROJECT-CLOSE}

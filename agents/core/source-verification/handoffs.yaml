@@ -1,0 +1,25 @@
+# GENERATED from agents/_specs/AG-SRC.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SRC
+receives_from:
+- AG-DSC
+- AG-LRV
+- AG-WRT
+- AG-EVA
+- HUMAN-AUTHOR
+- AG-TAH
+- AG-WCH
+sends_to:
+- AG-LRV
+- AG-EVA
+- AG-SUP-EVD
+consult:
+- agent: AG-TAH
+  when: المصدر مخطوط أو طبعة تراثية
+escalation:
+- trigger: مصدر مركزي ثبت سحبه
+  to: AG-SUP-EVD
+  level: L2
+fallback_agent: HUMAN-AUTHOR
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

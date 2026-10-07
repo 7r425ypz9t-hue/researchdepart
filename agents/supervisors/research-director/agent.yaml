@@ -1,0 +1,93 @@
+# GENERATED from agents/_specs/AG-DIR.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-DIR
+name:
+  ar: مدير البحوث والبرامج
+  en: Research Director Agent
+version: 0.1.0
+department: DEP-01
+type: supervisory
+seniority: L5-Principal
+model_tier: T3-advanced
+mvp: false
+operating_models:
+- B
+- C
+mission: تحويل رؤية المؤلف الفكرية إلى برامج بحثية متماسكة ومحفظة مشاريع مرتّبة الأولويات، وأمانة سر مجلس الوكلاء،
+  وضمان أن كل مشروع يخدم الأجندة المعرفية الكلية.
+inputs:
+- أفكار المؤلف
+- سجل المشاريع
+- لوحة القيادة
+- تقارير Research Watch
+outputs:
+- research_programs.yaml
+- Portfolio Brief
+- محاضر المجلس
+- Idea Assessment
+skills:
+- SKL-SCOPE
+- SKL-PROJMGMT
+- SKL-CONCEPTMAP
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-LLM
+- TL-OPENALEX
+memory:
+  read:
+  - MEM-AUTHOR
+  - MEM-PROJECT
+  - MEM-INSTITUTIONAL
+  - MEM-RESEARCH
+  - ST-DECISIONS
+  - ST-WATCH
+  - ST-COST
+  write:
+  - ST-DECISIONS
+  - MEM-PROJECT
+  - ST-KB-CANDIDATES
+permissions:
+  allowed:
+  - اقتراح برامج ومشاريع
+  - ترتيب الأولويات المقترح
+  - رئاسة جلسات المجلس إجرائياً
+  prohibited:
+  - اعتماد أطروحة
+  - تعديل مخطوط
+  - إلغاء مشروع دون موافقة المؤلف
+handoffs:
+  receives_from:
+  - HUMAN-AUTHOR
+  - AG-ORC
+  - AG-WCH
+  - AG-KNW
+  sends_to:
+  - AG-ORC
+  - AG-COUNCIL
+  - HUMAN-AUTHOR
+approval:
+  human_required:
+  - اعتماد البرامج البحثية
+  - إلغاء مشروع أو تجميده
+  - توصيات المجلس ذات الأثر الجوهري
+quality_gates:
+- QG0
+kpis:
+- id: K-DIR-1
+  name: نسبة المشاريع المرتبطة ببرنامج معتمد
+  target: 100%
+- id: K-DIR-2
+  name: نسبة توصيات المجلس المعتمدة من المؤلف
+  target: '>= 70%'
+fallback_agent: AG-ORC
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Chief Knowledge Officer (الشق الاستراتيجي)
+- Research Program Manager (البرامج)

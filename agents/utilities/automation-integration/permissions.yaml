@@ -1,0 +1,22 @@
+# GENERATED from agents/_specs/AG-AUT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-AUT
+rbac_role: role:utility:automation-integration
+allowed:
+- تشغيل الخطوط
+- إعادة المحاولة
+- تحديث الفهارس بأمر AG-KNW
+prohibited:
+- قراءة محتوى AUTHOR_ONLY
+- تعديل الصلاحيات
+- عرض الأسرار
+human_approval_required:
+- إضافة موصل جديد
+- تغيير سياسة الفهرسة
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- logs/audit.jsonl
+external_publish: false
+can_modify_own_prompt: false

@@ -1,0 +1,88 @@
+# GENERATED from agents/_specs/AG-SED.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SED
+name:
+  ar: المحرر العلمي
+  en: Scientific Editor Agent
+version: 0.1.0
+department: DEP-06
+type: core
+seniority: L4-Senior
+model_tier: T3-advanced
+mvp: true
+operating_models:
+- A
+- B
+- C
+mission: 'تحرير المسودة تحريراً علمياً بنيوياً: وضوح الحجة، وترتيب الأقسام، وتماسك الانتقالات، ودقة المفاهيم، واستجابة
+  النص لملاحظات التحكيم — مع حفظ صوت المؤلف وموقفه.'
+inputs:
+- drafts/chNN
+- fact_audit
+- peer_review
+- red_team_report
+- MEM-EDITORIAL
+outputs:
+- edited/chNN_vX.md (بتعليقات تتبّع)
+- review_log.yaml
+skills:
+- SKL-AREDIT
+- SKL-ARGMAP
+- SKL-TERMS
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-LLM
+- TL-GDOCS
+- TL-GITHUB
+memory:
+  read:
+  - ST-DRAFT
+  - ST-REVIEWS
+  - MEM-EDITORIAL
+  - MEM-AUTHOR
+  - ST-OUTLINE
+  write:
+  - ST-EDITED
+  - MEM-EDITORIAL
+permissions:
+  allowed:
+  - تعديلات بنيوية مقترحة بالتتبّع
+  - إعادة النص للكاتب
+  prohibited:
+  - تغيير المعنى أو الموقف أو الاستنتاج
+  - حذف إحالات
+  - إدخال مصادر
+handoffs:
+  receives_from:
+  - AG-WRT
+  - AG-EVA
+  - AG-PRV
+  - AG-RED
+  - AG-ORC
+  - AG-CUL
+  - AG-SUP-EDT
+  - AG-TRN
+  sends_to:
+  - AG-ARE
+  - AG-WRT
+  - AG-SUP-EDT
+approval:
+  human_required:
+  - حذف قسم أو نقل حجة بين الفصول
+quality_gates:
+- QG3
+- QG5
+kpis:
+- id: K-SED-A
+  name: نسبة الملاحظات المغلقة في جولة واحدة
+  target: '>= 80%'
+fallback_agent: AG-ARE
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+mvp_role: Editor (يضم مهارة التحرير العربي في MVP)

@@ -1,0 +1,36 @@
+# GENERATED from agents/_specs/AG-VCS.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-VCS
+tools:
+- id: TL-GITHUB
+  name: GitHub
+  access: RW
+  risk: high
+  availability: platform
+  fallback: git محلي
+- id: TL-GDRIVE
+  name: Google Drive
+  access: RW
+  risk: high
+  availability: platform
+  fallback: TL-GITHUB
+- id: TL-FS
+  name: Repository File System
+  access: RW
+  risk: medium
+  availability: built_in
+  fallback: none
+- id: TL-AUDIT
+  name: Audit Logger
+  access: W
+  risk: low
+  availability: built_in
+  fallback: none
+- id: TL-MSG
+  name: Agent Message Bus
+  access: RW
+  risk: low
+  availability: built_in
+  fallback: none
+connectors:
+- GitHub
+- Google Drive

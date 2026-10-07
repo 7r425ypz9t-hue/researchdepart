@@ -1,0 +1,17 @@
+{
+  "Memory_ID": "MEM-LESSON-000001",
+  "Type": "lesson",
+  "Layer": "ST-KB-CANDIDATES",
+  "Project": "RKP-2026-0001",
+  "Created_By": "AG-KNW",
+  "Created_Date": "2026-10-07",
+  "Verified": false,
+  "Confidence": "MEDIUM",
+  "Source": "DC-004",
+  "Version": 1,
+  "Access_Level": "INTERNAL",
+  "Expiry": null,
+  "Approved_By": null,
+  "Content": "تشغيل Red Team قبل اعتماد الهيكل وفّر جولتي مراجعة لاحقتين.",
+  "Tags": ["process", "red-team"]
+}

@@ -1,0 +1,22 @@
+# GENERATED from agents/_specs/AG-KNW.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-KNW
+receives_from:
+- AG-PUB
+- AG-ORC
+- AG-SUP-PUB
+- ALL
+sends_to:
+- AG-SUP-PUB
+- AG-DIR
+- HUMAN-AUTHOR
+consult:
+- agent: AG-SEC
+  when: تصنيف حساسية مادة قبل الفهرسة
+escalation:
+- trigger: تعارض عنصر مرشح مع ذاكرة مؤسسية قائمة
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: AG-VCS
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

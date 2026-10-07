@@ -1,0 +1,38 @@
+# قواعد الاختيار الديناميكي للوكلاء (القسم 56)
+# العوامل: Task Complexity, Research Type, Domain, Evidence Requirement, Risk, Deadline, Budget, Publication Target
+version: 0.1.0
+always:
+  A: [AG-ORC, AG-DSC, AG-SRC, AG-WRT, AG-SED, AG-INT, AG-PUB, AG-KNW]          # MVP الثمانية
+  B: [AG-ORC, AG-DSC, AG-SRC, AG-LRV, AG-WRT, AG-EVA, AG-SED, AG-ARE, AG-INT, AG-PUB, AG-KNW, AG-VCS, AG-CST]
+  C: [AG-ORC, AG-DIR, AG-DSC, AG-SRC, AG-LRV, AG-WRT, AG-EVA, AG-SED, AG-ARE, AG-INT, AG-PUB, AG-KNW, AG-VCS, AG-CST, AG-SEC, AG-AUT, AG-WCH]
+# في Model A تُغطّى وظائف الوكلاء غير المفعّلين بمهارات داخل وكلاء MVP
+model_substitutions:
+  AG-RQA: AG-ORC
+  AG-LRV: AG-DSC
+  AG-EVA: AG-INT
+  AG-ARE: AG-SED
+  AG-BKA: AG-WRT
+  AG-SUP-EVD: AG-INT
+  AG-SUP-EDT: AG-SED
+  AG-SUP-INT: AG-INT
+  AG-SUP-PUB: AG-PUB
+  AG-SUP-MTH: AG-ORC
+  AG-RED: AG-SED
+  AG-PRV: AG-SED
+  AG-VCS: AG-KNW
+  AG-CST: AG-ORC
+rules:
+  - {when: {project_type: [intellectual_book, academic_book, policy_study, systematic_review, foresight_study, strategic_report, journal_article, re_edition]}, add: [AG-RQA], why: "مشروع مركّب يحتاج إشكالية ونطاقاً"}
+  - {when: {project_type: [intellectual_book, academic_book, strategic_report, re_edition]}, add: [AG-BKA], why: "عمل متعدد الفصول يحتاج عمارة"}
+  - {when: {project_type: [intellectual_book, academic_book, journal_article]}, add: [AG-THR], why: "إطار نظري/مفاهيمي"}
+  - {when: {has_data: true}, add: [AG-MTH, AG-DAT, AG-VIS, AG-SUP-MTH], why: "وجود بيانات يستلزم منهجاً وتحليلاً ومشرفاً منهجياً"}
+  - {when: {project_type: [academic_book, systematic_review, journal_article]}, add: [AG-MTH, AG-SUP-MTH, AG-PRV], why: "منهج صريح وتحكيم"}
+  - {when: {project_type: [policy_study, foresight_study, strategic_report]}, add: [AG-POL], why: "تحليل سياسات/استشراف"}
+  - {when: {domain: [cultural_policy, heritage, identity, creative_economy, cultural_governance]}, add: [AG-CUL], why: "خبرة المجال الثقافي"}
+  - {when: {risk: [high, critical]}, add: [AG-RED, AG-SUP-INT, AG-SUP-EVD], why: "مخاطر عالية تستلزم فريقاً أحمر وإشرافاً مستقلاً"}
+  - {when: {evidence_requirement: [high, systematic]}, add: [AG-SUP-EVD, AG-EVA], why: "متطلبات أدلة مرتفعة"}
+  - {when: {project_type: [intellectual_book, academic_book, policy_study, foresight_study]}, add: [AG-RED], why: "Red Team إلزامي قبل اعتماد الفصول المهمة"}
+  - {when: {project_type: [translation]}, add: [AG-TRN], why: "إصدار مترجم"}
+  - {when: {project_type: [critical_edition]}, add: [AG-TAH], why: "تحقيق مخطوط"}
+  - {when: {publication_target: [print, peer_reviewed_journal, university_press]}, add: [AG-SUP-PUB, AG-SUP-EDT], why: "نشر رسمي يحتاج بوابات إشرافية"}
+  - {when: {operating_model: C}, add: [AG-SUP-MTH, AG-SUP-EVD, AG-SUP-EDT, AG-SUP-INT, AG-SUP-PUB], why: "طبقة الضمان الكاملة في Think Tank"}

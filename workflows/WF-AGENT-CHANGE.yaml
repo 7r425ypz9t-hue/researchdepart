@@ -1,0 +1,11 @@
+workflow_id: WF-AGENT-CHANGE
+name_ar: اعتماد تغيير وكيل (Prompt/Model) — الانحدار والتعلم المنضبط
+version: 0.1.0
+project_types: [system]
+steps:
+  - {id: G1, agent: AG-ORC, task: collect_improvement_proposal_from_log, inputs: [logs/agent_improvement_log.jsonl], decision_level: L1}
+  - {id: G2, agent: AG-AUT, task: apply_change_on_branch, decision_level: L1}
+  - {id: G3, agent: AG-AUT, task: run_regression_suite, outputs: [eval_report.json], decision_level: L1}
+  - {id: G4, agent: AG-SEC, task: security_compliance_check, decision_level: L1}
+  - {id: G5, agent: AG-ORC, task: request_management_approval, decision_level: L4, human_approval: true}
+  - {id: G6, agent: AG-VCS, task: merge_and_bump_agent_version, decision_level: L1}

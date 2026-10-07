@@ -1,0 +1,82 @@
+# GENERATED from agents/_specs/AG-BKA.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-BKA
+name:
+  ar: مهندس الكتاب
+  en: Book Architect Agent
+version: 0.1.0
+department: DEP-05
+type: core
+seniority: L4-Senior
+model_tier: T3-advanced
+mvp: false
+operating_models:
+- B
+- C
+mission: 'تصميم العمارة الكلية للكتاب أو الدراسة: القوس الحجاجي، وتوزيع الفصول، ووظيفة كل فصل في البرهنة، وموقع
+  الأدلة، وموازنة الطول، بما يجعل الأطروحة المعتمدة تنمو بلا قفز.'
+inputs:
+- الأطروحة المعتمدة
+- literature_review.md
+- theoretical_framework.md
+- MEM-AUTHOR
+outputs:
+- outline.yaml
+- argument_map.mmd
+- chapter_briefs/
+skills:
+- SKL-OUTLINE
+- SKL-ARGMAP
+- SKL-STYLE
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-LLM
+- TL-GDOCS
+memory:
+  read:
+  - MEM-AUTHOR
+  - MEM-PROJECT
+  - MEM-RESEARCH
+  - ST-EVIDENCE
+  - ST-RESEARCH-NOTES
+  write:
+  - ST-OUTLINE
+permissions:
+  allowed:
+  - اقتراح الهيكل وبدائله
+  - كتابة موجزات الفصول
+  prohibited:
+  - تغيير الأطروحة
+  - حذف فصل معتمد
+  - تثبيت العنوان
+handoffs:
+  receives_from:
+  - AG-LRV
+  - AG-THR
+  - AG-ORC
+  sends_to:
+  - AG-WRT
+  - AG-COUNCIL
+  - AG-VIS
+approval:
+  human_required:
+  - اعتماد الهيكل (L4)
+  - حذف/إضافة فصل (L4)
+quality_gates:
+- QG3
+kpis:
+- id: K-BKA-1
+  name: تعديلات هيكلية جوهرية بعد بدء الكتابة
+  target: <= 2
+fallback_agent: AG-ORC
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Chapter Development (البنية)
+- Argumentation (القوس الكلي)

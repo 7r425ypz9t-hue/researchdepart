@@ -1,0 +1,23 @@
+workflow_id: WF-BOOK-PRODUCTION
+name_ar: خط إنتاج الكتاب (السلسلة الرئيسة)
+version: 0.1.0
+project_types: [intellectual_book, academic_book]
+operating_model_min: A
+citation_style: APA7
+steps:
+  - {id: S01, stage: idea, agent: AG-ORC, task: initialize_project, outputs: [manifest.yaml, state.yaml, plan.yaml], decision_level: L1}
+  - {id: S02, stage: topic_scoping, agent: AG-RQA, task: define_scope, reviewer: AG-DIR, skills: [SKL-SCOPE, SKL-CONCEPTMAP], outputs: [scope.md, research_questions.yaml, concept_map.mmd, search_strategy.yaml], gate: QG0, decision_level: L4, human_approval: true}
+  - {id: S03, stage: literature_discovery, agent: AG-DSC, task: discover_sources, reviewer: AG-SRC, skills: [SKL-LITSEARCH, SKL-BIBLIOMETRIC], outputs: [search_log.jsonl, candidates.csv, bibliometric_profile.md], decision_level: L1}
+  - {id: S04, stage: source_verification, agent: AG-SRC, task: verify_sources, reviewer: AG-SUP-EVD, skills: [SKL-DOI, SKL-META, SKL-BIBCLEAN], outputs: [sources.jsonl, verification_report.md], decision_level: L1}
+  - {id: S05, stage: literature_review, agent: AG-LRV, task: synthesize_literature, reviewer: AG-SUP-EVD, skills: [SKL-ARGMAP, SKL-CLAIMTAG], outputs: [literature_review.md, evidence_cards/, gap_analysis.md], gate: QG1, decision_level: L2}
+  - {id: S06, stage: theory_building, agent: AG-THR, task: build_framework, reviewer: AG-SUP-MTH, outputs: [theoretical_framework.md, conceptual_model.mmd], optional_if: "project.operating_model == 'A'", decision_level: L4, human_approval: true}
+  - {id: S07, stage: methodology, agent: AG-MTH, task: design_method, reviewer: AG-SUP-MTH, outputs: [methods_plan.md], gate: QG2, optional_if: "project.project_type == 'intellectual_book' and not project.has_data", decision_level: L2}
+  - {id: S08, stage: book_architecture, agent: AG-BKA, task: build_structure, reviewer: AG-COUNCIL, skills: [SKL-OUTLINE, SKL-ARGMAP], outputs: [outline.yaml, argument_map.mmd, chapter_briefs/], decision_level: L4, human_approval: true}
+  - {id: S09, stage: chapters, uses: WF-CHAPTER-CYCLE, foreach: outline.chapters}
+  - {id: S10, stage: whole_book_red_team, agent: AG-RED, task: cross_chapter_consistency, reviewer: AG-COUNCIL, outputs: [red_team_book.yaml], gate: QG3, decision_level: L3}
+  - {id: S11, stage: council_final_review, agent: AG-ORC, task: convene_council_final, outputs: [council_minutes_final.md], decision_level: L3}
+  - {id: S12, stage: author_final_approval, agent: AG-ORC, task: request_final_approval, outputs: [approved/manuscript_v0.9.md], decision_level: L4, human_approval: true}
+  - {id: S13, stage: graphics_tables, agent: AG-VIS, task: produce_figures, reviewer: AG-EVA, outputs: [figures/, tables/], optional_if: "not outline.figures_plan", decision_level: L1}
+  - {id: S14, stage: production, agent: AG-PUB, task: prepare_final_files, reviewer: AG-SUP-PUB, skills: [SKL-INDEX, SKL-APA, SKL-PDF, SKL-EPUB], outputs: [book.pdf, book.epub, metadata.yaml, index.md, cover_brief.md], gate: QG6, decision_level: L4, human_approval: true}
+  - {id: S15, stage: publishing, agent: AG-VCS, task: tag_release_v1_0, outputs: [tag v1.0, CHANGELOG.md], decision_level: L4, human_approval: true}
+  - {id: S16, stage: archiving, uses: WF-PROJECT-CLOSE}

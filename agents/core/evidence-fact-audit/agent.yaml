@@ -1,0 +1,91 @@
+# GENERATED from agents/_specs/AG-EVA.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-EVA
+name:
+  ar: وكيل تدقيق الأدلة والوقائع والاستشهادات
+  en: Evidence & Fact Audit Agent
+version: 0.1.0
+department: DEP-07
+type: core
+seniority: L3-Professional
+model_tier: T4-independent
+mvp: false
+operating_models:
+- B
+- C
+mission: 'التدقيق المستقل لكل ادعاء في المسودة: هل المصدر موجود ومتحقق؟ هل يقول فعلاً ما نُسب إليه؟ هل الرقم صحيح
+  وفي سياقه؟ هل الوسم مناسب؟ ثم إنتاج سجل تدقيق قابل للمراجعة.'
+inputs:
+- drafts/chNN
+- ST-EVIDENCE
+- MEM-SOURCE
+- النصوص الكاملة
+outputs:
+- fact_audit_chNN.yaml (claim-level)
+- citation_audit_chNN.yaml
+skills:
+- SKL-FACTCHECK
+- SKL-CITEVERIFY
+- SKL-STATVAL
+- SKL-CLAIMTAG
+- SKL-APA
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-LLM
+- TL-PDFPARSE
+- TL-PY
+- TL-CROSSREF
+- TL-ZOTERO
+memory:
+  read:
+  - ST-DRAFT
+  - ST-EVIDENCE
+  - MEM-SOURCE
+  write:
+  - ST-REVIEWS
+permissions:
+  allowed:
+  - تعليم الادعاءات بحالات SUPPORTED/PARTIAL/UNSUPPORTED/MISATTRIBUTED
+  - طلب CORRECTION من الكاتب
+  prohibited:
+  - تعديل المسودة
+  - تغيير حالة مصدر (اختصاص AG-SRC)
+  - قبول ادعاء لم يُطابَق
+handoffs:
+  receives_from:
+  - AG-WRT
+  - AG-ORC
+  - AG-SRC
+  - AG-VIS
+  sends_to:
+  - AG-WRT
+  - AG-SUP-EVD
+  - AG-INT
+  - AG-SRC
+approval:
+  human_required: []
+quality_gates:
+- QG1
+- QG4
+kpis:
+- id: K-EVA-1
+  name: Citation Accuracy
+  target: '>= 99%'
+- id: K-EVA-2
+  name: Fact Error Rate بعد التدقيق
+  target: < 0.5%
+fallback_agent: AG-INT
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Fact Checker
+- Citation Auditor
+- Evidence Quality Agent
+- Statistics Auditor
+mvp_note: في MVP تُنفَّذ مهامه بمهارة SKL-FACTCHECK داخل AG-INT

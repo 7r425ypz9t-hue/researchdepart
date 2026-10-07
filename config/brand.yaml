@@ -1,0 +1,4 @@
+# الهوية البصرية
+colors: {primary: "#1F4E79", accent: "#B8860B", ink: "#1B1B1B", paper: "#FFFFFF", muted: "#5B6B7A", light: "#EAF1F8"}
+fonts: {arabic_body: "Noto Naskh Arabic", arabic_display: "Noto Naskh Arabic", latin: "Noto Serif"}
+direction: rtl

@@ -1,0 +1,32 @@
+# GENERATED from agents/_specs/AG-WRT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-WRT
+receives_from:
+- AG-BKA
+- AG-ORC
+- AG-SED
+- AG-PRV
+- AG-RED
+- AG-CUL
+- AG-DAT
+- AG-EVA
+- AG-INT
+- AG-LRV
+- AG-POL
+sends_to:
+- AG-EVA
+- AG-SED
+consult:
+- agent: AG-THR
+  when: استعمال مفهوم نظري خارج تعريفه العامل
+- agent: AG-CUL
+  when: معالجة سياسة ثقافية محددة
+- agent: AG-DAT
+  when: تفسير رقم أو نتيجة إحصائية
+escalation:
+- trigger: الأدلة تقود إلى نتيجة مخالفة لموقف المؤلف
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: HUMAN-AUTHOR
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

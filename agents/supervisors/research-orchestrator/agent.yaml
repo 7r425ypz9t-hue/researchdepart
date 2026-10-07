@@ -1,0 +1,107 @@
+# GENERATED from agents/_specs/AG-ORC.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-ORC
+name:
+  ar: المنسّق البحثي
+  en: Research Orchestrator
+version: 0.1.0
+department: DEP-01
+type: supervisory
+seniority: L5-Principal
+model_tier: T3-advanced
+mvp: true
+operating_models:
+- A
+- B
+- C
+mission: استقبال كل طلب، وتصنيفه، وتفكيكه إلى مهام، واختيار الحد الأدنى الكافي من الوكلاء، وبناء سير العمل وتشغيله
+  ومتابعته حتى الإغلاق، مع إدارة بوابات الجودة والتسليمات وحالة المشروع، دون أن يمسّ المحتوى الفكري.
+inputs:
+- طلب المؤلف بلغة طبيعية
+- Project Manifest وSTATE الحالي
+- رسائل RESULT/REVIEW/ESCALATION من الوكلاء
+- تقارير الكلفة من AG-CST
+outputs:
+- projects/<PID>/manifest.yaml
+- projects/<PID>/state.yaml
+- projects/<PID>/plan.yaml (سير العمل المخصص)
+- رسائل TASK وحزم HANDOFF
+- Decision Brief للمؤلف عند كل قرار L4
+skills:
+- SKL-PROJMGMT
+- SKL-HANDOFF
+- SKL-AGENTSELECT
+- SKL-COSTTRACK
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-GITHUB
+- TL-GDRIVE
+- TL-LLM
+memory:
+  read:
+  - MEM-PROJECT
+  - MEM-INSTITUTIONAL
+  - ST-MANIFEST
+  - ST-STATE
+  - ST-DECISIONS
+  - ST-COST
+  - ST-REVIEWS
+  write:
+  - ST-MANIFEST
+  - ST-STATE
+  - ST-DECISIONS
+  - ST-AUDIT
+  - MEM-PROJECT
+permissions:
+  allowed:
+  - إنشاء المشاريع والمجلدات وملفات الحالة
+  - إسناد المهام وإلغاؤها وإعادة إسنادها
+  - إيقاف سير العمل عند فشل بوابة أو تجاوز كلفة
+  - طلب وكيل مؤقت عبر بروتوكول الوكيل المفقود
+  prohibited:
+  - تعديل نص المخطوط أو الحجج أو الاستنتاجات
+  - اعتماد أي بوابة جودة بنفسه (الاعتماد للمشرفين/المؤلف)
+  - تغيير عنوان العمل أو أطروحته أو هيكله المعتمد
+  - النشر أو المشاركة الخارجية لأي ملف
+  - تجاوز قرار مثبّت DC-xxx
+handoffs:
+  receives_from:
+  - HUMAN-AUTHOR
+  - AG-DIR
+  - ALL
+  sends_to:
+  - ALL
+approval:
+  human_required:
+  - فتح مشروع جديد بميزانية أعلى من الحد الافتراضي
+  - أي قرار من المستوى L4
+  - تفعيل وكيل مؤقت جديد
+  - تجاوز موعد نهائي معتمد
+quality_gates:
+- QG0
+- QG7
+kpis:
+- id: K-ORC-1
+  name: نسبة المهام المسلّمة في موعدها
+  target: '>= 90%'
+- id: K-ORC-2
+  name: نسبة Handoffs المرفوضة لنقص السياق
+  target: <= 5%
+- id: K-ORC-3
+  name: متوسط الوكلاء المفعّلين لكل مشروع مقابل الخطة
+  target: <= 110%
+- id: K-ORC-4
+  name: زمن الاستئناف من STATE دون إعادة سياق
+  target: < 2 دقيقة
+fallback_agent: HUMAN-AUTHOR
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Research Program Manager
+- Project Management Agent

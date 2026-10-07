@@ -1,0 +1,23 @@
+workflow_id: WF-BOOK-ACADEMIC
+name_ar: كتاب أكاديمي
+version: 0.1.0
+project_types: [academic_book]
+operating_model_min: B
+citation_style: APA7
+notes: "منهج صريح، مراجعة أدبيات منظمة، تحكيم بشري خارجي إلزامي قبل النشر."
+steps:
+  - {id: S01, agent: AG-ORC, task: initialize_project, decision_level: L1}
+  - {id: S02, agent: AG-RQA, task: define_scope, reviewer: AG-SUP-MTH, gate: QG0, decision_level: L4, human_approval: true}
+  - {id: S03, agent: AG-DSC, task: discover_sources, decision_level: L1}
+  - {id: S04, agent: AG-SRC, task: verify_sources, decision_level: L1}
+  - {id: S05, agent: AG-LRV, task: structured_literature_review, reviewer: AG-SUP-EVD, gate: QG1, decision_level: L2}
+  - {id: S06, agent: AG-THR, task: build_framework, reviewer: AG-SUP-MTH, decision_level: L4, human_approval: true}
+  - {id: S07, agent: AG-MTH, task: design_method, reviewer: AG-SUP-MTH, gate: QG2, decision_level: L2}
+  - {id: S08, agent: AG-DAT, task: analyze_data, reviewer: AG-SUP-MTH, optional_if: "not project.has_data", decision_level: L1}
+  - {id: S09, agent: AG-BKA, task: build_structure, reviewer: AG-COUNCIL, decision_level: L4, human_approval: true}
+  - {id: S10, uses: WF-CHAPTER-CYCLE, foreach: outline.chapters}
+  - {id: S11, agent: AG-ORC, task: external_human_peer_review, outputs: [external_reviews/], decision_level: L4, human_approval: true}
+  - {id: S12, agent: AG-WRT, task: revise_per_external_review, reviewer: AG-SED, decision_level: L1}
+  - {id: S13, agent: AG-ORC, task: convene_council_final, gate: QG3, decision_level: L3}
+  - {id: S14, agent: AG-PUB, task: prepare_final_files, reviewer: AG-SUP-PUB, gate: QG6, decision_level: L4, human_approval: true}
+  - {id: S15, uses: WF-PROJECT-CLOSE}

@@ -1,0 +1,20 @@
+# GENERATED from agents/_specs/AG-CST.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-CST
+read:
+- id: ST-COST
+  name_ar: سجل الكلفة
+  path: logs/cost_events.jsonl
+  classification: INTERNAL
+- id: ST-STATE
+  name_ar: حالة المشروع
+  path: projects/<PID>/state.yaml
+  classification: CONFIDENTIAL
+write:
+- id: ST-COST
+  name_ar: سجل الكلفة
+  path: logs/cost_events.jsonl
+  classification: INTERNAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

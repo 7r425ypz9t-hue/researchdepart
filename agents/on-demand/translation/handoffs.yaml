@@ -1,0 +1,18 @@
+# GENERATED from agents/_specs/AG-TRN.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-TRN
+receives_from:
+- AG-ORC
+sends_to:
+- AG-ARE
+- AG-SED
+consult:
+- agent: AG-CUL
+  when: مصطلحات السياسات الثقافية
+escalation:
+- trigger: حقوق غير واضحة
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: HUMAN-AUTHOR
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

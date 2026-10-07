@@ -1,0 +1,11 @@
+# ملف تعريف النشر — يُنسخ إلى projects/<PID>/publishing_profile.yaml (Pandoc metadata)
+title: "عنوان الكتاب المعتمد"
+subtitle: ""
+author: ["د. ماجد بوشليبي"]
+lang: ar
+dir: rtl
+publisher: ""
+isbn: ""            # يُملأ من الناشر/الوكالة الوطنية — لا يُختلق
+rights: "© المؤلف"
+date: ""
+ai_disclosure: "أُعد هذا العمل بمساندة منظومة مِداد للذكاء الاصطناعي تحت إشراف المؤلف واعتماده النهائي."

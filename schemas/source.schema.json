@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "source.schema.json",
+  "title": "Source Record — سجل المصدر",
+  "type": "object",
+  "required": [
+    "Source_ID",
+    "Title",
+    "Author",
+    "Year",
+    "Source_Type",
+    "Peer_Reviewed",
+    "Verification_Status",
+    "Reliability_Level",
+    "Date_Accessed"
+  ],
+  "properties": {
+    "Source_ID": {
+      "type": "string",
+      "pattern": "^SRC-[0-9]{6}$"
+    },
+    "Title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "Author": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "Year": {
+      "type": [
+        "integer",
+        "string"
+      ]
+    },
+    "Publisher": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Journal": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Volume": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Issue": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Pages": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "DOI": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^10\\.[0-9]{4,9}/\\S+$"
+    },
+    "URL": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uri"
+    },
+    "Date_Accessed": {
+      "type": "string",
+      "format": "date"
+    },
+    "Source_Type": {
+      "enum": [
+        "peer_reviewed_journal",
+        "primary_dataset",
+        "government_record",
+        "university_research",
+        "international_organization",
+        "university_press",
+        "academic_book",
+        "research_institute",
+        "professional_report",
+        "consultancy_report",
+        "ngo_report",
+        "reputable_journalism",
+        "general_web",
+        "manuscript",
+        "interview",
+        "classical_text",
+        "other"
+      ]
+    },
+    "Tier": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "Peer_Reviewed": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "Verification_Status": {
+      "enum": [
+        "UNVERIFIED",
+        "VERIFIED",
+        "PARTIAL",
+        "FAILED",
+        "RETRACTED",
+        "NOT_VERIFIABLE"
+      ]
+    },
+    "Verification_Evidence": {
+      "type": "object",
+      "properties": {
+        "tool": {
+          "type": "string"
+        },
+        "checked_at": {
+          "type": "string"
+        },
+        "match_score": {
+          "type": "number"
+        },
+        "response_ref": {
+          "type": "string"
+        }
+      }
+    },
+    "Used_In": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "Reliability_Level": {
+      "enum": [
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "UNKNOWN"
+      ]
+    },
+    "Zotero_Key": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "OpenAlex_ID": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Notes": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "DOI": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "DOI"
+        ]
+      },
+      "then": {
+        "properties": {
+          "Verification_Status": {
+            "not": {
+              "const": "UNVERIFIED"
+            }
+          }
+        },
+        "required": [
+          "Verification_Evidence"
+        ]
+      },
+      "$comment": "لا يسمح بإضافة DOI غير متحقق منه: وجود DOI يلزمه دليل تحقق وحالة غير UNVERIFIED"
+    },
+    {
+      "if": {
+        "properties": {
+          "Verification_Status": {
+            "const": "VERIFIED"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "Verification_Evidence"
+        ]
+      }
+    }
+  ],
+  "additionalProperties": false
+}

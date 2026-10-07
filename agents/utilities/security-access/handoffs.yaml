@@ -1,0 +1,19 @@
+# GENERATED from agents/_specs/AG-SEC.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SEC
+receives_from:
+- AG-AUT
+- AG-ORC
+- AG-KNW
+sends_to:
+- AG-ORC
+- HUMAN-AUTHOR
+- HUMAN-TECH
+consult: []
+escalation:
+- trigger: خرق أو تسرب
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: HUMAN-TECH
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: ESCALATION

@@ -1,0 +1,23 @@
+# GENERATED from agents/_specs/AG-RED.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-RED
+receives_from:
+- AG-ORC
+- AG-BKA
+- AG-SED
+- AG-POL
+sends_to:
+- AG-WRT
+- AG-SED
+- AG-COUNCIL
+- AG-DSC
+consult:
+- agent: AG-DSC
+  when: البحث عن دراسات تناقض النتائج
+escalation:
+- trigger: تحدٍّ يهدم الأطروحة المركزية
+  to: AG-COUNCIL
+  level: L3
+fallback_agent: AG-PRV
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: CHALLENGE

@@ -1,0 +1,18 @@
+# GENERATED from agents/_specs/AG-TAH.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-TAH
+receives_from:
+- AG-ORC
+- AG-SRC
+sends_to:
+- AG-SRC
+- AG-ARE
+- HUMAN-AUTHOR
+consult: []
+escalation:
+- trigger: شك في نسبة المخطوط
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: HUMAN-AUTHOR
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

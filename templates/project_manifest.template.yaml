@@ -1,0 +1,47 @@
+# Project Manifest — القالب الكامل (القسم 31). يولّده `rkpos new-project` آلياً ثم يُستكمل في S02/QG0.
+project_id: RKP-2026-0001
+slug: ai-governance-cultural-sector
+title: حوكمة الذكاء الاصطناعي في القطاع الثقافي
+title_status: WORKING            # WORKING | APPROVED (L4)
+project_type: intellectual_book  # intellectual_book | academic_book | policy_study | systematic_review | literature_review | foresight_study | critical_edition | journal_article | op_ed | strategic_report | translation | re_edition
+workflow: WF-BOOK-INTELLECTUAL
+operating_model: B               # A Personal Studio | B Professional Department | C Digital Think Tank
+author: د. ماجد بوشليبي
+governing_manifest: null         # مسار GRMM إن كان المشروع مُداراً به
+objectives:
+  - تأصيل مفهوم حوكمة الذكاء الاصطناعي في المؤسسات الثقافية
+  - اقتراح إطار حوكمة ملائم للسياق الخليجي
+thesis: null                     # تُعتمد L4
+research_questions:
+  main: null
+  sub: []
+scope:
+  in: []
+  out: []
+  period: null
+  geography: null
+methodology: null
+agents:
+  core: []
+  specialist: []
+  supervisory: []
+  utility: []
+  on_demand: []
+selection_rationale: []
+classification: {}
+sources_policy:
+  hierarchy: governance/source_hierarchy.yaml
+  zero_fabrication: true
+  min_tier12_share_central: 0.7
+  min_verified_ratio: 0.95
+citation_style: APA7             # APA7 | Chicago | Harvard | MLA
+language: ar
+deliverables: []
+quality_gates: [QG0, QG1, QG2, QG3, QG4, QG5, QG6, QG7]
+human_approvals: [العنوان, الأطروحة, الهيكل, الاستنتاجات الجوهرية, النشر النهائي]
+budget_usd: 400
+deadline: null
+data_classification: CONFIDENTIAL
+status: ACTIVE
+version: v0.1
+created: "2026-10-07T00:00:00+00:00"

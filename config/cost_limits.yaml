@@ -1,0 +1,20 @@
+# حدود الكلفة (بالدولار) — تُعدَّل بقرار المؤلف
+version: 0.1.0
+currency: USD
+alerts_at: [0.5, 0.75, 0.9]
+defaults_by_project_type:
+  op_ed: 3
+  journal_article: 40
+  literature_review: 60
+  policy_study: 120
+  strategic_report: 120
+  foresight_study: 150
+  systematic_review: 200
+  intellectual_book: 400
+  academic_book: 500
+  translation: 300
+  re_edition: 150
+  critical_edition: 400
+per_chapter_soft_limit: 40
+monthly_unit_limit: 1500
+pricing_source: "يُحدَّث جدول الأسعار في config/pricing.yaml من صفحات المزودين الرسمية؛ لا تُفترض أسعار من الذاكرة"

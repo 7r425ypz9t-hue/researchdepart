@@ -1,0 +1,10 @@
+workflow_id: WF-CONFLICT-RESOLUTION
+name_ar: حل النزاع بين الوكلاء
+version: 0.1.0
+project_types: [all]
+steps:
+  - {id: X1, agent: AG-ORC, task: register_dispute, outputs: [dispute_record.yaml], decision_level: L1}
+  - {id: X2, agent: AG-ORC, task: collect_evidence_from_both_parties, decision_level: L1}
+  - {id: X3, agent: AG-ORC, task: route_to_competent_supervisor, decision_level: L2}
+  - {id: X4, agent: AG-ORC, task: escalate_to_council_if_unresolved, decision_level: L3, optional_if: "dispute.resolved"}
+  - {id: X5, agent: AG-ORC, task: escalate_to_author_if_substantive, decision_level: L4, human_approval: true, optional_if: "not dispute.substantive"}

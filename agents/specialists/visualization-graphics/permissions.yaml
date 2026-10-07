@@ -1,0 +1,18 @@
+# GENERATED from agents/_specs/AG-VIS.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-VIS
+rbac_role: role:specialist:visualization-graphics
+allowed:
+- إنشاء الأشكال والجداول
+prohibited:
+- تغيير البيانات
+- شكل بلا مصدر
+- استعمال صورة محمية
+human_approval_required:
+- الأشكال المفاهيمية التي تعبر عن أطروحة المؤلف
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+write_path_allowlist:
+- publishing/<PID>/
+external_publish: false
+can_modify_own_prompt: false

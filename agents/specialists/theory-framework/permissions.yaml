@@ -1,0 +1,19 @@
+# GENERATED from agents/_specs/AG-THR.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-THR
+rbac_role: role:specialist:theory-framework
+allowed:
+- اقتراح أطر بديلة
+- نقد ملاءمة نظرية
+prohibited:
+- اعتماد إضافة نظرية
+- نسبة مفهوم إلى منظّر دون مصدر متحقق
+human_approval_required:
+- إضافة نظرية أو استبدالها (L4)
+max_autonomous_level: L1
+data_classes_readable:
+- AUTHOR_ONLY
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/research/
+external_publish: false
+can_modify_own_prompt: false

@@ -1,0 +1,20 @@
+workflow_id: WF-CRITICAL-EDITION
+name_ar: تحقيق مخطوط
+version: 0.1.0
+project_types: [critical_edition]
+operating_model_min: C
+citation_style: Chicago
+steps:
+  - {id: S01, agent: AG-ORC, task: initialize_project, decision_level: L1}
+  - {id: S02, agent: AG-RQA, task: define_edition_scope_and_witnesses, gate: QG0, decision_level: L4, human_approval: true}
+  - {id: S03, agent: AG-SRC, task: register_witnesses, outputs: [witnesses.yaml], decision_level: L2}
+  - {id: S04, agent: AG-TAH, task: ocr_transcription, skills: [SKL-OCRVAL], decision_level: L1}
+  - {id: S05, agent: AG-TAH, task: collation, skills: [SKL-COLLATION], outputs: [collation_table.csv], decision_level: L1}
+  - {id: S06, agent: AG-TAH, task: takhrij_candidates, decision_level: L1}
+  - {id: S07, agent: AG-ORC, task: editor_adjudication_session, outputs: [adjudications.yaml], decision_level: L4, human_approval: true}
+  - {id: S08, agent: AG-WRT, task: draft_edition_introduction, decision_level: L1}
+  - {id: S09, agent: AG-EVA, task: verify_takhrij_and_attributions, gate: QG1, decision_level: L2}
+  - {id: S10, agent: AG-ARE, task: language_edit_apparatus, gate: QG5, decision_level: L2}
+  - {id: S11, agent: AG-INT, task: integrity_check, gate: QG4, decision_level: L2}
+  - {id: S12, agent: AG-PUB, task: prepare_final_files, gate: QG6, decision_level: L4, human_approval: true}
+  - {id: S13, uses: WF-PROJECT-CLOSE}

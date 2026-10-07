@@ -1,0 +1,21 @@
+# GENERATED from agents/_specs/AG-THR.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-THR
+receives_from:
+- AG-RQA
+- AG-LRV
+- AG-ORC
+sends_to:
+- AG-BKA
+- AG-MTH
+- AG-SUP-MTH
+consult:
+- agent: AG-CUL
+  when: نظريات السياسة الثقافية والهوية
+escalation:
+- trigger: الحاجة إلى إضافة نظرية
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: AG-LRV
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

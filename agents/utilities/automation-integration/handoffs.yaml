@@ -1,0 +1,20 @@
+# GENERATED from agents/_specs/AG-AUT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-AUT
+receives_from:
+- AG-ORC
+- AG-KNW
+- AG-SEC
+sends_to:
+- AG-ORC
+- AG-SEC
+consult:
+- agent: AG-SEC
+  when: أي تغيير في المصادقة أو المفاتيح
+escalation:
+- trigger: عطل يوقف مشروعاً
+  to: AG-ORC
+  level: L2
+fallback_agent: HUMAN-TECH
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

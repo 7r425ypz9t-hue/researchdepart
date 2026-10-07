@@ -1,0 +1,22 @@
+# GENERATED from agents/_specs/AG-DSC.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-DSC
+receives_from:
+- AG-RQA
+- AG-ORC
+- AG-SUP-EVD
+- AG-RED
+- AG-WCH
+sends_to:
+- AG-SRC
+- AG-LRV
+consult:
+- agent: AG-RQA
+  when: النتائج أقل من 10 أو أكثر من 2000 ← مراجعة الاستراتيجية
+escalation:
+- trigger: ندرة شديدة في الأدبيات تهدد جدوى المشروع
+  to: AG-ORC
+  level: L2
+fallback_agent: AG-LRV
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

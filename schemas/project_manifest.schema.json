@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project_manifest.schema.json",
+  "title": "Project Manifest",
+  "type": "object",
+  "required": [
+    "project_id",
+    "title",
+    "project_type",
+    "author",
+    "objectives",
+    "research_questions",
+    "scope",
+    "methodology",
+    "agents",
+    "sources_policy",
+    "citation_style",
+    "deliverables",
+    "quality_gates",
+    "human_approvals",
+    "status",
+    "version"
+  ],
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "pattern": "^RKP-[0-9]{4}-[0-9]{4}$"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "title_status": {
+      "enum": [
+        "WORKING",
+        "APPROVED"
+      ]
+    },
+    "project_type": {
+      "enum": [
+        "intellectual_book",
+        "academic_book",
+        "policy_study",
+        "systematic_review",
+        "literature_review",
+        "foresight_study",
+        "critical_edition",
+        "journal_article",
+        "op_ed",
+        "strategic_report",
+        "translation",
+        "re_edition"
+      ]
+    },
+    "workflow": {
+      "type": "string"
+    },
+    "operating_model": {
+      "enum": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    "author": {
+      "type": "string"
+    },
+    "governing_manifest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "إحالة إلى GRMM إن وُجد"
+    },
+    "objectives": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "thesis": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "research_questions": {
+      "type": "object",
+      "properties": {
+        "main": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sub": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "in": {
+          "type": "array"
+        },
+        "out": {
+          "type": "array"
+        },
+        "period": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "geography": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "methodology": {
+      "type": [
+        "string",
+        "object",
+        "null"
+      ]
+    },
+    "agents": {
+      "type": "object",
+      "properties": {
+        "core": {
+          "type": "array"
+        },
+        "specialist": {
+          "type": "array"
+        },
+        "supervisory": {
+          "type": "array"
+        },
+        "utility": {
+          "type": "array"
+        },
+        "on_demand": {
+          "type": "array"
+        }
+      }
+    },
+    "selection_rationale": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "classification": {
+      "type": "object"
+    },
+    "sources_policy": {
+      "type": "object"
+    },
+    "citation_style": {
+      "enum": [
+        "APA7",
+        "Chicago",
+        "Harvard",
+        "MLA"
+      ]
+    },
+    "language": {
+      "type": "string"
+    },
+    "deliverables": {
+      "type": "array"
+    },
+    "quality_gates": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "QG0",
+          "QG1",
+          "QG2",
+          "QG3",
+          "QG4",
+          "QG5",
+          "QG6",
+          "QG7"
+        ]
+      }
+    },
+    "human_approvals": {
+      "type": "array"
+    },
+    "budget_usd": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "deadline": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "data_classification": {
+      "enum": [
+        "PUBLIC",
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "AUTHOR_ONLY"
+      ]
+    },
+    "status": {
+      "enum": [
+        "DRAFT",
+        "ACTIVE",
+        "ON_HOLD",
+        "IN_REVIEW",
+        "APPROVED",
+        "PUBLISHED",
+        "ARCHIVED",
+        "CANCELLED"
+      ]
+    },
+    "version": {
+      "type": "string"
+    },
+    "created": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

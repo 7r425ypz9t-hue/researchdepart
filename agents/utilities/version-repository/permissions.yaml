@@ -1,0 +1,25 @@
+# GENERATED from agents/_specs/AG-VCS.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-VCS
+rbac_role: role:utility:version-repository
+allowed:
+- commit
+- tag لإصدارات < v1.0
+- PR
+- نسخ احتياطي
+prohibited:
+- force-push
+- حذف فروع محمية
+- وسم v1.0 دون موافقة
+- دمج PR دون مراجعة
+human_approval_required:
+- Release v1.0
+- حذف أي إصدار
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/archive/
+- logs/audit.jsonl
+external_publish: false
+can_modify_own_prompt: false

@@ -1,0 +1,261 @@
+# Tool Registry — السجل المركزي للأدوات
+# access: R | W | RW
+# risk: low | medium | high | critical
+# availability: الحالة الفعلية الآن —
+#   built_in      : مُنفَّذ في هذا المستودع (runtime/ أو scripts/)
+#   public_api    : واجهة عامة مجانية؛ تعمل فور توفر الشبكة (بلا مفتاح أو بمفتاح مجاني)
+#   needs_account : تحتاج حساباً/اشتراكاً ومفتاحاً من المؤلف
+#   needs_install : برنامج محلي يجب تثبيته
+#   platform      : متاح عبر موصل منصة (Claude connectors / MCP) عند تفعيله
+# authorized_agents يُشتق آلياً من agents/_specs ويُتحقق منه في الاختبارات.
+
+version: 0.1.0
+tools:
+
+  - id: TL-FS
+    name: Repository File System
+    function: قراءة/كتابة ملفات المشروع داخل المستودع ضمن مسارات الصلاحية
+    access: RW
+    auth: none (local)
+    risk: medium
+    availability: built_in
+    fallback: none
+    guardrails: [path allow-list من permissions.yaml, لا كتابة خارج projects/<PID> إلا للمنسق والأدوات]
+
+  - id: TL-MSG
+    name: Agent Message Bus
+    function: إرسال واستقبال رسائل البروتوكول وحزم Handoff (JSONL في projects/<PID>/messages/)
+    access: RW
+    auth: none (local)
+    risk: low
+    availability: built_in
+    fallback: none
+    implementation: runtime/rkpos/protocol.py
+
+  - id: TL-AUDIT
+    name: Audit Logger
+    function: سجل تدقيق إلحاقي فقط (append-only) logs/audit.jsonl
+    access: W
+    auth: none
+    risk: low
+    availability: built_in
+    fallback: none
+    implementation: runtime/rkpos/audit.py
+
+  - id: TL-LLM
+    name: Model Adapter Layer
+    function: استدعاء النماذج عبر طبقة محايدة (Anthropic/OpenAI/Google/Local) مع التوجيه والكلفة
+    access: R
+    auth: API key per provider (env)
+    risk: medium
+    availability: built_in (adapter) + needs_account (provider keys)
+    fallback: provider التالي في config/model_routing.yaml
+    implementation: runtime/rkpos/adapters/
+
+  - id: TL-WEB
+    name: Web Search
+    function: استكشاف أولي (Tier 5) فقط
+    access: R
+    auth: platform
+    risk: medium
+    availability: platform
+    fallback: TL-OPENALEX
+    guardrails: [النتائج توسم EXPLORATORY ولا تدخل سجل الأدلة مباشرة]
+
+  - id: TL-OPENALEX
+    name: OpenAlex API
+    function: بحث الأعمال والمؤلفين والمؤسسات والاستشهادات والبيانات الوصفية
+    access: R
+    auth: none (polite pool via mailto param)
+    risk: low
+    availability: public_api
+    fallback: TL-S2
+    endpoint: https://api.openalex.org
+
+  - id: TL-CROSSREF
+    name: Crossref REST API
+    function: حل DOI والبيانات الوصفية وحالات التحديث/السحب
+    access: R
+    auth: none (polite pool via mailto)
+    risk: low
+    availability: public_api
+    fallback: TL-OPENALEX
+    endpoint: https://api.crossref.org
+
+  - id: TL-S2
+    name: Semantic Scholar API
+    function: بحث دلالي، استشهادات، ملخصات
+    access: R
+    auth: optional API key
+    risk: low
+    availability: public_api
+    fallback: TL-OPENALEX
+    endpoint: https://api.semanticscholar.org/graph/v1
+
+  - id: TL-ELICIT
+    name: Elicit
+    function: بحث واستخلاص مدعوم بالذكاء الاصطناعي
+    access: R
+    auth: account
+    risk: medium
+    availability: needs_account
+    fallback: TL-S2
+    guardrails: [مخرجاته مرشحات تمر بـ AG-SRC]
+
+  - id: TL-ZOTERO
+    name: Zotero Web API
+    function: المصدر المرجعي الرئيس — العناصر، المجموعات، الوسوم، الملاحظات، المرفقات، تصدير CSL-JSON/BibTeX
+    access: RW
+    auth: Zotero API key + user/group ID
+    risk: medium
+    availability: needs_account
+    fallback: references.jsonl محلي (MEM-SOURCE)
+    endpoint: https://api.zotero.org
+
+  - id: TL-GITHUB
+    name: GitHub
+    function: المستودع، الإصدارات، PRs، Actions
+    access: RW
+    auth: GitHub App / fine-grained token
+    risk: high
+    availability: platform
+    fallback: git محلي
+    guardrails: [لا force-push, حماية الفرع الرئيس, v1.0 بموافقة]
+
+  - id: TL-GDRIVE
+    name: Google Drive
+    function: مجلدات العمل المشتركة والنسخ الاحتياطي
+    access: RW
+    auth: OAuth (connector)
+    risk: high
+    availability: platform
+    fallback: TL-GITHUB
+    guardrails: [لا مشاركة خارجية, AUTHOR_ONLY لا يُرفع إلى مجلد مشترك]
+
+  - id: TL-GDOCS
+    name: Google Docs
+    function: مراجعة المؤلف بالتعليقات والاقتراحات
+    access: RW
+    auth: OAuth (connector)
+    risk: medium
+    availability: platform
+    fallback: Markdown في المستودع
+
+  - id: TL-GSHEETS
+    name: Google Sheets
+    function: لوحات خفيفة وجداول بيانات
+    access: RW
+    auth: OAuth
+    risk: low
+    availability: platform
+    fallback: CSV
+
+  - id: TL-PY
+    name: Python Sandbox
+    function: تحليل بيانات، تحقق، إنتاج أشكال
+    access: RW
+    auth: none
+    risk: medium
+    availability: built_in
+    fallback: TL-R
+    guardrails: [بيئة معزولة, data/raw للقراءة فقط, لا شبكة إلا للواجهات المسجلة]
+
+  - id: TL-R
+    name: R Runtime
+    function: إحصاء وقياس اقتصادي
+    access: RW
+    auth: none
+    risk: medium
+    availability: needs_install
+    fallback: TL-PY
+
+  - id: TL-SQL
+    name: SQL Database
+    function: قاعدة المراجع والأدلة والكلفة (SQLite في MVP، PostgreSQL في Model B/C)
+    access: RW
+    auth: DSN in env
+    risk: medium
+    availability: built_in (SQLite) / needs_install (PostgreSQL)
+    fallback: JSONL
+
+  - id: TL-VDB
+    name: Vector Database
+    function: فهرس دلالي لقاعدة المعرفة (RAG)
+    access: RW
+    auth: DSN/API key
+    risk: medium
+    availability: needs_install (pgvector/Qdrant/Chroma)
+    fallback: بحث نصي كامل (SQLite FTS5)
+
+  - id: TL-OCR
+    name: Arabic OCR
+    function: تفريغ ضوئي للنصوص العربية والمخطوطات
+    access: R
+    auth: depends
+    risk: medium
+    availability: needs_install (Tesseract ara) / needs_account (خدمات سحابية)
+    fallback: تفريغ بشري
+
+  - id: TL-PDFPARSE
+    name: PDF Parser
+    function: استخراج النص والبيانات الوصفية من PDF
+    access: R
+    auth: none
+    risk: low
+    availability: needs_install (pypdf / pdfplumber / GROBID)
+    fallback: TL-OCR
+
+  - id: TL-CSL
+    name: Citation Processor (CSL / citeproc)
+    function: تنسيق الإحالات والقائمة بأي أسلوب CSL (APA 7 افتراضياً)
+    access: R
+    auth: none
+    risk: low
+    availability: needs_install (pandoc --citeproc)
+    fallback: TL-ZOTERO export
+
+  - id: TL-PANDOC
+    name: Publishing Engine (Pandoc + XeLaTeX/LuaLaTeX)
+    function: بناء PDF/EPUB/DOCX من Markdown
+    access: RW
+    auth: none
+    risk: low
+    availability: needs_install
+    fallback: WeasyPrint / Typst
+
+  - id: TL-EPUBCHECK
+    name: EPUBCheck
+    function: التحقق من صلاحية EPUB
+    access: R
+    auth: none
+    risk: low
+    availability: needs_install (Java)
+    fallback: فحص يدوي
+
+  - id: TL-SIMCHECK
+    name: Similarity Check Service
+    function: فحص التشابه النصي (مثل iThenticate/Crossref Similarity Check أو بديل)
+    access: R
+    auth: account
+    risk: high
+    availability: needs_account
+    fallback: فحص داخلي محدود عبر TL-VDB مع تصريح بالقصور
+    guardrails: [لا يُرفع نص AUTHOR_ONLY إلى خدمة خارجية دون موافقة]
+
+  - id: TL-OBSIDIAN
+    name: Obsidian Vault
+    function: ملاحظات المؤلف المترابطة (Markdown محلي)
+    access: R
+    auth: filesystem
+    risk: medium
+    availability: needs_install
+    fallback: knowledge-base/ في المستودع
+
+  - id: TL-NOTION
+    name: Notion API
+    function: لوحات تشغيلية اختيارية
+    access: RW
+    auth: integration token
+    risk: medium
+    availability: needs_account
+    fallback: dashboard HTML المولّد

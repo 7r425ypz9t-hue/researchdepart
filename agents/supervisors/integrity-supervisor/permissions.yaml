@@ -1,0 +1,20 @@
+# GENERATED from agents/_specs/AG-SUP-INT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SUP-INT
+rbac_role: role:supervisory:integrity-supervisor
+allowed:
+- اعتماد/رفض QG4
+- تجميد مرحلة النشر عند خطر جسيم
+prohibited:
+- إصلاح المخالفات بنفسه
+- التساهل في اقتباس حرفي غير متحقق
+human_approval_required:
+- أي قرار باستعمال مادة محمية بلا إذن موثق (ممنوع افتراضياً)
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/reviews/
+- logs/audit.jsonl
+external_publish: false
+can_modify_own_prompt: false

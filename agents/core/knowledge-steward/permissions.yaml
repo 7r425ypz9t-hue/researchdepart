@@ -1,0 +1,23 @@
+# GENERATED from agents/_specs/AG-KNW.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-KNW
+rbac_role: role:core:knowledge-steward
+allowed:
+- الأرشفة
+- اقتراح عناصر للذاكرة المؤسسية
+- تحديث فهارس RAG للمعتمد
+prohibited:
+- الكتابة المباشرة في MEM-INSTITUTIONAL أو MEM-AUTHOR
+- فهرسة مسودات غير معتمدة في الفهرس العام
+- حذف أرشيف
+human_approval_required:
+- ترقية أي عنصر إلى MEM-INSTITUTIONAL أو MEM-AUTHOR
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/archive/
+- knowledge-base/candidates/
+- knowledge-base/research/
+external_publish: false
+can_modify_own_prompt: false

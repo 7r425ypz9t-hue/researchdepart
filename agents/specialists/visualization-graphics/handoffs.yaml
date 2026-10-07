@@ -1,0 +1,18 @@
+# GENERATED from agents/_specs/AG-VIS.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-VIS
+receives_from:
+- AG-DAT
+- AG-BKA
+- AG-ORC
+sends_to:
+- AG-PUB
+- AG-EVA
+consult: []
+escalation:
+- trigger: شكل يوحي بنتيجة أقوى من البيانات
+  to: AG-SUP-MTH
+  level: L2
+fallback_agent: AG-PUB
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

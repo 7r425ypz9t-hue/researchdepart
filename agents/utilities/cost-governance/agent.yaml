@@ -1,0 +1,67 @@
+# GENERATED from agents/_specs/AG-CST.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-CST
+name:
+  ar: وكيل حوكمة الكلفة
+  en: Cost Governance Agent
+version: 0.1.0
+department: DEP-10
+type: utility
+seniority: L2-Associate
+model_tier: T1-economy
+mvp: false
+operating_models:
+- B
+- C
+mission: رصد كلفة الرموز وواجهات API والتخزين والخدمات لكل مشروع وفصل ووكيل، ومقارنتها بالحدود، والإنذار المبكر،
+  واقتراح توجيه أوفر دون المساس بالجودة.
+inputs:
+- cost_events.jsonl
+- config/cost_limits.yaml
+- config/model_routing.yaml
+outputs:
+- cost_report.md
+- alerts
+skills:
+- SKL-COSTTRACK
+tools:
+- TL-FS
+- TL-AUDIT
+- TL-MSG
+- TL-SQL
+- TL-GSHEETS
+memory:
+  read:
+  - ST-COST
+  - ST-STATE
+  write:
+  - ST-COST
+permissions:
+  allowed:
+  - إصدار إنذارات
+  - اقتراح توجيه
+  prohibited:
+  - إيقاف مشروع (يطلب ذلك من المنسق)
+  - تغيير النماذج مباشرة
+handoffs:
+  receives_from:
+  - AG-ORC
+  sends_to:
+  - AG-ORC
+  - HUMAN-AUTHOR
+approval:
+  human_required:
+  - رفع حد الكلفة
+quality_gates: []
+kpis:
+- id: K-CST-1
+  name: مشاريع تجاوزت الحد دون إنذار مسبق
+  target: '0'
+fallback_agent: AG-ORC
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+mvp_note: 'في MVP: عدّاد كلفة آلي في rkpos/cost.py'

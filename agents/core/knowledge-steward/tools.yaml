@@ -1,0 +1,63 @@
+# GENERATED from agents/_specs/AG-KNW.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-KNW
+tools:
+- id: TL-FS
+  name: Repository File System
+  access: RW
+  risk: medium
+  availability: built_in
+  fallback: none
+- id: TL-MSG
+  name: Agent Message Bus
+  access: RW
+  risk: low
+  availability: built_in
+  fallback: none
+- id: TL-AUDIT
+  name: Audit Logger
+  access: W
+  risk: low
+  availability: built_in
+  fallback: none
+- id: TL-VDB
+  name: Vector Database
+  access: RW
+  risk: medium
+  availability: needs_install (pgvector/Qdrant/Chroma)
+  fallback: بحث نصي كامل (SQLite FTS5)
+- id: TL-GDRIVE
+  name: Google Drive
+  access: RW
+  risk: high
+  availability: platform
+  fallback: TL-GITHUB
+- id: TL-GITHUB
+  name: GitHub
+  access: RW
+  risk: high
+  availability: platform
+  fallback: git محلي
+- id: TL-OBSIDIAN
+  name: Obsidian Vault
+  access: R
+  risk: medium
+  availability: needs_install
+  fallback: knowledge-base/ في المستودع
+- id: TL-NOTION
+  name: Notion API
+  access: RW
+  risk: medium
+  availability: needs_account
+  fallback: dashboard HTML المولّد
+- id: TL-LLM
+  name: Model Adapter Layer
+  access: R
+  risk: medium
+  availability: built_in (adapter) + needs_account (provider keys)
+  fallback: provider التالي في config/model_routing.yaml
+connectors:
+- Google Drive
+- GitHub
+- Vector DB
+- Obsidian
+- Notion

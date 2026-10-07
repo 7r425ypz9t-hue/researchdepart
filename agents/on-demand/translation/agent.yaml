@@ -1,0 +1,72 @@
+# GENERATED from agents/_specs/AG-TRN.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-TRN
+name:
+  ar: وكيل الترجمة والمواءمة المصطلحية
+  en: Translation Agent
+version: 0.1.0
+department: DEP-05
+type: on_demand
+seniority: L3-Professional
+model_tier: T3-advanced
+mvp: false
+operating_models:
+- B
+- C
+mission: نقل النصوص بين العربية والإنجليزية (وغيرهما عند الإمكان) نقلاً أميناً للمعنى والمصطلح والسجل، مع ذاكرة
+  ترجمة ومسرد ثنائي، وتمييز الترجمة الحرفية للاقتباس عن الترجمة الحرة.
+inputs:
+- النص المصدر
+- bilingual_glossary.yaml
+- rights clearance
+outputs:
+- translation/chNN.md
+- translator_notes.md
+- glossary_proposals.yaml
+skills:
+- SKL-TRANSLATE
+- SKL-TERMS
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-LLM
+memory:
+  read:
+  - MEM-EDITORIAL
+  - MEM-AUTHOR
+  - ST-APPROVED
+  write:
+  - ST-DRAFT
+  - ST-KB-CANDIDATES
+permissions:
+  allowed:
+  - الترجمة
+  prohibited:
+  - ترجمة عمل محمي دون إذن موثق
+  - الحذف أو الإضافة الصامتة
+handoffs:
+  receives_from:
+  - AG-ORC
+  sends_to:
+  - AG-ARE
+  - AG-SED
+approval:
+  human_required:
+  - حقوق الترجمة
+  - المصطلحات المفتاحية
+quality_gates:
+- QG4
+- QG5
+kpis:
+- id: K-TRN-1
+  name: أخطاء معنى في المطابقة العيّنية
+  target: 0 حرجة
+fallback_agent: HUMAN-AUTHOR
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+activation: سير عمل الإصدار المترجم، أو ترجمة مقتطفات مصدرية

@@ -1,0 +1,18 @@
+# GENERATED from agents/_specs/AG-SUP-PUB.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SUP-PUB
+receives_from:
+- AG-PUB
+- AG-KNW
+- AG-ORC
+sends_to:
+- AG-ORC
+- HUMAN-AUTHOR
+consult: []
+escalation:
+- trigger: طلب نشر قبل QG4
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: HUMAN-AUTHOR
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: REVIEW

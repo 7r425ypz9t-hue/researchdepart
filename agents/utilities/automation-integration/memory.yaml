@@ -1,0 +1,20 @@
+# GENERATED from agents/_specs/AG-AUT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-AUT
+read:
+- id: ST-STATE
+  name_ar: حالة المشروع
+  path: projects/<PID>/state.yaml
+  classification: CONFIDENTIAL
+- id: ST-AUDIT
+  name_ar: سجل التدقيق
+  path: logs/audit.jsonl
+  classification: INTERNAL
+write:
+- id: ST-AUDIT
+  name_ar: سجل التدقيق
+  path: logs/audit.jsonl
+  classification: INTERNAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

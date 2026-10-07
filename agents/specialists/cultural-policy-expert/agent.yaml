@@ -1,0 +1,82 @@
+# GENERATED from agents/_specs/AG-CUL.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-CUL
+name:
+  ar: الخبير المتخصص في السياسات الثقافية
+  en: Cultural Policy Domain Expert Agent
+version: 0.1.0
+department: DEP-04
+type: specialist
+seniority: L5-Principal
+model_tier: T3-advanced
+mvp: false
+operating_models:
+- A
+- B
+- C
+mission: 'تقديم الخبرة النوعية في السياسات الثقافية والهوية الخليجية والتراث والصناعات الإبداعية والحوكمة الثقافية:
+  دقة المفاهيم، وسلامة السياق المؤسسي، ومقارنة التجارب، وتنبيه الفريق إلى مزالق المجال.'
+inputs:
+- مسودات
+- policy_analysis.md
+- concept_dictionary.yaml
+outputs:
+- domain_review.md
+- comparative_notes.md
+skills:
+- SKL-CULTPOL
+- SKL-TERMS
+- SKL-ARGMAP
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-LLM
+- TL-OPENALEX
+- TL-WEB
+memory:
+  read:
+  - MEM-AUTHOR
+  - MEM-RESEARCH
+  - MEM-SOURCE
+  - MEM-PROJECT
+  - ST-DRAFT
+  write:
+  - ST-REVIEWS
+  - ST-KB-CANDIDATES
+permissions:
+  allowed:
+  - المراجعة النوعية
+  - اقتراح مصطلحات ومقارنات مسندة
+  prohibited:
+  - تعديل النص
+  - إطلاق أحكام على مؤسسات أو أشخاص دون دليل
+  - أي تعليق على المسيرة المؤسسية للمؤلف خارج الصيغة المحايدة
+handoffs:
+  receives_from:
+  - AG-ORC
+  - AG-RQA
+  - AG-WRT
+  - AG-POL
+  - AG-SUP-EDT
+  sends_to:
+  - AG-WRT
+  - AG-SED
+  - AG-COUNCIL
+approval:
+  human_required:
+  - أي حكم تقييمي على مؤسسة ثقافية قائمة
+quality_gates:
+- QG3
+kpis:
+- id: K-CUL-1
+  name: أخطاء توصيف مؤسسي بعد المراجعة
+  target: '0'
+fallback_agent: AG-POL
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+activation: كل مشروع يمس الثقافة أو الهوية أو التراث أو الاقتصاد الإبداعي؛ عضو دائم في المجلس بصفة Domain Expert

@@ -1,0 +1,32 @@
+# GENERATED from agents/_specs/AG-SUP-EDT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SUP-EDT
+read:
+- id: ST-EDITED
+  name_ar: النص المحرر
+  path: projects/<PID>/manuscript/edited/
+  classification: CONFIDENTIAL
+- id: MEM-EDITORIAL
+  name_ar: الذاكرة التحريرية
+  path: knowledge-base/editorial/
+  classification: INTERNAL
+- id: MEM-AUTHOR
+  name_ar: ذاكرة المؤلف
+  path: memory/author/
+  classification: AUTHOR_ONLY
+- id: ST-REVIEWS
+  name_ar: المراجعات والتحكيم
+  path: projects/<PID>/reviews/
+  classification: CONFIDENTIAL
+write:
+- id: ST-REVIEWS
+  name_ar: المراجعات والتحكيم
+  path: projects/<PID>/reviews/
+  classification: CONFIDENTIAL
+- id: ST-AUDIT
+  name_ar: سجل التدقيق
+  path: logs/audit.jsonl
+  classification: INTERNAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

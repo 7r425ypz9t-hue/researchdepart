@@ -1,0 +1,33 @@
+# اختبارات الانحدار الحية — تُشغَّل يدوياً أو عند تغيير Prompt/نموذج وكيل (WF-AGENT-CHANGE).
+# تستهلك رصيداً فعلياً: لذلك لا تعمل تلقائياً على كل دفع.
+name: agent-regression
+on:
+  workflow_dispatch:
+    inputs:
+      agent: {description: "Agent ID (فارغ = كل الوكلاء المتغيرين)", required: false}
+  pull_request:
+    paths: ["agents/_specs/**", "prompts/**", "config/model_routing.yaml"]
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    if: ${{ vars.RKPOS_LIVE_EVALS == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -e ".[dev,anthropic,openai]"
+      - name: Determine changed agents
+        id: changed
+        run: |
+          if [ -n "${{ github.event.inputs.agent }}" ]; then echo "ids=${{ github.event.inputs.agent }}" >> $GITHUB_OUTPUT;
+          else echo "ids=$(git diff --name-only origin/${{ github.base_ref || 'main' }}... -- agents/_specs | xargs -r -n1 basename | sed 's/.yaml//' | tr '\n' ' ')" >> $GITHUB_OUTPUT; fi
+      - name: Live evaluation
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          mkdir -p validation/reports
+          for a in ${{ steps.changed.outputs.ids }}; do rkpos eval "$a" --live > "validation/reports/$a.json"; done
+      - uses: actions/upload-artifact@v4
+        with: {name: eval-reports, path: validation/reports}

@@ -1,0 +1,15 @@
+# GENERATED from agents/_specs/AG-TMP.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-TMP
+receives_from:
+- AG-ORC
+sends_to:
+- AG-ORC
+consult: []
+escalation:
+- trigger: أي غموض
+  to: AG-ORC
+  level: L2
+fallback_agent: AG-ORC
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

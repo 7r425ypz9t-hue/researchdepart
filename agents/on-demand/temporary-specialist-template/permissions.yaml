@@ -1,0 +1,20 @@
+# GENERATED from agents/_specs/AG-TMP.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-TMP
+rbac_role: role:on_demand:temporary-specialist-template
+allowed:
+- '{{ALLOWED}}'
+prohibited:
+- الكتابة في أي ذاكرة دائمة
+- التواصل مع غير المنسق
+- العمل بعد تاريخ الانتهاء
+human_approval_required:
+- الإنشاء
+- التمديد
+- الترقية
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+write_path_allowlist:
+- projects/<PID>/research/
+external_publish: false
+can_modify_own_prompt: false

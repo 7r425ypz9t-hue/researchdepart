@@ -1,0 +1,22 @@
+# GENERATED from agents/_specs/AG-ARE.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-ARE
+receives_from:
+- AG-SED
+- AG-TRN
+- AG-ORC
+- AG-SUP-EDT
+- AG-TAH
+sends_to:
+- AG-SUP-EDT
+- AG-PUB
+consult:
+- agent: AG-CUL
+  when: مصطلح سياسات ثقافية بلا مقابل مستقر
+escalation:
+- trigger: خلاف أسلوبي مع بصمة المؤلف
+  to: AG-SUP-EDT
+  level: L2
+fallback_agent: AG-SED
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

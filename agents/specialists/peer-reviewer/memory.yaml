@@ -1,0 +1,20 @@
+# GENERATED from agents/_specs/AG-PRV.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-PRV
+read:
+- id: ST-EDITED
+  name_ar: النص المحرر
+  path: projects/<PID>/manuscript/edited/
+  classification: CONFIDENTIAL
+- id: MEM-SOURCE
+  name_ar: ذاكرة المصادر
+  path: knowledge-base/sources/sources.jsonl
+  classification: INTERNAL
+write:
+- id: ST-REVIEWS
+  name_ar: المراجعات والتحكيم
+  path: projects/<PID>/reviews/
+  classification: CONFIDENTIAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

@@ -1,0 +1,22 @@
+# GENERATED from agents/_specs/AG-RQA.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-RQA
+rbac_role: role:core:research-question-architect
+allowed:
+- اقتراح صيغ بديلة للإشكالية
+- استكشاف أولي Tier 5 لرسم الحقل فقط
+prohibited:
+- اعتماد الأطروحة
+- تثبيت عنوان الكتاب
+- بناء ادعاء على Tier 5
+human_approval_required:
+- اعتماد السؤال الرئيس والنطاق (L4 عند QG0)
+max_autonomous_level: L1
+data_classes_readable:
+- AUTHOR_ONLY
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/research/
+- projects/<PID>/memory/
+external_publish: false
+can_modify_own_prompt: false

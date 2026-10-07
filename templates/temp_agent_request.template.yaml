@@ -1,0 +1,19 @@
+# طلب وكيل مؤقت (بروتوكول الوكيل المفقود — WF-MISSING-AGENT)
+request_id: TMPREQ-0001
+project_id: RKP-2026-0001
+need: "تحليل شبكات استشهاد بين المؤسسات الثقافية الخليجية"
+checked_skills: [SKL-BIBLIOMETRIC]     # الخطوة 1
+checked_agents: [AG-DAT, AG-DSC]        # الخطوة 2
+why_insufficient: ""
+proposed_agent:
+  agent_id: AG-TMP
+  domain_task: ""
+  inputs: []
+  outputs: []
+  tools: [TL-FS, TL-MSG, TL-AUDIT, TL-LLM]
+  memory_read: [MEM-PROJECT]
+  memory_write: [ST-RESEARCH-NOTES]
+  acceptance_tests: []
+  expiry_date: ""
+author_approval: null                   # DC-xxx
+post_project_evaluation: null           # keep | retire | promote

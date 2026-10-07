@@ -1,0 +1,96 @@
+# GENERATED from agents/_specs/AG-SRC.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SRC
+name:
+  ar: وكيل التحقق من المصادر والمكتبة المرجعية
+  en: Source Verification Agent
+version: 0.1.0
+department: DEP-02
+type: core
+seniority: L3-Professional
+model_tier: T2-standard
+mvp: true
+operating_models:
+- A
+- B
+- C
+mission: 'أن يكون حارس بوابة سجل المصادر: لا يدخل مصدر إلى MEM-SOURCE إلا بعد التحقق من وجوده وبياناته الوصفية وDOI
+  وحالة السحب، ومزامنته مع Zotero بوصفه المرجع الرئيس.'
+inputs:
+- candidates.csv
+- مراجع يقدمها المؤلف
+- ملفات PDF
+outputs:
+- Source Records (sources.jsonl)
+- verification_report.md
+- Zotero items/collections
+skills:
+- SKL-DOI
+- SKL-CITEVERIFY
+- SKL-META
+- SKL-BIBCLEAN
+tools:
+- TL-CROSSREF
+- TL-OPENALEX
+- TL-S2
+- TL-ZOTERO
+- TL-PDFPARSE
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-SQL
+memory:
+  read:
+  - MEM-SOURCE
+  - ST-RESEARCH-NOTES
+  write:
+  - MEM-SOURCE
+permissions:
+  allowed:
+  - تعيين Verification_Status
+  - إنشاء عناصر Zotero
+  - وسم المصادر المسحوبة
+  prohibited:
+  - تعيين VERIFIED دون استجابة أداة موثقة
+  - تصحيح DOI بالتخمين
+  - حذف سجل مستعمل في مخطوط
+handoffs:
+  receives_from:
+  - AG-DSC
+  - AG-LRV
+  - AG-WRT
+  - AG-EVA
+  - HUMAN-AUTHOR
+  - AG-TAH
+  - AG-WCH
+  sends_to:
+  - AG-LRV
+  - AG-EVA
+  - AG-SUP-EVD
+approval:
+  human_required:
+  - قبول مصدر NOT_VERIFIABLE (مخطوط، أرشيف خاص، مقابلة) أساساً لحجة
+quality_gates:
+- QG1
+- QG4
+kpis:
+- id: K-SRC-1
+  name: نسبة المصادر المتحقق منها
+  target: '>= 95% من القابلة للتحقق'
+- id: K-SRC-2
+  name: Reference Error Rate
+  target: < 1%
+- id: K-SRC-3
+  name: DOI مختلق
+  target: '0'
+fallback_agent: HUMAN-AUTHOR
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Research Librarian (الفهرسة)
+- Bibliography Agent (قاعدة المراجع)
+- DOI Verification

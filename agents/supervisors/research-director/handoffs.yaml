@@ -1,0 +1,24 @@
+# GENERATED from agents/_specs/AG-DIR.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-DIR
+receives_from:
+- HUMAN-AUTHOR
+- AG-ORC
+- AG-WCH
+- AG-KNW
+sends_to:
+- AG-ORC
+- AG-COUNCIL
+- HUMAN-AUTHOR
+consult:
+- agent: AG-CUL
+  when: تقييم أصالة فكرة في السياسات الثقافية
+- agent: AG-DSC
+  when: قياس حجم الأدبيات حول فكرة جديدة
+escalation:
+- trigger: تعارض بين برنامجين
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: AG-ORC
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

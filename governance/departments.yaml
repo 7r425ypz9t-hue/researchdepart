@@ -1,0 +1,15 @@
+# الهيكل التنظيمي الأمثل — من 16 قطاعاً مقترحاً إلى 11 إدارة + مكتب المؤلف
+version: 0.1.0
+departments:
+  - {id: DEP-00, name_ar: مكتب المؤلف (السلطة العليا), name_en: Author's Chamber, merges: [], human: true, head: HUMAN-AUTHOR}
+  - {id: DEP-01, name_ar: مكتب مدير الإدارة والبرامج وإدارة المشاريع, name_en: Director's Office & PMO, merges: ["1 مكتب المدير", "2 الاستراتيجية والبرامج", "13 إدارة المشاريع"], head: AG-DIR}
+  - {id: DEP-02, name_ar: الاستكشاف العلمي والمصادر, name_en: Discovery & Sources, merges: ["3 الاستكشاف والمراجعات", "9 التوثيق والمصادر"], head: AG-LRV}
+  - {id: DEP-03, name_ar: المناهج والتحليل, name_en: Methods & Analytics, merges: ["4 الدراسات والمنهجيات", "5 البيانات والتحليل"], head: AG-MTH}
+  - {id: DEP-04, name_ar: السياسات والاستشراف, name_en: Policy & Foresight, merges: ["6 الدراسات المستقبلية والسياسات"], head: AG-POL}
+  - {id: DEP-05, name_ar: التأليف والكتابة, name_en: Authoring, merges: ["7 التأليف والكتابة"], head: AG-BKA}
+  - {id: DEP-06, name_ar: التحرير والتحكيم, name_en: Editorial & Review, merges: ["8 التحرير والتحكيم"], head: AG-SED}
+  - {id: DEP-07, name_ar: النزاهة والملكية الفكرية, name_en: Integrity & IP, merges: ["10 النزاهة والملكية الفكرية"], head: AG-INT}
+  - {id: DEP-08, name_ar: النشر والإنتاج والتصميم, name_en: Publishing & Design, merges: ["11 النشر والإنتاج", "12 التصميم والإخراج"], head: AG-PUB}
+  - {id: DEP-09, name_ar: المعرفة والأرشيف, name_en: Knowledge & Archives, merges: ["14 الأرشيف وإدارة المعرفة"], head: AG-KNW}
+  - {id: DEP-10, name_ar: التقنية والأمن والكلفة, name_en: Technology, Security & Cost, merges: ["15 التقنية والأتمتة", "16 الأمن والحوكمة (الشق التقني)"], head: AG-AUT}
+  - {id: DEP-11, name_ar: طبقة الضمان الإشرافية, name_en: Assurance Layer, merges: ["16 الأمن والحوكمة (الشق الرقابي)"], head: AG-COUNCIL, independent: true, reports_to: DEP-00}

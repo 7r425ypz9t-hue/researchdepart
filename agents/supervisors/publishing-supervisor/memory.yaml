@@ -1,0 +1,32 @@
+# GENERATED from agents/_specs/AG-SUP-PUB.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SUP-PUB
+read:
+- id: ST-APPROVED
+  name_ar: النص المعتمد
+  path: projects/<PID>/manuscript/approved/
+  classification: CONFIDENTIAL
+- id: ST-PUBLISH
+  name_ar: مخرجات النشر
+  path: publishing/<PID>/
+  classification: INTERNAL
+- id: ST-ARCHIVE
+  name_ar: الأرشيف
+  path: projects/<PID>/archive/
+  classification: CONFIDENTIAL
+- id: MEM-PROJECT
+  name_ar: ذاكرة المشروع
+  path: projects/<PID>/memory/
+  classification: CONFIDENTIAL
+write:
+- id: ST-REVIEWS
+  name_ar: المراجعات والتحكيم
+  path: projects/<PID>/reviews/
+  classification: CONFIDENTIAL
+- id: ST-AUDIT
+  name_ar: سجل التدقيق
+  path: logs/audit.jsonl
+  classification: INTERNAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

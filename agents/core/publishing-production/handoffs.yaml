@@ -1,0 +1,22 @@
+# GENERATED from agents/_specs/AG-PUB.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-PUB
+receives_from:
+- AG-ARE
+- AG-SUP-EDT
+- AG-ORC
+- AG-VIS
+sends_to:
+- AG-SUP-PUB
+- AG-KNW
+- AG-VCS
+consult:
+- agent: AG-VIS
+  when: جودة الأشكال أو الجداول في الإخراج
+escalation:
+- trigger: طلب بناء من نسخة غير معتمدة
+  to: AG-ORC
+  level: L2
+fallback_agent: HUMAN-AUTHOR
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

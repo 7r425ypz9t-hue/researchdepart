@@ -1,0 +1,21 @@
+workflow_id: WF-BOOK-INTELLECTUAL
+name_ar: تأليف كتاب فكري
+version: 0.1.0
+project_types: [intellectual_book]
+operating_model_min: A
+citation_style: Chicago
+notes: "الكتاب الفكري: حجة وأطروحة وسجل أدبي رفيع؛ المنهج استدلالي-تأويلي؛ QG2 بصيغة مخففة؛ Red Team إلزامي للفصول المركزية."
+steps:
+  - {id: S01, agent: AG-ORC, task: initialize_project, decision_level: L1}
+  - {id: S02, agent: AG-RQA, task: define_problem_and_thesis_hypothesis, reviewer: AG-DIR, outputs: [scope.md, thesis_draft.md], gate: QG0, decision_level: L4, human_approval: true}
+  - {id: S03, agent: AG-DIR, task: idea_assessment_council, reviewer: AG-COUNCIL, outputs: [idea_assessment.md], decision_level: L3, optional_if: "project.operating_model == 'A'"}
+  - {id: S04, agent: AG-DSC, task: discover_sources, reviewer: AG-SRC, decision_level: L1}
+  - {id: S05, agent: AG-SRC, task: verify_sources, decision_level: L1}
+  - {id: S06, agent: AG-LRV, task: map_intellectual_traditions, reviewer: AG-SUP-EVD, outputs: [traditions_map.md, evidence_cards/], gate: QG1, decision_level: L2}
+  - {id: S07, agent: AG-THR, task: build_conceptual_framework, reviewer: AG-SUP-MTH, outputs: [concept_dictionary.yaml, conceptual_model.mmd], decision_level: L4, human_approval: true}
+  - {id: S08, agent: AG-BKA, task: build_argument_arc, reviewer: AG-COUNCIL, outputs: [outline.yaml, argument_map.mmd], decision_level: L4, human_approval: true}
+  - {id: S09, uses: WF-CHAPTER-CYCLE, foreach: outline.chapters}
+  - {id: S10, agent: AG-RED, task: whole_book_challenge, gate: QG3, decision_level: L3}
+  - {id: S11, agent: AG-ORC, task: request_final_approval, decision_level: L4, human_approval: true}
+  - {id: S12, agent: AG-PUB, task: prepare_final_files, reviewer: AG-SUP-PUB, gate: QG6, decision_level: L4, human_approval: true}
+  - {id: S13, uses: WF-PROJECT-CLOSE}

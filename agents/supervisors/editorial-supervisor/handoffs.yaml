@@ -1,0 +1,23 @@
+# GENERATED from agents/_specs/AG-SUP-EDT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SUP-EDT
+receives_from:
+- AG-ORC
+- AG-SED
+- AG-ARE
+- AG-PRV
+sends_to:
+- AG-ORC
+- AG-SED
+- AG-ARE
+- AG-COUNCIL
+consult:
+- agent: AG-CUL
+  when: مصطلح سياساتي ثقافي ملتبس
+escalation:
+- trigger: خلاف بين المحرر والمؤلف حول الأسلوب
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: HUMAN-AUTHOR
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: REVIEW

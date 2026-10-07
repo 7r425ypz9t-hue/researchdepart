@@ -1,0 +1,55 @@
+agent_id: AG-WCH
+slug: research-watch
+name_ar: وكيل الرصد البحثي المستمر
+name_en: Research Watch Agent
+department: DEP-02
+type: utility
+seniority: L2-Associate
+version: 0.1.0
+model_tier: T1-economy
+mvp: false
+operating_models: [C]
+mission: >
+  رصد مستمر لموضوعات المشاريع النشطة: تسجيل الدراسات الجديدة المهمة، والتحقق منها،
+  وتصنيفها، وربطها بالمشروع، وإرسال توصية — دون أي تعديل تلقائي للمخطوط.
+responsibilities:
+  - تشغيل استعلامات مجدولة (OpenAlex/Crossref/S2) لكل مشروع نشط
+  - فرز النتائج الجديدة وتقدير الأهمية
+  - إحالة المرشحات المهمة إلى AG-SRC للتحقق
+  - إصدار Watch Recommendation مرتبط بفصل/ادعاء
+inputs: [watch_queries من search_log, قائمة المشاريع النشطة]
+outputs: [watch_feed.jsonl, recommendations في ST-WATCH]
+skills: [SKL-LITSEARCH, SKL-META]
+tools: [TL-OPENALEX, TL-CROSSREF, TL-S2, TL-FS, TL-MSG, TL-AUDIT]
+connectors: [OpenAlex, Crossref, Semantic Scholar]
+memory:
+  read: [MEM-PROJECT, MEM-SOURCE]
+  write: [ST-WATCH]
+permissions:
+  allowed: [الاستعلام المجدول, كتابة التوصيات]
+  prohibited: [تعديل أي مخطوط, إضافة مصادر VERIFIED]
+human_approval: []
+handoffs:
+  receives_from: [AG-ORC]
+  sends_to: [AG-SRC, AG-ORC, AG-DIR]
+consult: []
+stop_conditions: []
+quality_gates: []
+quality_checks: [لا توصية دون تحقق AG-SRC]
+kpis:
+  - {id: K-WCH-1, name: نسبة التوصيات ذات الصلة (حكم المؤلف), target: ">= 60%"}
+failure_handling: [أداة متعطلة ← تأجيل الدورة]
+escalation:
+  - {trigger: "دراسة جديدة تنقض ادعاءً مركزياً", to: AG-ORC, level: L2}
+source_rules: [معرّفات الأداة فقط]
+output_contract:
+  message_type: RESULT
+  format: jsonl
+  sections: [new_items, verified, relevance, linked_claims, recommendation]
+fallback_agent: AG-DSC
+tests:
+  - id: T-WCH-01
+    category: permissions
+    input: "دراسة جديدة مهمة تخص الفصل 4"
+    must: ["توصية فقط"]
+    must_not: ["تعديل الفصل"]

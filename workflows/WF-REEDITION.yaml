@@ -1,0 +1,17 @@
+workflow_id: WF-REEDITION
+name_ar: إعادة تحرير كتاب سابق
+version: 0.1.0
+project_types: [re_edition]
+operating_model_min: A
+citation_style: APA7
+steps:
+  - {id: S01, agent: AG-ORC, task: initialize_project_from_previous_edition, decision_level: L1}
+  - {id: S02, agent: AG-KNW, task: retrieve_previous_edition_and_decisions, decision_level: L1}
+  - {id: S03, agent: AG-RQA, task: define_revision_scope, gate: QG0, decision_level: L4, human_approval: true}
+  - {id: S04, agent: AG-SRC, task: re_verify_all_references_and_retractions, decision_level: L1}
+  - {id: S05, agent: AG-DSC, task: update_literature_since_publication, decision_level: L1}
+  - {id: S06, agent: AG-LRV, task: what_changed_since_report, gate: QG1, decision_level: L2}
+  - {id: S07, agent: AG-BKA, task: revision_map, decision_level: L4, human_approval: true}
+  - {id: S08, uses: WF-CHAPTER-CYCLE, foreach: revision_map.chapters_to_revise}
+  - {id: S09, agent: AG-PUB, task: prepare_new_edition_files, gate: QG6, decision_level: L4, human_approval: true}
+  - {id: S10, uses: WF-PROJECT-CLOSE}

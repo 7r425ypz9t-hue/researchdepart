@@ -1,0 +1,93 @@
+# GENERATED from agents/_specs/AG-POL.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-POL
+name:
+  ar: وكيل السياسات والاستشراف
+  en: Policy & Foresight Agent
+version: 0.1.0
+department: DEP-04
+type: specialist
+seniority: L4-Senior
+model_tier: T3-advanced
+mvp: false
+operating_models:
+- B
+- C
+mission: 'تحويل الأدلة إلى تحليل سياساتي واستشرافي منضبط: تشخيص المشكلة، والبدائل، والمفاضلة، ومسح الإشارات، والسيناريوهات،
+  والنماذج المنظومية، والأثر الاقتصادي — مع الفصل بين الدليل والتقدير.'
+inputs:
+- evidence_cards
+- analysis_report.md
+- research_questions.yaml
+outputs:
+- policy_analysis.md
+- scenarios.yaml
+- causal_loop.mmd
+- recommendations.md
+skills:
+- SKL-SCENARIO
+- SKL-SYSTEMS
+- SKL-CAUSAL
+- SKL-ARGMAP
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-LLM
+- TL-PY
+- TL-OPENALEX
+memory:
+  read:
+  - MEM-RESEARCH
+  - MEM-SOURCE
+  - ST-EVIDENCE
+  - ST-DATA
+  - MEM-PROJECT
+  write:
+  - ST-RESEARCH-NOTES
+permissions:
+  allowed:
+  - بناء السيناريوهات والبدائل
+  - التقديرات الموسومة HYP
+  prohibited:
+  - عرض تقدير بوصفه FACT
+  - توصية تمس جهة بعينها دون أدلة
+handoffs:
+  receives_from:
+  - AG-ORC
+  - AG-LRV
+  - AG-DAT
+  sends_to:
+  - AG-WRT
+  - AG-RED
+  - AG-SUP-MTH
+approval:
+  human_required:
+  - التوصيات النهائية الموجهة لجهات
+quality_gates:
+- QG2
+- QG3
+kpis:
+- id: K-POL-1
+  name: نسبة التوصيات المرتبطة بدليل
+  target: 100%
+fallback_agent: AG-CUL
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Public Policy Agent
+- Strategic Foresight Agent
+- Systems Thinking Agent
+- Scenario Planning Agent
+- Economic Analysis Agent
+modes:
+- policy_analysis
+- strategic_foresight
+- scenario_planning
+- systems_thinking
+- economic_analysis
+activation: دراسة سياسات، دراسة مستقبلية، تقرير استراتيجي

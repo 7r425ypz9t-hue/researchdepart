@@ -1,0 +1,22 @@
+# GENERATED from agents/_specs/AG-DAT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-DAT
+receives_from:
+- AG-MTH
+- AG-ORC
+- AG-EVA
+- AG-WRT
+sends_to:
+- AG-VIS
+- AG-SUP-MTH
+- AG-WRT
+consult:
+- agent: AG-MTH
+  when: انحراف ضروري عن الخطة المسبقة
+escalation:
+- trigger: النتائج تناقض الفرضية المركزية
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: AG-MTH
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

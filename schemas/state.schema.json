@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "state.schema.json",
+  "title": "Project State — حالة المشروع للاستئناف",
+  "type": "object",
+  "required": [
+    "PROJECT_ID",
+    "STATE",
+    "NEXT_ACTION",
+    "CURRENT_AGENT",
+    "WAITING_FOR",
+    "BLOCKERS",
+    "VERSION",
+    "QUALITY_GATE",
+    "UPDATED"
+  ],
+  "properties": {
+    "PROJECT_ID": {
+      "type": "string"
+    },
+    "STATE": {
+      "enum": [
+        "INITIALIZED",
+        "SCOPING",
+        "DISCOVERY",
+        "EVIDENCE",
+        "THEORY_METHOD",
+        "ANALYSIS",
+        "ARCHITECTURE",
+        "DRAFTING",
+        "AUDIT",
+        "RED_TEAM",
+        "REVISION",
+        "LANGUAGE_EDIT",
+        "INTEGRITY",
+        "PRODUCTION",
+        "AWAITING_AUTHOR",
+        "PUBLISHED",
+        "ARCHIVING",
+        "CLOSED",
+        "ON_HOLD"
+      ]
+    },
+    "STAGE_ID": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "NEXT_ACTION": {
+      "type": "string"
+    },
+    "CURRENT_AGENT": {
+      "type": "string"
+    },
+    "WAITING_FOR": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "BLOCKERS": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "VERSION": {
+      "type": "string"
+    },
+    "QUALITY_GATE": {
+      "type": "object",
+      "properties": {
+        "current": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "COMPLETION_PCT": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "LAST_WORK_POINT": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "PINNED_DECISIONS": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "PENDING_HUMAN_DECISIONS": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "OPEN_ISSUES": {
+      "type": "integer"
+    },
+    "COST_USD": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "DEADLINE": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "UPDATED": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

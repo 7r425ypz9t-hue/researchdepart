@@ -1,0 +1,19 @@
+# نسخ احتياطي أسبوعي + لوحة القيادة + (اختياري) الرصد البحثي
+name: backup-and-watch
+on:
+  schedule: [{cron: "17 3 * * 1"}]
+  workflow_dispatch:
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    permissions: {contents: write}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -e .
+      - run: rkpos dashboard
+      - name: Snapshot archive
+        run: tar -czf "snapshot-$(date +%F).tar.gz" projects knowledge-base logs memory
+      - uses: actions/upload-artifact@v4
+        with: {name: weekly-snapshot, path: "snapshot-*.tar.gz", retention-days: 90}

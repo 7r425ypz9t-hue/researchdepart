@@ -1,0 +1,14 @@
+workflow_id: WF-OPED
+name_ar: مقال رأي («رأي ثقافي»)
+version: 0.1.0
+project_types: [op_ed]
+operating_model_min: A
+citation_style: none_inline
+notes: "مسار خفيف: سقف 300 كلمة (op-ed-column-ar)؛ وكلاء أقل؛ لا تنازل عن صفر تلفيق."
+steps:
+  - {id: S01, agent: AG-ORC, task: initialize_light_project, decision_level: L1}
+  - {id: S02, agent: AG-WRT, task: draft_op_ed, skills: [SKL-STYLE], outputs: [op_ed_draft.md], decision_level: L1}
+  - {id: S03, agent: AG-INT, task: fact_check_light, skills: [SKL-FACTCHECK], decision_level: L1}
+  - {id: S04, agent: AG-SED, task: edit_and_language, decision_level: L1}
+  - {id: S05, agent: AG-ORC, task: request_author_approval, decision_level: L4, human_approval: true}
+  - {id: S06, agent: AG-KNW, task: archive_and_index, decision_level: L1}

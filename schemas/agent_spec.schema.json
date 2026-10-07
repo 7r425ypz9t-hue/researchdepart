@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent_spec.schema.json",
+  "title": "Agent Specification Source",
+  "type": "object",
+  "required": [
+    "agent_id",
+    "slug",
+    "name_ar",
+    "name_en",
+    "department",
+    "type",
+    "seniority",
+    "version",
+    "model_tier",
+    "mvp",
+    "operating_models",
+    "mission",
+    "responsibilities",
+    "inputs",
+    "outputs",
+    "skills",
+    "tools",
+    "connectors",
+    "memory",
+    "permissions",
+    "human_approval",
+    "handoffs",
+    "consult",
+    "stop_conditions",
+    "quality_gates",
+    "quality_checks",
+    "kpis",
+    "failure_handling",
+    "escalation",
+    "source_rules",
+    "output_contract",
+    "fallback_agent",
+    "tests"
+  ],
+  "properties": {
+    "agent_id": {
+      "type": "string",
+      "pattern": "^AG-[A-Z]{3}(-[A-Z]{3})?$"
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "type": {
+      "enum": [
+        "core",
+        "specialist",
+        "on_demand",
+        "supervisory",
+        "utility"
+      ]
+    },
+    "model_tier": {
+      "enum": [
+        "T1-economy",
+        "T2-standard",
+        "T3-advanced",
+        "T4-independent"
+      ]
+    },
+    "mvp": {
+      "type": "boolean"
+    },
+    "operating_models": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "A",
+          "B",
+          "C"
+        ]
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^SKL-[A-Z]+$"
+      }
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^TL-[A-Z0-9]+$"
+      }
+    },
+    "memory": {
+      "type": "object",
+      "required": [
+        "read",
+        "write"
+      ]
+    },
+    "permissions": {
+      "type": "object",
+      "required": [
+        "allowed",
+        "prohibited"
+      ]
+    },
+    "handoffs": {
+      "type": "object",
+      "required": [
+        "receives_from",
+        "sends_to"
+      ]
+    },
+    "kpis": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "target"
+        ]
+      }
+    },
+    "escalation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "trigger",
+          "to",
+          "level"
+        ]
+      }
+    },
+    "tests": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "input",
+          "must"
+        ],
+        "properties": {
+          "category": {
+            "enum": [
+              "accuracy",
+              "citation_accuracy",
+              "hallucination",
+              "tool_use",
+              "instruction_following",
+              "handoff_quality",
+              "reproducibility",
+              "security",
+              "permissions",
+              "integrity",
+              "realism"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

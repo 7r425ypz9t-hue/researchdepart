@@ -1,0 +1,16 @@
+# GENERATED from agents/_specs/AG-PRV.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-PRV
+receives_from:
+- AG-ORC
+sends_to:
+- AG-SED
+- AG-SUP-EDT
+consult: []
+escalation:
+- trigger: توصية رفض
+  to: AG-COUNCIL
+  level: L3
+fallback_agent: AG-RED
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: REVIEW

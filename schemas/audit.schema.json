@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "audit.schema.json",
+  "title": "Audit Record — سجل التدقيق",
+  "type": "object",
+  "required": [
+    "ACTION_ID",
+    "AGENT",
+    "DATE",
+    "PROJECT",
+    "ACTION"
+  ],
+  "properties": {
+    "ACTION_ID": {
+      "type": "string",
+      "pattern": "^ACT-[0-9]{8}-[0-9a-f]{8}$"
+    },
+    "AGENT": {
+      "type": "string",
+      "pattern": "^(AG-[A-Z0-9-]+|HUMAN-[A-Z]+|ALL)$"
+    },
+    "DATE": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "PROJECT": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ACTION": {
+      "type": "string"
+    },
+    "FILES_CHANGED": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "SOURCE_USED": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "DECISION": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "DECISION_LEVEL": {
+      "enum": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        null
+      ]
+    },
+    "APPROVAL": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "MODEL": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "COST_USD": {
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

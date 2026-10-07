@@ -1,0 +1,108 @@
+# بوابات الجودة QG0–QG7 — لا تُتجاوز بوابة مرفوضة
+version: 0.1.0
+gates:
+  - id: QG0
+    name_ar: تعريف المشروع
+    question: هل المشروع محدد؟
+    owner_producer: AG-RQA
+    approver: HUMAN-AUTHOR
+    supervisor: AG-DIR
+    decision_level: L4
+    criteria:
+      - "manifest.yaml صالح وفق المخطط"
+      - "سؤال رئيس واحد و3-7 أسئلة فرعية"
+      - "نطاق داخل/خارج صريح"
+      - "نوع المشروع وسير العمل محددان"
+      - "الأطروحة المبدئية أو فرضية العمل موسومة AUTHOR ومعتمدة"
+    automated_checks: [schema:project_manifest, rule:research_questions_count]
+  - id: QG1
+    name_ar: بوابة الأدلة
+    question: هل المصادر كافية وموثوقة؟
+    owner_producer: AG-LRV
+    approver: AG-SUP-EVD
+    fallback_approver: HUMAN-AUTHOR
+    decision_level: L2
+    criteria:
+      - "≥ 95% من المصادر القابلة للتحقق بحالة VERIFIED"
+      - "صفر مصادر FAILED أو RETRACTED في الحجج"
+      - "Tier 1-2 ≥ 70% من مصادر الحجج المركزية"
+      - "كل سؤال فرعي مغطى بحد أدنى من الأدلة يحدده manifest"
+      - "عرض الآراء المعارضة الرئيسة"
+    automated_checks: [rule:source_verification_ratio, rule:tier_distribution, rule:no_failed_sources]
+  - id: QG2
+    name_ar: بوابة المنهج
+    question: هل المنهج صحيح؟
+    owner_producer: AG-MTH
+    approver: AG-SUP-MTH
+    fallback_approver: HUMAN-AUTHOR
+    decision_level: L2
+    applies_when: "المشروع ذو بيانات أو منهج تجريبي/نوعي/مختلط؛ في الكتاب الفكري تُطبَّق نسخة مخففة (منهج الاستدلال والمصادر)"
+    criteria:
+      - "مواءمة السؤال والتصميم والتحليل"
+      - "تهديدات الصدق مسماة ومعالجة"
+      - "قابلية إعادة الإنتاج للتحليلات"
+      - "الاعتبارات الأخلاقية موثقة"
+  - id: QG3
+    name_ar: بوابة الحجة
+    question: هل الاستدلال متماسك؟
+    owner_producer: AG-WRT
+    approver: AG-COUNCIL
+    reviewers: [AG-RED, AG-PRV, AG-SUP-EDT]
+    decision_level: L3
+    criteria:
+      - "تقرير Red Team منجز وكل تحدٍّ حرج مغلق أو مقبول بقرار"
+      - "خريطة الحجة بلا قفزات غير مسوغة"
+      - "الادعاءات السببية مختبرة"
+      - "الاتساق مع الأطروحة المعتمدة والفصول الأخرى"
+    automated_checks: [rule:claims_tagged_100, rule:no_open_critical_challenges]
+  - id: QG4
+    name_ar: بوابة النزاهة
+    question: هل توجد مشكلات في النزاهة أو الاستشهاد؟
+    owner_producer: AG-INT
+    approver: AG-SUP-INT
+    fallback_approver: HUMAN-AUTHOR
+    decision_level: L2
+    blocking_any_of: ["مرجع مختلق", "DOI غير متحقق", "اقتباس حرفي غير متحقق", "نسبة فكرة خاطئة", "مادة محمية بلا إذن"]
+    criteria:
+      - "Citation Accuracy ≥ 99%"
+      - "صفر UNSUPPORTED/MISATTRIBUTED مفتوحة"
+      - "خطر الانتحال منخفض أو موثق القرار"
+      - "سجل الحقوق مكتمل"
+      - "بيان الإفصاح عن الذكاء الاصطناعي جاهز"
+    automated_checks: [rule:citations_resolve, rule:no_unverified_doi, rule:verbatim_quotes_verified]
+  - id: QG5
+    name_ar: البوابة التحريرية
+    question: هل النص جاهز تحريرياً؟
+    owner_producer: AG-ARE
+    approver: AG-SUP-EDT
+    fallback_approver: HUMAN-AUTHOR
+    decision_level: L2
+    criteria:
+      - "صفر ملاحظات مراجعة مفتوحة"
+      - "اتساق مصطلحي 100% مع المسرد"
+      - "أخطاء لغوية ≤ 3 لكل 10 آلاف كلمة (عينة)"
+  - id: QG6
+    name_ar: بوابة النشر
+    question: هل الملفات جاهزة للنشر؟
+    owner_producer: AG-PUB
+    approver: AG-SUP-PUB
+    final_release_approver: HUMAN-AUTHOR
+    decision_level: L4
+    criteria:
+      - "checksum الإخراج = checksum النسخة المعتمدة"
+      - "EPUBCheck بلا أخطاء؛ PDF بخطوط مضمّنة وRTL سليم"
+      - "البيانات الوصفية كاملة"
+      - "QG4 وQG5 معتمدتان"
+  - id: QG7
+    name_ar: بوابة الأرشفة
+    question: هل حُفظ المشروع كاملاً؟
+    owner_producer: AG-KNW
+    approver: AG-SUP-PUB
+    fallback_approver: AG-ORC
+    decision_level: L2
+    criteria:
+      - "كل الإصدارات موسومة وCHANGELOG كامل"
+      - "الأرشيف بـ checksums"
+      - "سجل التدقيق والقرارات مكتمل"
+      - "مرشحات المعرفة مرفوعة للاعتماد"
+      - "نسخة احتياطية في موقعين"

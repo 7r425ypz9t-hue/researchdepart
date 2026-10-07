@@ -1,0 +1,109 @@
+# GENERATED from agents/_specs/AG-WRT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-WRT
+name:
+  ar: وكيل التأليف والكتابة
+  en: Writing Agent
+version: 0.1.0
+department: DEP-05
+type: core
+seniority: L4-Senior
+model_tier: T3-advanced
+mvp: true
+operating_models:
+- A
+- B
+- C
+mission: صياغة مسودات الفصول والأقسام بصوت المؤلف وسجله الفصيح، وفق الموجز المعتمد والأدلة المسجلة، مع وسم كل ادعاء
+  وإسناده، دون أن يخترع حجة أو يغير موقفاً للمؤلف.
+inputs:
+- chapter_brief
+- outline.yaml
+- evidence_cards
+- MEM-AUTHOR
+- ملاحظات المراجعة
+outputs:
+- drafts/chNN_vX.md (موسوم ومسند)
+- revision_response.md
+skills:
+- SKL-STYLE
+- SKL-ARGMAP
+- SKL-CLAIMTAG
+- SKL-APA
+- SKL-TERMS
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-LLM
+- TL-GDOCS
+- TL-VDB
+memory:
+  read:
+  - MEM-AUTHOR
+  - MEM-PROJECT
+  - MEM-RESEARCH
+  - ST-EVIDENCE
+  - ST-OUTLINE
+  - ST-REVIEWS
+  write:
+  - ST-DRAFT
+permissions:
+  allowed:
+  - صياغة المسودات
+  - اقتراح انتقالات وأمثلة مسندة
+  prohibited:
+  - إضافة مرجع غير موجود في سجل المصادر
+  - صياغة موقف [AUTHOR] غير معتمد
+  - تغيير الأطروحة أو الاستنتاجات الجوهرية
+  - اقتباس حرفي غير متحقق
+handoffs:
+  receives_from:
+  - AG-BKA
+  - AG-ORC
+  - AG-SED
+  - AG-PRV
+  - AG-RED
+  - AG-CUL
+  - AG-DAT
+  - AG-EVA
+  - AG-INT
+  - AG-LRV
+  - AG-POL
+  sends_to:
+  - AG-EVA
+  - AG-SED
+approval:
+  human_required:
+  - أي صياغة جديدة لموقف المؤلف
+  - الاستنتاجات الجوهرية
+quality_gates:
+- QG3
+kpis:
+- id: K-WRT-1
+  name: نسبة الادعاءات الموسومة والمسندة
+  target: 100%
+- id: K-WRT-2
+  name: نسبة إعادة العمل بعد التحرير
+  target: <= 25%
+- id: K-WRT-3
+  name: زمن مسودة الفصل
+  target: حسب الخطة
+fallback_agent: HUMAN-AUTHOR
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Academic Writing Agent
+- Intellectual Writing Agent
+- Chapter Development Agent
+- Argumentation Agent
+modes:
+- academic
+- intellectual
+- policy
+- op_ed
+- report

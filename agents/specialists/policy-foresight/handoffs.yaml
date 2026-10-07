@@ -1,0 +1,23 @@
+# GENERATED from agents/_specs/AG-POL.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-POL
+receives_from:
+- AG-ORC
+- AG-LRV
+- AG-DAT
+sends_to:
+- AG-WRT
+- AG-RED
+- AG-SUP-MTH
+consult:
+- agent: AG-CUL
+  when: سياسات ثقافية
+- agent: AG-DAT
+  when: نمذجة كمية أو محاكاة
+escalation:
+- trigger: توصية ذات حساسية سياسية/مؤسسية
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: AG-CUL
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

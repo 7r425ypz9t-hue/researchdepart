@@ -1,0 +1,21 @@
+# GENERATED from agents/_specs/AG-SUP-EVD.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SUP-EVD
+rbac_role: role:supervisory:evidence-supervisor
+allowed:
+- اعتماد/رفض QG1
+- طلب بحث إضافي من AG-DSC
+- طلب مصادر معارضة من AG-RED
+prohibited:
+- إضافة مصادر بنفسه
+- تعديل حالة التحقق في سجل المصادر
+human_approval_required:
+- قبول بناء فصل على أدلة Tier 3-4 فقط
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/reviews/
+- logs/audit.jsonl
+external_publish: false
+can_modify_own_prompt: false

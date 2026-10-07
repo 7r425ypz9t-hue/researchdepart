@@ -1,0 +1,24 @@
+# GENERATED from agents/_specs/AG-PUB.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-PUB
+rbac_role: role:core:publishing-production
+allowed:
+- بناء الملفات
+- إعادة البناء
+- اقتراح تصحيحات إخراجية
+prohibited:
+- تعديل نص معتمد
+- النشر الخارجي
+- إصدار Release نهائي
+- البناء من نسخة غير معتمدة
+human_approval_required:
+- الغلاف
+- البيانات الوصفية النهائية
+- الإطلاق (L4)
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- publishing/<PID>/
+external_publish: false
+can_modify_own_prompt: false

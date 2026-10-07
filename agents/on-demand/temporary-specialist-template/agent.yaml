@@ -1,0 +1,63 @@
+# GENERATED from agents/_specs/AG-TMP.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-TMP
+name:
+  ar: قالب الوكيل المتخصص المؤقت
+  en: Temporary Specialist Agent (Template)
+version: 0.1.0
+department: DEP-01
+type: on_demand
+seniority: L3-Professional
+model_tier: T3-advanced
+mvp: false
+operating_models:
+- B
+- C
+mission: قالب يُنسخ لإنشاء متخصص مؤقت لمهمة محددة بعمر محدد، بصلاحيات دنيا، ثم يُقيَّم عند إغلاق المشروع لتقرير
+  إلغائه أو ترقيته إلى وكيل دائم عبر اختبارات الانحدار.
+inputs:
+- '{{INPUTS}}'
+outputs:
+- '{{OUTPUTS}}'
+- temp_agent_report.md
+skills: []
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-LLM
+memory:
+  read:
+  - MEM-PROJECT
+  write:
+  - ST-RESEARCH-NOTES
+permissions:
+  allowed:
+  - '{{ALLOWED}}'
+  prohibited:
+  - الكتابة في أي ذاكرة دائمة
+  - التواصل مع غير المنسق
+  - العمل بعد تاريخ الانتهاء
+handoffs:
+  receives_from:
+  - AG-ORC
+  sends_to:
+  - AG-ORC
+approval:
+  human_required:
+  - الإنشاء
+  - التمديد
+  - الترقية
+quality_gates: []
+kpis:
+- id: K-TMP-1
+  name: إنجاز المهمة ضمن العمر المحدد
+  target: 100%
+fallback_agent: AG-ORC
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+activation: فقط بعد فشل خطوات بروتوكول الوكيل المفقود 1-3 وموافقة المؤلف

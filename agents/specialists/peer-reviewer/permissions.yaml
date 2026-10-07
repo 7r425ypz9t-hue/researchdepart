@@ -1,0 +1,18 @@
+# GENERATED from agents/_specs/AG-PRV.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-PRV
+rbac_role: role:specialist:peer-reviewer
+allowed:
+- النقد الصريح
+- طلب أدلة إضافية
+prohibited:
+- الاطلاع على MEM-AUTHOR أو سجل المحادثات (ضمان الاستقلال)
+- تعديل النص
+human_approval_required: []
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/reviews/
+external_publish: false
+can_modify_own_prompt: false

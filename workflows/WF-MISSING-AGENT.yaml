@@ -1,0 +1,10 @@
+workflow_id: WF-MISSING-AGENT
+name_ar: بروتوكول الوكيل المفقود
+version: 0.1.0
+project_types: [system]
+steps:
+  - {id: M1, agent: AG-ORC, task: check_skill_registry_for_fit, decision_level: L1}
+  - {id: M2, agent: AG-ORC, task: check_existing_agent_can_perform_with_skill, decision_level: L1, optional_if: "skill_found"}
+  - {id: M3, agent: AG-ORC, task: draft_temporary_specialist_from_AG-TMP, decision_level: L1, optional_if: "existing_agent_found"}
+  - {id: M4, agent: AG-ORC, task: request_author_approval_for_temp_agent, decision_level: L4, human_approval: true, optional_if: "existing_agent_found"}
+  - {id: M5, agent: AG-ORC, task: evaluate_permanence_at_project_close, decision_level: L4, human_approval: true}

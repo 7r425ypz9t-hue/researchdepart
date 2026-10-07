@@ -1,0 +1,21 @@
+# GENERATED from agents/_specs/AG-TRN.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-TRN
+rbac_role: role:on_demand:translation
+allowed:
+- الترجمة
+prohibited:
+- ترجمة عمل محمي دون إذن موثق
+- الحذف أو الإضافة الصامتة
+human_approval_required:
+- حقوق الترجمة
+- المصطلحات المفتاحية
+max_autonomous_level: L1
+data_classes_readable:
+- AUTHOR_ONLY
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/manuscript/drafts/
+- knowledge-base/candidates/
+external_publish: false
+can_modify_own_prompt: false

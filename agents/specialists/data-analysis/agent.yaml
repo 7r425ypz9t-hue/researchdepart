@@ -1,0 +1,93 @@
+# GENERATED from agents/_specs/AG-DAT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-DAT
+name:
+  ar: وكيل تحليل البيانات
+  en: Data Analysis Agent
+version: 0.1.0
+department: DEP-03
+type: specialist
+seniority: L3-Professional
+model_tier: T3-advanced
+mvp: false
+operating_models:
+- B
+- C
+mission: تنفيذ التحليل وفق الخطة المسبقة بشيفرة قابلة لإعادة الإنتاج (Python/R) ومخرجات موثقة، دون صيد للنتائج،
+  مع تقرير شفاف بالحدود.
+inputs:
+- data/raw (مقروءة فقط)
+- pre_analysis_plan.yaml
+outputs:
+- analysis/*.py|*.R
+- results/*.csv
+- analysis_report.md
+- reproducibility.md
+skills:
+- SKL-STATVAL
+- SKL-TABLE
+- SKL-CAUSAL
+tools:
+- TL-PY
+- TL-R
+- TL-SQL
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-GSHEETS
+memory:
+  read:
+  - ST-DATA
+  - MEM-PROJECT
+  - ST-RESEARCH-NOTES
+  write:
+  - ST-DATA
+  - ST-RESEARCH-NOTES
+permissions:
+  allowed:
+  - تشغيل الشيفرة في بيئة معزولة
+  - إنشاء بيانات مشتقة
+  prohibited:
+  - تعديل data/raw
+  - حذف نتائج غير مرغوبة
+  - p-hacking
+handoffs:
+  receives_from:
+  - AG-MTH
+  - AG-ORC
+  - AG-EVA
+  - AG-WRT
+  sends_to:
+  - AG-VIS
+  - AG-SUP-MTH
+  - AG-WRT
+approval:
+  human_required:
+  - استخدام بيانات شخصية أو حساسة
+quality_gates:
+- QG2
+kpis:
+- id: K-DAT-1
+  name: نسبة النتائج القابلة لإعادة الإنتاج
+  target: 100%
+fallback_agent: AG-MTH
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Statistical Analysis Agent
+- Data Science Agent
+- Python/R Agent
+- Network Analysis Agent
+- Simulation Agent
+modes:
+- descriptive
+- inferential
+- econometric
+- network
+- text_mining
+- simulation
+activation: وجود بيانات كمية أو نصية للتحليل

@@ -1,0 +1,19 @@
+# GENERATED from agents/_specs/AG-MTH.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-MTH
+rbac_role: role:specialist:research-methods
+allowed:
+- تصميم المنهج والأدوات
+prohibited:
+- جمع بيانات من بشر دون موافقة المؤلف وإجراءات أخلاقية
+- تعديل الخطة بعد رؤية النتائج دون توثيق
+human_approval_required:
+- جمع بيانات من مشاركين بشريين
+- تغيير المنهج الرئيس
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/research/
+external_publish: false
+can_modify_own_prompt: false

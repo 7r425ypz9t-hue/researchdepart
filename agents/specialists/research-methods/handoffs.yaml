@@ -1,0 +1,20 @@
+# GENERATED from agents/_specs/AG-MTH.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-MTH
+receives_from:
+- AG-THR
+- AG-RQA
+- AG-ORC
+sends_to:
+- AG-DAT
+- AG-SUP-MTH
+consult:
+- agent: AG-DAT
+  when: قوة إحصائية/حجم عينة
+escalation:
+- trigger: مخاطر أخلاقية
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: AG-SUP-MTH
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

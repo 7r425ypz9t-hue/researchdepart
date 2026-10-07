@@ -1,0 +1,20 @@
+# GENERATED from agents/_specs/AG-DSC.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-DSC
+rbac_role: role:core:scientific-discovery
+allowed:
+- استدعاء واجهات البحث المفتوحة
+- كتابة سجل البحث
+- اقتراح مرشحين
+prohibited:
+- إدخال مصدر إلى سجل المصادر بحالة VERIFIED
+- كتابة DOI لم تُرجعه أداة
+- تلخيص بحث لم يُقرأ ملخصه فعلاً
+human_approval_required:
+- استعمال قاعدة مدفوعة تتجاوز الحد المالي
+max_autonomous_level: L1
+data_classes_readable:
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/research/
+external_publish: false
+can_modify_own_prompt: false

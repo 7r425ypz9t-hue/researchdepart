@@ -1,0 +1,18 @@
+workflow_id: WF-TRANSLATION
+name_ar: إصدار مترجم
+version: 0.1.0
+project_types: [translation]
+operating_model_min: B
+citation_style: as_source
+steps:
+  - {id: S01, agent: AG-ORC, task: initialize_project, decision_level: L1}
+  - {id: S02, agent: AG-INT, task: rights_clearance_check, skills: [SKL-RIGHTS], outputs: [rights_register.yaml], gate: QG0, decision_level: L4, human_approval: true}
+  - {id: S03, agent: AG-TRN, task: build_bilingual_glossary, decision_level: L4, human_approval: true}
+  - {id: S04, agent: AG-TRN, task: translate_by_chapter, decision_level: L1}
+  - {id: S05, agent: AG-EVA, task: segment_fidelity_sampling, decision_level: L1}
+  - {id: S06, agent: AG-ARE, task: language_and_terminology, gate: QG5, decision_level: L2}
+  - {id: S07, agent: AG-SED, task: translator_notes_and_intro_review, decision_level: L1}
+  - {id: S08, agent: AG-INT, task: integrity_check, gate: QG4, decision_level: L2}
+  - {id: S09, agent: AG-ORC, task: request_final_approval, decision_level: L4, human_approval: true}
+  - {id: S10, agent: AG-PUB, task: prepare_final_files, gate: QG6, decision_level: L4, human_approval: true}
+  - {id: S11, uses: WF-PROJECT-CLOSE}

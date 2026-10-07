@@ -1,0 +1,17 @@
+# GENERATED from agents/_specs/AG-VCS.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-VCS
+receives_from:
+- AG-ORC
+- AG-PUB
+- AG-KNW
+sends_to:
+- AG-ORC
+consult: []
+escalation:
+- trigger: تعارض دمج في مخطوط
+  to: AG-ORC
+  level: L2
+fallback_agent: HUMAN-AUTHOR
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

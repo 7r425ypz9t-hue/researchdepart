@@ -1,0 +1,14 @@
+.env
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+.venv/
+publishing/*/book.*
+publishing/dashboard/
+validation/reports/
+snapshot-*.tar.gz
+# مواد المؤلف الخاصة لا تُتتبع في مستودع مشترك
+memory/author/private/

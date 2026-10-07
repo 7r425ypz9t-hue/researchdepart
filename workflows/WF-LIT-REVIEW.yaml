@@ -1,0 +1,17 @@
+workflow_id: WF-LIT-REVIEW
+name_ar: مراجعة أدبيات سردية نقدية
+version: 0.1.0
+project_types: [literature_review]
+operating_model_min: A
+citation_style: APA7
+steps:
+  - {id: S01, agent: AG-ORC, task: initialize_project, decision_level: L1}
+  - {id: S02, agent: AG-RQA, task: define_scope, gate: QG0, decision_level: L4, human_approval: true}
+  - {id: S03, agent: AG-DSC, task: discover_sources, decision_level: L1}
+  - {id: S04, agent: AG-SRC, task: verify_sources, decision_level: L1}
+  - {id: S05, agent: AG-LRV, task: thematic_synthesis, reviewer: AG-SUP-EVD, gate: QG1, decision_level: L2}
+  - {id: S06, agent: AG-RED, task: selection_bias_challenge, optional_if: "project.operating_model == 'A'", decision_level: L1}
+  - {id: S07, agent: AG-SED, task: structural_edit, decision_level: L1}
+  - {id: S08, agent: AG-INT, task: integrity_check, gate: QG4, decision_level: L2}
+  - {id: S09, agent: AG-ORC, task: request_final_approval, decision_level: L4, human_approval: true}
+  - {id: S10, uses: WF-PROJECT-CLOSE}

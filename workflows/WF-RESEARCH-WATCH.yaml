@@ -1,0 +1,11 @@
+workflow_id: WF-RESEARCH-WATCH
+name_ar: الرصد البحثي المستمر
+version: 0.1.0
+project_types: [all]
+schedule: "weekly"
+steps:
+  - {id: W1, agent: AG-WCH, task: run_watch_queries, outputs: [watch_feed.jsonl], decision_level: L1}
+  - {id: W2, agent: AG-SRC, task: verify_new_items, decision_level: L1}
+  - {id: W3, agent: AG-WCH, task: classify_and_link_to_claims, decision_level: L1}
+  - {id: W4, agent: AG-WCH, task: send_recommendation_no_auto_edit, outputs: [recommendation], decision_level: L1}
+  - {id: W5, agent: AG-ORC, task: route_to_author_if_material, decision_level: L4, human_approval: true, optional_if: "not recommendation.material"}

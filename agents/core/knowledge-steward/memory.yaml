@@ -1,0 +1,56 @@
+# GENERATED from agents/_specs/AG-KNW.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-KNW
+read:
+- id: MEM-PROJECT
+  name_ar: ذاكرة المشروع
+  path: projects/<PID>/memory/
+  classification: CONFIDENTIAL
+- id: MEM-RESEARCH
+  name_ar: الذاكرة البحثية
+  path: knowledge-base/research/
+  classification: INTERNAL
+- id: MEM-SOURCE
+  name_ar: ذاكرة المصادر
+  path: knowledge-base/sources/sources.jsonl
+  classification: INTERNAL
+- id: MEM-EDITORIAL
+  name_ar: الذاكرة التحريرية
+  path: knowledge-base/editorial/
+  classification: INTERNAL
+- id: MEM-INSTITUTIONAL
+  name_ar: الذاكرة المؤسسية
+  path: knowledge-base/institutional/
+  classification: INTERNAL
+- id: ST-DECISIONS
+  name_ar: سجل القرارات
+  path: projects/<PID>/decisions.yaml
+  classification: CONFIDENTIAL
+- id: ST-AUDIT
+  name_ar: سجل التدقيق
+  path: logs/audit.jsonl
+  classification: INTERNAL
+- id: ST-APPROVED
+  name_ar: النص المعتمد
+  path: projects/<PID>/manuscript/approved/
+  classification: CONFIDENTIAL
+- id: ST-PUBLISH
+  name_ar: مخرجات النشر
+  path: publishing/<PID>/
+  classification: INTERNAL
+write:
+- id: ST-ARCHIVE
+  name_ar: الأرشيف
+  path: projects/<PID>/archive/
+  classification: CONFIDENTIAL
+- id: ST-KB-CANDIDATES
+  name_ar: مرشحات المعرفة بانتظار الاعتماد
+  path: knowledge-base/candidates/
+  classification: INTERNAL
+- id: MEM-RESEARCH
+  name_ar: الذاكرة البحثية
+  path: knowledge-base/research/
+  classification: INTERNAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

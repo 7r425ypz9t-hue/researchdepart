@@ -1,0 +1,19 @@
+# GENERATED from agents/_specs/AG-POL.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-POL
+rbac_role: role:specialist:policy-foresight
+allowed:
+- بناء السيناريوهات والبدائل
+- التقديرات الموسومة HYP
+prohibited:
+- عرض تقدير بوصفه FACT
+- توصية تمس جهة بعينها دون أدلة
+human_approval_required:
+- التوصيات النهائية الموجهة لجهات
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/research/
+external_publish: false
+can_modify_own_prompt: false

@@ -1,0 +1,425 @@
+# Skills Registry — سجل المهارات القابلة لإعادة الاستخدام
+# المهارة = إجراء معرفي/تقني موحّد يُستدعى من داخل وكيل، لا موظف مستقل.
+# realization: كيف تتحقق المهارة فعلياً
+#   prompt      = إجراء مكتوب يُحقن في سياق الوكيل (متاح الآن)
+#   code        = دالة/سكربت في runtime/ (متاح الآن أو يحتاج برمجة حسب status)
+#   claude_skill= مهارة Claude قائمة لدى المؤلف تُستدعى بالاسم
+#   api         = يعتمد على واجهة خارجية
+# status: available_now | needs_code | needs_api | needs_account
+# ملاحظة: حقل used_by يُشتق آلياً من agents/_specs ويُتحقق منه في الاختبارات.
+
+version: 0.1.0
+skills:
+
+  - id: SKL-SCOPE
+    name_ar: "صياغة الإشكالية وتحديد النطاق"
+    name_en: "Research Scoping"
+    purpose: "تحويل الفكرة إلى إشكالية وسؤال رئيس وأسئلة فرعية ونطاق داخل/خارج."
+    procedure: ["استخراج الزاوية والجمهور", "صياغة السؤال الرئيس", "تفكيكه إلى 3-7 أسئلة فرعية", "اختيار إطار صياغة (PICO/SPIDER/PCC) عند الملاءمة", "تحديد النطاق والاستبعاد", "تسجيل الافتراضات"]
+    outputs: ["scope.md", "research_questions.yaml"]
+    realization: ["prompt", "claude_skill:grmm-master-manifest-ar"]
+    status: available_now
+
+  - id: SKL-CONCEPTMAP
+    name_ar: "رسم الخرائط المفاهيمية"
+    name_en: "Concept Mapping"
+    purpose: "تعريفات عاملة للمفاهيم وعلاقاتها في مخطط Mermaid."
+    procedure: ["حصر المفاهيم المركزية", "تعريف عامل مسند لكل مفهوم", "تحديد العلاقات ونوعها", "إخراج concept_map.mmd"]
+    outputs: ["concept_map.mmd", "concept_dictionary.yaml"]
+    realization: ["prompt", "claude_skill:graphify-knowledge-graph"]
+    status: available_now
+
+  - id: SKL-LITSEARCH
+    name_ar: "البحث في الأدبيات"
+    name_en: "Literature Search Skill"
+    purpose: "تنفيذ استراتيجية بحث قابلة للتكرار عبر قواعد مفتوحة وتسجيلها."
+    procedure: ["بناء الاستعلامات البولية عربي/إنجليزي", "التنفيذ عبر OpenAlex/Crossref/S2", "تسجيل الاستعلام والتاريخ وعدد النتائج", "إزالة التكرار بالـ DOI ثم بالعنوان المطبع", "فرز أولي"]
+    outputs: ["search_log.jsonl", "candidates.csv"]
+    realization: ["code:runtime/rkpos/verify/scholarly.py", "api"]
+    status: available_now
+    tools: [TL-OPENALEX, TL-CROSSREF, TL-S2]
+
+  - id: SKL-BIBLIOMETRIC
+    name_ar: "التحليل الببليومتري"
+    name_en: "Bibliometric Profiling"
+    purpose: "ملامح الحقل: الإنتاج عبر الزمن، أبرز المؤلفين والمجلات، شبكات الاستشهاد."
+    procedure: ["سحب البيانات الوصفية من OpenAlex", "حساب التوزيعات", "شبكة الاستشهاد المشترك عند الحاجة", "تقرير موجز"]
+    outputs: ["bibliometric_profile.md"]
+    realization: ["code", "api"]
+    status: needs_code
+    tools: [TL-OPENALEX, TL-PY]
+
+  - id: SKL-DOI
+    name_ar: "التحقق من DOI"
+    name_en: "DOI Verification Skill"
+    purpose: "حل DOI عبر Crossref ومطابقة العنوان والسنة والمؤلفين، وفحص السحب."
+    procedure: ["تطبيع DOI", "استعلام api.crossref.org/works/{doi}", "مقارنة العنوان (تشابه ≥ 0.9) والسنة والمؤلف الأول", "فحص علاقات is-retracted-by/update-to", "تعيين الحالة"]
+    outputs: ["verification result (status", "evidence", "timestamp)"]
+    realization: ["code:runtime/rkpos/verify/doi.py", "api"]
+    status: available_now
+    tools: [TL-CROSSREF]
+
+  - id: SKL-CITEVERIFY
+    name_ar: "التحقق من الاستشهاد"
+    name_en: "Citation Verification Skill"
+    purpose: "التأكد أن كل استشهاد في النص يقابل سجلاً متحققاً في MEM-SOURCE وأن بياناته متطابقة."
+    procedure: ["استخراج الاستشهادات (مؤلف، سنة، صفحة)", "مطابقتها بسجل المصادر", "كشف الاستشهادات اليتيمة والمراجع غير المستشهد بها", "تقرير"]
+    outputs: ["citation_audit.yaml"]
+    realization: ["code:runtime/rkpos/verify/citations.py", "prompt"]
+    status: available_now
+
+  - id: SKL-APA
+    name_ar: "التنسيق وفق APA 7"
+    name_en: "APA Formatting Skill"
+    purpose: "تنسيق الإحالات والقائمة وفق APA 7 افتراضياً، أو Chicago/Harvard/MLA عبر CSL."
+    procedure: ["تصدير CSL-JSON من Zotero", "تطبيق ملف CSL المعتمد عبر citeproc/Pandoc", "مراجعة الحالات العربية الخاصة (الأسماء، التواريخ الهجرية)"]
+    outputs: ["references formatted"]
+    realization: ["code", "prompt"]
+    status: available_now
+    tools: [TL-CSL, TL-PANDOC, TL-ZOTERO]
+
+  - id: SKL-STATVAL
+    name_ar: "التحقق الإحصائي"
+    name_en: "Statistical Validation Skill"
+    purpose: "إعادة حساب الأرقام والاختبارات وفحص الافتراضات وملاءمة الاستدلال."
+    procedure: ["إعادة الحساب من البيانات", "فحص الافتراضات", "فحص أحجام الأثر وفترات الثقة", "كشف المقارنات المتعددة", "تقرير"]
+    outputs: ["stat_validation.yaml"]
+    realization: ["code", "prompt", "claude_skill:arabic-math-econ"]
+    status: needs_code
+    tools: [TL-PY, TL-R]
+
+  - id: SKL-AREDIT
+    name_ar: "التحرير العربي الأكاديمي"
+    name_en: "Academic Arabic Editing Skill"
+    purpose: "ضبط النحو والإملاء والترقيم والأسلوب مع حفظ السجل الفصيح."
+    procedure: ["مرور نحوي", "مرور إملائي وترقيمي", "مرور أسلوبي محافظ", "مرور مصطلحي مقابل المسرد", "تقرير التغييرات بأنواعها"]
+    outputs: ["edited text", "copyedit_report.md"]
+    realization: ["prompt", "claude_skill:style-fingerprint-majed-ar"]
+    status: available_now
+
+  - id: SKL-OUTLINE
+    name_ar: "بناء هيكل الكتاب"
+    name_en: "Book Outline Skill"
+    purpose: "هيكل فصول بوظائف وأسئلة وأدلة وموازنة كلمات."
+    procedure: ["من الأطروحة إلى القوس الحجاجي", "تقسيم القوس إلى فصول", "لكل فصل وظيفة وسؤال وأدلة", "موازنة الطول", "خطة الأشكال"]
+    outputs: ["outline.yaml"]
+    realization: ["prompt"]
+    status: available_now
+
+  - id: SKL-ARGMAP
+    name_ar: "رسم خرائط الحجاج"
+    name_en: "Argument Mapping Skill"
+    purpose: "تفكيك الحجة إلى دعاوى ومقدمات وأدلة واعتراضات وردود (نموذج تولمين معدّل)."
+    procedure: ["تحديد الدعوى", "المقدمات", "الأدلة لكل مقدمة", "الضمانات", "الاعتراضات", "الردود", "إخراج argument_map.mmd"]
+    outputs: ["argument_map.mmd"]
+    realization: ["prompt"]
+    status: available_now
+
+  - id: SKL-CLAIMTAG
+    name_ar: "وسم الادعاءات"
+    name_en: "Claim Tagging"
+    purpose: "وسم كل ادعاء بـ FACT/EBI/INTERP/HYP/AUTHOR وربطه بالدليل."
+    procedure: ["تقطيع النص إلى ادعاءات", "تصنيف كل ادعاء", "ربط FACT/EBI بمعرّف دليل", "التحقق آلياً من اكتمال الوسوم"]
+    outputs: ["tagged text", "claims.jsonl"]
+    realization: ["prompt", "code:runtime/rkpos/verify/claims.py"]
+    status: available_now
+
+  - id: SKL-FACTCHECK
+    name_ar: "تدقيق الوقائع"
+    name_en: "Fact Checking Skill"
+    purpose: "مطابقة كل ادعاء وقائعي مع نص مصدره وحكمه."
+    procedure: ["استخراج الادعاء", "جلب المقطع من المصدر", "المطابقة", "حكم SUPPORTED/PARTIAL/UNSUPPORTED/MISATTRIBUTED مع مقتطف"]
+    outputs: ["fact_audit.yaml"]
+    realization: ["prompt", "claude_skill:source-integrity-ar"]
+    status: available_now
+
+  - id: SKL-TABLE
+    name_ar: "توليد الجداول"
+    name_en: "Table Generation Skill"
+    purpose: "جداول دقيقة من البيانات مع مصدر وسكربت."
+    procedure: ["قراءة النتائج", "بناء الجدول Markdown/LaTeX", "سطر المصدر", "التحقق من مطابقة الأرقام"]
+    outputs: ["tables/*.md"]
+    realization: ["code"]
+    status: needs_code
+    tools: [TL-PY]
+
+  - id: SKL-VIZ
+    name_ar: "التصوير البياني بالهوية البصرية"
+    name_en: "Branded Visualization"
+    purpose: "أشكال SVG/PDF بالألوان #1F4E79/#B8860B وخط Noto Naskh Arabic."
+    procedure: ["اختيار نوع الشكل الملائم للبيانات", "تطبيق brand.yaml", "التعليق والمصدر", "فحص التباين"]
+    outputs: ["figures/*.svg"]
+    realization: ["code"]
+    status: needs_code
+    tools: [TL-PY]
+
+  - id: SKL-BIBCLEAN
+    name_ar: "تنظيف الببليوغرافيا"
+    name_en: "Bibliography Cleaning Skill"
+    purpose: "إزالة التكرار وتوحيد الأسماء والحقول وكشف النواقص."
+    procedure: ["مطابقة DOI", "مطابقة عنوان مطبّع", "توحيد أسماء المؤلفين العربية", "إكمال الحقول من OpenAlex", "تقرير"]
+    outputs: ["clean references", "bibclean_report.md"]
+    realization: ["code:runtime/rkpos/verify/bibclean.py"]
+    status: available_now
+
+  - id: SKL-OCRVAL
+    name_ar: "التحقق من التفريغ الضوئي"
+    name_en: "OCR Validation Skill"
+    purpose: "قياس دقة OCR على عينة مرجعية (CER/WER) وتعليم المقاطع الضعيفة."
+    procedure: ["تفريغ", "اختيار عينة", "مقارنة بتفريغ بشري", "حساب CER/WER", "عتبة القبول"]
+    outputs: ["ocr_quality.yaml"]
+    realization: ["code"]
+    status: needs_code
+    tools: [TL-OCR, TL-PY]
+
+  - id: SKL-META
+    name_ar: "استخلاص البيانات الوصفية"
+    name_en: "Metadata Extraction Skill"
+    purpose: "استخلاص وتطبيع البيانات الوصفية للمصادر والمخرجات (Dublin Core + حقول المشروع)."
+    procedure: ["قراءة PDF/الموصل", "استخلاص الحقول", "التطبيع", "التحقق من المخطط"]
+    outputs: ["metadata records"]
+    realization: ["code", "api"]
+    status: needs_code
+    tools: [TL-PDFPARSE, TL-OPENALEX]
+
+  - id: SKL-PRISMA
+    name_ar: "المراجعة المنهجية وفق PRISMA 2020"
+    name_en: "Systematic Review (PRISMA 2020)"
+    purpose: "بروتوكول، فرز، استخلاص، تقييم جودة، ومخطط تدفق PRISMA."
+    procedure: ["بروتوكول معتمد", "تحديد", "فرز بالعنوان والملخص", "فرز النص الكامل", "استخلاص", "تقييم مخاطر التحيز", "التركيب", "مخطط التدفق"]
+    outputs: ["protocol.md", "prisma_flow.json", "extraction.csv"]
+    realization: ["prompt", "code"]
+    status: needs_code
+
+  - id: SKL-PROJMGMT
+    name_ar: "إدارة المشروع"
+    name_en: "Project Management"
+    purpose: "تفكيك العمل، الجدولة، المتابعة، إدارة المخاطر والحالة."
+    procedure: ["WBS", "تقدير", "جدولة", "متابعة الحالة", "تحديث STATE", "سجل المخاطر"]
+    outputs: ["plan.yaml", "state.yaml"]
+    realization: ["code:runtime/rkpos/state.py", "claude_skill:project-runtime-protocol-ar"]
+    status: available_now
+
+  - id: SKL-HANDOFF
+    name_ar: "صياغة حزم التسليم"
+    name_en: "Handoff Packaging"
+    purpose: "بناء حزمة Handoff كاملة وفق المخطط والتحقق منها قبل الإرسال."
+    procedure: ["جمع السياق والقرارات", "قائمة المصادر", "حالة الجودة", "التحقق من المخطط", "الإرسال والتسجيل"]
+    outputs: ["handoff.json"]
+    realization: ["code:runtime/rkpos/protocol.py"]
+    status: available_now
+
+  - id: SKL-AGENTSELECT
+    name_ar: "الاختيار الديناميكي للوكلاء"
+    name_en: "Dynamic Agent Selection"
+    purpose: "اختيار الحد الأدنى الكافي من الوكلاء وفق عوامل المشروع."
+    procedure: ["قراءة عوامل التصنيف", "تطبيق قواعد validation/agent_selection_rules.yaml", "تطبيق نموذج التشغيل", "تقرير التعليل"]
+    outputs: ["selected_agents in plan.yaml"]
+    realization: ["code:runtime/rkpos/selection.py"]
+    status: available_now
+
+  - id: SKL-COSTTRACK
+    name_ar: "تتبع الكلفة"
+    name_en: "Cost Tracking"
+    purpose: "تجميع أحداث الكلفة ومقارنتها بالحدود."
+    procedure: ["قراءة cost_events", "التجميع حسب الأبعاد", "المقارنة بالحدود", "الإنذار"]
+    outputs: ["cost_report.md"]
+    realization: ["code:runtime/rkpos/cost.py"]
+    status: available_now
+
+  - id: SKL-CULTPOL
+    name_ar: "تحليل السياسات الثقافية"
+    name_en: "Cultural Policy Analysis"
+    purpose: "أطر تحليل السياسات الثقافية والحوكمة الثقافية والمقارنة الدولية."
+    procedure: ["تحديد مستوى السياسة", "الفاعلون والأدوات", "المقارنة المسندة", "المزالق المفاهيمية"]
+    outputs: ["domain_review.md"]
+    realization: ["prompt"]
+    status: available_now
+
+  - id: SKL-QUAL
+    name_ar: "المناهج النوعية والترميز"
+    name_en: "Qualitative Methods & Coding"
+    purpose: "تصميم وتحليل نوعي (تحليل موضوعي، ترميز، تشبع)."
+    procedure: ["دليل الترميز", "الترميز المفتوح والمحوري", "اتفاق المرمّزين", "المصفوفات", "الشفافية"]
+    outputs: ["codebook.yaml", "qual_analysis.md"]
+    realization: ["prompt", "code"]
+    status: available_now
+
+  - id: SKL-CAUSAL
+    name_ar: "الاستدلال السببي"
+    name_en: "Causal Inference"
+    purpose: "فحص ادعاءات السببية وتصميم استراتيجيات التعرّف (DAG، الفرق في الفروق...)."
+    procedure: ["رسم DAG", "تحديد المربكات", "تقييم استراتيجية التعرّف", "حدود الادعاء"]
+    outputs: ["causal_assessment.md"]
+    realization: ["prompt", "code"]
+    status: available_now
+
+  - id: SKL-SCENARIO
+    name_ar: "بناء السيناريوهات"
+    name_en: "Scenario Planning"
+    purpose: "سيناريوهات مستقبلية من محاور عدم اليقين مع مؤشرات إنذار."
+    procedure: ["مسح المحركات STEEP", "ترتيب حسب الأثر وعدم اليقين", "اختيار محورين", "أربع سرديات", "مؤشرات إنذار", "آثار سياساتية"]
+    outputs: ["scenarios.yaml"]
+    realization: ["prompt"]
+    status: available_now
+
+  - id: SKL-SYSTEMS
+    name_ar: "التفكير المنظومي"
+    name_en: "Systems Thinking"
+    purpose: "حلقات سببية، نقاط رافعة، نماذج مخزون/تدفق مبسطة."
+    procedure: ["تحديد المتغيرات", "الحلقات المعززة والموازنة", "التأخيرات", "نقاط الرافعة"]
+    outputs: ["causal_loop.mmd"]
+    realization: ["prompt"]
+    status: available_now
+
+  - id: SKL-STYLE
+    name_ar: "البصمة الأسلوبية للمؤلف"
+    name_en: "Author Style Fingerprint"
+    purpose: "مطابقة النص مع أسلوب المؤلف ومصطلحاته المعتمدة."
+    procedure: ["قراءة MEM-AUTHOR", "تطبيق السجل والإيقاع والمعجم", "رصد الانحرافات"]
+    outputs: ["style notes"]
+    realization: ["claude_skill:style-fingerprint-majed-ar", "claude_skill:op-ed-column-ar"]
+    status: available_now
+
+  - id: SKL-TERMS
+    name_ar: "إدارة المصطلحات"
+    name_en: "Terminology Management"
+    purpose: "صيانة المسرد الثنائي وفرض الاتساق."
+    procedure: ["استخراج المصطلحات", "المطابقة مع glossary.yaml", "اقتراح مصطلحات جديدة", "منع الاعتماد الذاتي"]
+    outputs: ["glossary_proposals.yaml"]
+    realization: ["code:runtime/rkpos/verify/terms.py", "prompt"]
+    status: available_now
+
+  - id: SKL-RISKAUDIT
+    name_ar: "تقدير خطر الانتحال"
+    name_en: "Plagiarism Risk Audit"
+    purpose: "فحص التشابه وإعادة الصياغة القريبة والانتحال الذاتي."
+    procedure: ["فحص الخدمة الخارجية إن توفرت", "فحص داخلي بالتشابه الدلالي مع القاعدة", "مراجعة الاقتباسات الحرفية", "تقرير مستوى الخطر"]
+    outputs: ["similarity section in integrity_report"]
+    realization: ["api", "code"]
+    status: needs_account
+    tools: [TL-SIMCHECK, TL-VDB]
+
+  - id: SKL-RIGHTS
+    name_ar: "الحقوق والأذونات"
+    name_en: "Copyright & Permissions"
+    purpose: "سجل حقوق للمواد المستعارة وتقدير الاستخدام العادل/الأذونات."
+    procedure: ["حصر المواد المستعارة", "تحديد صاحب الحق والترخيص", "حالة الإذن", "تقرير"]
+    outputs: ["rights_register.yaml"]
+    realization: ["prompt"]
+    status: available_now
+
+  - id: SKL-REDTEAM
+    name_ar: "بروتوكول الفريق الأحمر"
+    name_en: "Red Team Protocol"
+    purpose: "الأنماط الثمانية لاختبار الحجة (انظر governance/red_team_protocol.md)."
+    procedure: ["تفنيد", "أدلة معارضة", "تناقض", "تحيز", "قفزات منطقية", "سببية", "تعميم", "بيانات مناقضة"]
+    outputs: ["red_team report"]
+    realization: ["prompt"]
+    status: available_now
+
+  - id: SKL-PEERREVIEW
+    name_ar: "التحكيم العلمي"
+    name_en: "Peer Review"
+    purpose: "تحكيم أعمى بمعايير المجلات المحكمة."
+    procedure: ["ملخص العمل", "الأصالة", "المنهج", "الأدلة", "الإسهام", "الوضوح", "ملاحظات كبرى/صغرى", "توصية"]
+    outputs: ["peer_review.yaml"]
+    realization: ["prompt"]
+    status: available_now
+
+  - id: SKL-INDEX
+    name_ar: "بناء الفهارس"
+    name_en: "Indexing"
+    purpose: "فهارس الأعلام والأماكن والمفاهيم مرتبطة بالمواضع."
+    procedure: ["استخراج الكيانات", "التطبيع والتجميع", "المراجعة البشرية", "الربط في الإخراج"]
+    outputs: ["index.md"]
+    realization: ["code", "prompt"]
+    status: needs_code
+
+  - id: SKL-PDF
+    name_ar: "إنتاج PDF عربي"
+    name_en: "PDF Production"
+    purpose: "إخراج PDF عربي بخطوط مضمّنة واتجاه RTL."
+    procedure: ["Pandoc → XeLaTeX/LuaLaTeX بقالب publishing/templates", "تضمين الخطوط", "فحص"]
+    outputs: ["book.pdf"]
+    realization: ["code:scripts/build_publication.sh"]
+    status: available_now
+    tools: [TL-PANDOC]
+
+  - id: SKL-EPUB
+    name_ar: "إنتاج EPUB"
+    name_en: "EPUB Production"
+    purpose: "EPUB3 عربي RTL صالح."
+    procedure: ["Pandoc → EPUB3", "CSS RTL", "EPUBCheck"]
+    outputs: ["book.epub"]
+    realization: ["code:scripts/build_publication.sh"]
+    status: available_now
+    tools: [TL-PANDOC, TL-EPUBCHECK]
+
+  - id: SKL-LESSONS
+    name_ar: "استخلاص المعرفة والدروس"
+    name_en: "Knowledge Extraction"
+    purpose: "استخلاص القرارات والمناهج والمصادر والأخطاء والدروس والقوالب والمصطلحات والتحسينات عند الإغلاق."
+    procedure: ["قراءة السجلات", "الاستخلاص في الفئات الثماني", "صياغة عناصر مرشحة بحقول Memory Schema", "طلب الاعتماد"]
+    outputs: ["kb_candidates.yaml", "lessons_learned.md"]
+    realization: ["prompt", "code:runtime/rkpos/knowledge.py"]
+    status: available_now
+
+  - id: SKL-COLLATION
+    name_ar: "مقابلة النسخ"
+    name_en: "Manuscript Collation"
+    purpose: "مقابلة نسخ المخطوط ورصد الفروق آلياً."
+    procedure: ["محاذاة النصوص", "رصد الفروق", "تصنيفها", "جدول المقابلة"]
+    outputs: ["collation_table.csv"]
+    realization: ["code"]
+    status: needs_code
+
+  - id: SKL-TRANSLATE
+    name_ar: "الترجمة المصطلحية"
+    name_en: "Terminology-aware Translation"
+    purpose: "ترجمة أمينة بذاكرة ترجمة ومسرد ثنائي."
+    procedure: ["تحميل المسرد", "الترجمة المقطعية", "وسم الالتباس", "مطابقة عيّنية"]
+    outputs: ["translation"]
+    realization: ["prompt"]
+    status: available_now
+
+  - id: SKL-VERSION
+    name_ar: "إدارة الإصدارات"
+    name_en: "Versioning"
+    purpose: "Commits، وسوم، CHANGELOG، نسخ احتياطي."
+    procedure: ["commit منضبط", "وسم المرحلة", "تحديث CHANGELOG", "نسخ احتياطي"]
+    outputs: ["tags", "CHANGELOG.md"]
+    realization: ["code:runtime/rkpos/versioning.py"]
+    status: available_now
+
+  - id: SKL-PIPELINE
+    name_ar: "تشغيل خطوط الأتمتة"
+    name_en: "Pipeline Operations"
+    purpose: "تشغيل ومراقبة CI والمزامنة والاستيعاب."
+    procedure: ["جدولة", "تشغيل", "مراقبة", "إعادة محاولة", "تقرير"]
+    outputs: ["pipeline logs"]
+    realization: ["code:.github/workflows"]
+    status: available_now
+
+  - id: SKL-SECAUDIT
+    name_ar: "التدقيق الأمني"
+    name_en: "Security Audit"
+    purpose: "فحص الأسرار ومطابقة الصلاحيات ومراجعة سجلات الوصول."
+    procedure: ["secret scan", "permissions lint", "مراجعة access logs", "تقرير"]
+    outputs: ["security_report.md"]
+    realization: ["code:scripts/security_scan.py"]
+    status: available_now
+
+# مهارات Claude القائمة لدى المؤلف والمربوطة بالمنظومة (تُستدعى بالاسم داخل بيئة Claude):
+existing_claude_skills:
+  - {name: council-orchestration-ar, binds_to: [AG-ORC, AG-COUNCIL], note: "الأصوات الستة تقابل: Intake=AG-RQA، الإطار=AG-THR/AG-LRV، المنهج=AG-BKA/AG-MTH، المنفذ=AG-WRT، QA=AG-EVA/AG-INT، المحكّم=AG-RED/AG-PRV"}
+  - {name: source-integrity-ar, binds_to: [AG-SRC, AG-EVA, AG-INT, AG-SUP-EVD, AG-SUP-INT]}
+  - {name: grmm-master-manifest-ar, binds_to: [AG-ORC, AG-RQA], note: "المشاريع البحثية المركبة: project manifest يحيل إلى GRMM"}
+  - {name: project-runtime-protocol-ar, binds_to: [AG-ORC], note: "بطاقة الحالة ودورة الجلسة = state.yaml"}
+  - {name: style-fingerprint-majed-ar, binds_to: [AG-WRT, AG-ARE, AG-SUP-EDT]}
+  - {name: op-ed-column-ar, binds_to: [AG-WRT], note: "سير عمل WF-OPED"}
+  - {name: arabic-math-econ, binds_to: [AG-DAT, AG-WRT]}
+  - {name: academic-integrity-sunni-sources-ar, binds_to: [AG-SRC, AG-DSC, AG-INT], note: "سياسة انتقاء المراجع الخاصة بالمؤلف"}
+  - {name: graphify-knowledge-graph, binds_to: [AG-KNW, AG-THR]}
+  - {name: arabic-personal-library-builder, binds_to: [AG-KNW], note: "تكامل مع PKC/MajLib"}
+  - {name: ccap-project, binds_to: [AG-ORC], note: "مشروع BCCM-2026 عند فتحه داخل الوحدة"}

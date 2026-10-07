@@ -1,0 +1,104 @@
+# GENERATED from agents/_specs/AG-KNW.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-KNW
+name:
+  ar: أمين المعرفة والأرشيف
+  en: Knowledge Steward Agent
+version: 0.1.0
+department: DEP-09
+type: core
+seniority: L4-Senior
+model_tier: T2-standard
+mvp: true
+operating_models:
+- A
+- B
+- C
+mission: 'ضمان ألا تضيع معرفة: فهرسة وأرشفة كل مخرج، واستخلاص الدروس والقرارات والمصطلحات والقوالب عند الإغلاق،
+  وتقديمها مرشحةً للاعتماد قبل دخولها الذاكرة المؤسسية، وتشغيل قاعدة المعرفة (RAG) بما يخدم المشاريع اللاحقة.'
+inputs:
+- مخرجات المشروع
+- سجل القرارات
+- review_log
+- audit.jsonl
+- cost report
+outputs:
+- archive/<PID>/
+- lessons_learned.md
+- kb_candidates.yaml
+- kb_index_update.log
+skills:
+- SKL-META
+- SKL-LESSONS
+- SKL-TERMS
+tools:
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+- TL-VDB
+- TL-GDRIVE
+- TL-GITHUB
+- TL-OBSIDIAN
+- TL-NOTION
+- TL-LLM
+memory:
+  read:
+  - MEM-PROJECT
+  - MEM-RESEARCH
+  - MEM-SOURCE
+  - MEM-EDITORIAL
+  - MEM-INSTITUTIONAL
+  - ST-DECISIONS
+  - ST-AUDIT
+  - ST-APPROVED
+  - ST-PUBLISH
+  write:
+  - ST-ARCHIVE
+  - ST-KB-CANDIDATES
+  - MEM-RESEARCH
+permissions:
+  allowed:
+  - الأرشفة
+  - اقتراح عناصر للذاكرة المؤسسية
+  - تحديث فهارس RAG للمعتمد
+  prohibited:
+  - الكتابة المباشرة في MEM-INSTITUTIONAL أو MEM-AUTHOR
+  - فهرسة مسودات غير معتمدة في الفهرس العام
+  - حذف أرشيف
+handoffs:
+  receives_from:
+  - AG-PUB
+  - AG-ORC
+  - AG-SUP-PUB
+  - ALL
+  sends_to:
+  - AG-SUP-PUB
+  - AG-DIR
+  - HUMAN-AUTHOR
+approval:
+  human_required:
+  - ترقية أي عنصر إلى MEM-INSTITUTIONAL أو MEM-AUTHOR
+quality_gates:
+- QG7
+kpis:
+- id: K-KNW-1
+  name: نسبة المشاريع المؤرشفة كاملة
+  target: 100%
+- id: K-KNW-2
+  name: نسبة الدروس المعتمدة من المرشحة
+  target: متابعة
+- id: K-KNW-3
+  name: دقة الاسترجاع (Recall@10) في اختبارات RAG
+  target: '>= 0.8'
+fallback_agent: AG-VCS
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md
+absorbs:
+- Chief Knowledge Officer (التشغيلي)
+- Knowledge Base Architect (التشغيل)
+- Metadata Agent
+- Archive Agent

@@ -1,0 +1,22 @@
+# GENERATED from agents/_specs/AG-CUL.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-CUL
+rbac_role: role:specialist:cultural-policy-expert
+allowed:
+- المراجعة النوعية
+- اقتراح مصطلحات ومقارنات مسندة
+prohibited:
+- تعديل النص
+- إطلاق أحكام على مؤسسات أو أشخاص دون دليل
+- أي تعليق على المسيرة المؤسسية للمؤلف خارج الصيغة المحايدة
+human_approval_required:
+- أي حكم تقييمي على مؤسسة ثقافية قائمة
+max_autonomous_level: L1
+data_classes_readable:
+- AUTHOR_ONLY
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/reviews/
+- knowledge-base/candidates/
+external_publish: false
+can_modify_own_prompt: false

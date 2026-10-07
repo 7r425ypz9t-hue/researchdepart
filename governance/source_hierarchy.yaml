@@ -1,0 +1,17 @@
+# هرم المصادر — Source Hierarchy
+version: 0.1.0
+tiers:
+  - {tier: 1, name_ar: المحكّم والأولي, types: [peer_reviewed_journal, primary_dataset, government_record, university_research, international_organization], may_support: [FACT, EBI, INTERP]}
+  - {tier: 2, name_ar: الأكاديمي المنشور, types: [university_press, academic_book, research_institute], may_support: [FACT, EBI, INTERP]}
+  - {tier: 3, name_ar: التقارير المهنية, types: [professional_report, consultancy_report, ngo_report], may_support: [EBI, INTERP], condition: "FACT فقط مع مصدر Tier 1-2 مؤيد"}
+  - {tier: 4, name_ar: الصحافة الموثوقة, types: [reputable_journalism], may_support: [FACT], condition: "وقائع حدثية فقط + مصدر ثانٍ مستقل"}
+  - {tier: 5, name_ar: الاستكشاف, types: [general_web, blog, social_media, encyclopedia_open], may_support: [], condition: "استكشاف أولي فقط؛ يُمنع أساساً لحجة"}
+special_sources:
+  - {type: manuscript, handling: "NOT_VERIFIABLE رقمياً؛ يوثَّق بالمكتبة ورقم الحفظ؛ قبوله L2/L4"}
+  - {type: interview, handling: "سجل موافقة + تاريخ + نص مفرّغ؛ CONFIDENTIAL"}
+  - {type: classical_text, handling: "طبعة محققة معتمدة مع ذكر المحقق والطبعة"}
+author_policy_binding: "تُطبَّق سياسة الكاتب الخاصة بانتقاء المراجع (academic-integrity-sunni-sources-ar) إضافة إلى هذا الهرم"
+rules:
+  - "لا اعتماد على Tier 5 كأساس للحجة البحثية دون تحقق وترقية بمصدر أعلى"
+  - "المصدر المسحوب (RETRACTED) لا يُستشهد به إلا موضوعاً للنقاش مع التصريح بسحبه"
+  - "الأولوية للمصدر الأولي على الثانوي الناقل عنه"

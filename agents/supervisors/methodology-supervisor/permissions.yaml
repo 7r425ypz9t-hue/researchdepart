@@ -1,0 +1,22 @@
+# GENERATED from agents/_specs/AG-SUP-MTH.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SUP-MTH
+rbac_role: role:supervisory:methodology-supervisor
+allowed:
+- اعتماد أو رفض QG2
+- طلب إعادة تحليل
+- طلب CHALLENGE من AG-RED
+prohibited:
+- كتابة فصل المنهجية بدلاً من المنتج
+- تعديل البيانات
+- اعتماد بوابة غير QG2
+human_approval_required:
+- تغيير المنهج الرئيس بعد اعتماده
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/reviews/
+- logs/audit.jsonl
+external_publish: false
+can_modify_own_prompt: false

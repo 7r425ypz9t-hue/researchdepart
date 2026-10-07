@@ -1,0 +1,21 @@
+# GENERATED from agents/_specs/AG-INT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-INT
+rbac_role: role:core:research-integrity
+allowed:
+- تجميد مقطع بخطر عالٍ
+- طلب CORRECTION
+prohibited:
+- إصلاح النص بنفسه
+- منح إذن حقوق
+- إخفاء نتيجة فحص
+human_approval_required:
+- استعمال مادة محمية
+- نشر مع خطر متوسط موثق
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/reviews/
+external_publish: false
+can_modify_own_prompt: false

@@ -1,0 +1,36 @@
+# نظام القرار وحقوقه — Decision Rights Matrix
+version: 0.1.0
+levels:
+  L1: {name_ar: ذاتي للوكيل, approver: الوكيل نفسه, logging: audit}
+  L2: {name_ar: موافقة المشرف, approver: المشرف المختص أو AG-ORC للإجرائيات, logging: audit+review}
+  L3: {name_ar: قرار المجلس, approver: AG-COUNCIL, logging: council_minutes}
+  L4: {name_ar: موافقة المؤلف, approver: HUMAN-AUTHOR, logging: decisions.yaml (DC-xxx)}
+rule_of_doubt: "عند الشك يُرفع القرار درجة"
+decisions:
+  # L4 — حكر على المؤلف
+  - {id: D-01, decision: عنوان الكتاب, level: L4}
+  - {id: D-02, decision: الأطروحة الرئيسة, level: L4}
+  - {id: D-03, decision: الاستنتاجات الجوهرية, level: L4}
+  - {id: D-04, decision: حذف فصل أو إضافته, level: L4}
+  - {id: D-05, decision: إضافة نظرية أو استبدالها, level: L4}
+  - {id: D-06, decision: نشر النسخة النهائية, level: L4}
+  - {id: D-07, decision: اعتماد الهيكل, level: L4}
+  - {id: D-08, decision: فتح مشروع وميزانيته, level: L4}
+  - {id: D-09, decision: ترقية معرفة إلى MEM-INSTITUTIONAL/MEM-AUTHOR, level: L4}
+  - {id: D-10, decision: تفعيل وكيل مؤقت أو ترقيته دائماً, level: L4}
+  - {id: D-11, decision: منح صلاحية أو توسيعها, level: L4}
+  - {id: D-12, decision: استعمال مادة محمية, level: L4}
+  - {id: D-13, decision: صياغة موقف جديد للمؤلف, level: L4}
+  - {id: D-14, decision: اعتماد System Prompt أو نموذج جديد لوكيل بعد الاختبارات, level: L4}
+  # L3 — المجلس
+  - {id: D-20, decision: تقييم فكرة الكتاب قبل عرضها على المؤلف, level: L3}
+  - {id: D-21, decision: مراجعة الهيكل والمنهج والحجج والنتائج والنسخة النهائية, level: L3}
+  - {id: D-22, decision: حسم نزاع بين وكيلين لم يحسمه المشرف, level: L3}
+  - {id: D-23, decision: QG3 بوابة الحجة, level: L3}
+  # L2 — المشرفون
+  - {id: D-30, decision: QG1 QG2 QG4 QG5 QG7, level: L2}
+  - {id: D-31, decision: قبول مصدر NOT_VERIFIABLE لادعاء غير مركزي, level: L2}
+  - {id: D-32, decision: إعادة إسناد مهمة لوكيل بديل, level: L2}
+  - {id: D-33, decision: إغلاق ملاحظة تحكيم بالتعديل, level: L2}
+  # L1 — ذاتي
+  - {id: D-40, decision: تنسيق، إعادة محاولة أداة، تنظيف مراجع، تحديث حالة, level: L1}

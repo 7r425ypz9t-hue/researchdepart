@@ -1,0 +1,21 @@
+# GENERATED from agents/_specs/AG-TAH.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-TAH
+rbac_role: role:on_demand:critical-edition
+allowed:
+- التفريغ والمقابلة واقتراح التخريج
+prohibited:
+- الترجيح النهائي بين القراءات
+- نسبة نص إلى مؤلف دون دليل
+- تصحيح النص الأصلي صامتاً
+human_approval_required:
+- كل ترجيح بين القراءات
+- نسبة المخطوط
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/data/
+- projects/<PID>/research/
+external_publish: false
+can_modify_own_prompt: false

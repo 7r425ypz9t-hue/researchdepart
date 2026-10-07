@@ -1,0 +1,32 @@
+# GENERATED from agents/_specs/AG-RQA.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-RQA
+read:
+- id: MEM-AUTHOR
+  name_ar: ذاكرة المؤلف
+  path: memory/author/
+  classification: AUTHOR_ONLY
+- id: MEM-PROJECT
+  name_ar: ذاكرة المشروع
+  path: projects/<PID>/memory/
+  classification: CONFIDENTIAL
+- id: MEM-RESEARCH
+  name_ar: الذاكرة البحثية
+  path: knowledge-base/research/
+  classification: INTERNAL
+- id: ST-MANIFEST
+  name_ar: بيان المشروع
+  path: projects/<PID>/manifest.yaml
+  classification: CONFIDENTIAL
+write:
+- id: ST-RESEARCH-NOTES
+  name_ar: ملاحظات البحث
+  path: projects/<PID>/research/
+  classification: INTERNAL
+- id: MEM-PROJECT
+  name_ar: ذاكرة المشروع
+  path: projects/<PID>/memory/
+  classification: CONFIDENTIAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

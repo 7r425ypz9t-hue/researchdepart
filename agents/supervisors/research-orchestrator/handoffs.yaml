@@ -1,0 +1,26 @@
+# GENERATED from agents/_specs/AG-ORC.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-ORC
+receives_from:
+- HUMAN-AUTHOR
+- AG-DIR
+- ALL
+sends_to:
+- ALL
+consult:
+- agent: AG-DIR
+  when: تعارض أولويات بين مشاريع أو برامج بحثية
+- agent: AG-CST
+  when: قبل إطلاق مرحلة يُتوقع أن تتجاوز 20% من ميزانية المشروع
+- agent: AG-SUP-MTH
+  when: تصنيف مشروع ذي منهج غير قياسي
+escalation:
+- trigger: قرار L3
+  to: AG-COUNCIL
+  level: L3
+- trigger: قرار L4 أو تجاوز ميزانية أو موعد
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: HUMAN-AUTHOR
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

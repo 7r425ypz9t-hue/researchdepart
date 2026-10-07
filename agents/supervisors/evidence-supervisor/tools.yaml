@@ -1,0 +1,41 @@
+# GENERATED from agents/_specs/AG-SUP-EVD.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SUP-EVD
+tools:
+- id: TL-FS
+  name: Repository File System
+  access: RW
+  risk: medium
+  availability: built_in
+  fallback: none
+- id: TL-MSG
+  name: Agent Message Bus
+  access: RW
+  risk: low
+  availability: built_in
+  fallback: none
+- id: TL-AUDIT
+  name: Audit Logger
+  access: W
+  risk: low
+  availability: built_in
+  fallback: none
+- id: TL-LLM
+  name: Model Adapter Layer
+  access: R
+  risk: medium
+  availability: built_in (adapter) + needs_account (provider keys)
+  fallback: provider التالي في config/model_routing.yaml
+- id: TL-ZOTERO
+  name: Zotero Web API
+  access: RW
+  risk: medium
+  availability: needs_account
+  fallback: references.jsonl محلي (MEM-SOURCE)
+- id: TL-SQL
+  name: SQL Database
+  access: RW
+  risk: medium
+  availability: built_in (SQLite) / needs_install (PostgreSQL)
+  fallback: JSONL
+connectors:
+- Zotero

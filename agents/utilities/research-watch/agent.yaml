@@ -1,0 +1,66 @@
+# GENERATED from agents/_specs/AG-WCH.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-WCH
+name:
+  ar: وكيل الرصد البحثي المستمر
+  en: Research Watch Agent
+version: 0.1.0
+department: DEP-02
+type: utility
+seniority: L2-Associate
+model_tier: T1-economy
+mvp: false
+operating_models:
+- C
+mission: 'رصد مستمر لموضوعات المشاريع النشطة: تسجيل الدراسات الجديدة المهمة، والتحقق منها، وتصنيفها، وربطها بالمشروع،
+  وإرسال توصية — دون أي تعديل تلقائي للمخطوط.'
+inputs:
+- watch_queries من search_log
+- قائمة المشاريع النشطة
+outputs:
+- watch_feed.jsonl
+- recommendations في ST-WATCH
+skills:
+- SKL-LITSEARCH
+- SKL-META
+tools:
+- TL-OPENALEX
+- TL-CROSSREF
+- TL-S2
+- TL-FS
+- TL-MSG
+- TL-AUDIT
+memory:
+  read:
+  - MEM-PROJECT
+  - MEM-SOURCE
+  write:
+  - ST-WATCH
+permissions:
+  allowed:
+  - الاستعلام المجدول
+  - كتابة التوصيات
+  prohibited:
+  - تعديل أي مخطوط
+  - إضافة مصادر VERIFIED
+handoffs:
+  receives_from:
+  - AG-ORC
+  sends_to:
+  - AG-SRC
+  - AG-ORC
+  - AG-DIR
+approval:
+  human_required: []
+quality_gates: []
+kpis:
+- id: K-WCH-1
+  name: نسبة التوصيات ذات الصلة (حكم المؤلف)
+  target: '>= 60%'
+fallback_agent: AG-DSC
+logging:
+  enabled: true
+  audit_log: logs/audit.jsonl
+  schema: schemas/audit.schema.json
+prompt:
+  system: system_prompt.md
+  constitution: prompts/constitution.md

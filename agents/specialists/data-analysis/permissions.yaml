@@ -1,0 +1,21 @@
+# GENERATED from agents/_specs/AG-DAT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-DAT
+rbac_role: role:specialist:data-analysis
+allowed:
+- تشغيل الشيفرة في بيئة معزولة
+- إنشاء بيانات مشتقة
+prohibited:
+- تعديل data/raw
+- حذف نتائج غير مرغوبة
+- p-hacking
+human_approval_required:
+- استخدام بيانات شخصية أو حساسة
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/data/
+- projects/<PID>/research/
+external_publish: false
+can_modify_own_prompt: false

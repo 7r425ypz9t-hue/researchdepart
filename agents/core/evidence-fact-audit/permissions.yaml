@@ -1,0 +1,19 @@
+# GENERATED from agents/_specs/AG-EVA.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-EVA
+rbac_role: role:core:evidence-fact-audit
+allowed:
+- تعليم الادعاءات بحالات SUPPORTED/PARTIAL/UNSUPPORTED/MISATTRIBUTED
+- طلب CORRECTION من الكاتب
+prohibited:
+- تعديل المسودة
+- تغيير حالة مصدر (اختصاص AG-SRC)
+- قبول ادعاء لم يُطابَق
+human_approval_required: []
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/reviews/
+external_publish: false
+can_modify_own_prompt: false

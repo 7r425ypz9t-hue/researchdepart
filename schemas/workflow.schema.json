@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "workflow.schema.json",
+  "title": "Workflow Definition",
+  "type": "object",
+  "required": [
+    "workflow_id",
+    "name_ar",
+    "version",
+    "project_types",
+    "steps"
+  ],
+  "properties": {
+    "workflow_id": {
+      "type": "string",
+      "pattern": "^WF-[A-Z0-9-]+$"
+    },
+    "name_ar": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "project_types": {
+      "type": "array"
+    },
+    "operating_model_min": {
+      "enum": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    "citation_style": {
+      "type": "string"
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "string"
+          },
+          "agent": {
+            "type": "string"
+          },
+          "reviewer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "task": {
+            "type": "string"
+          },
+          "uses": {
+            "type": "string"
+          },
+          "foreach": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "array"
+          },
+          "inputs": {
+            "type": "array"
+          },
+          "outputs": {
+            "type": "array"
+          },
+          "gate": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decision_level": {
+            "enum": [
+              "L1",
+              "L2",
+              "L3",
+              "L4"
+            ]
+          },
+          "human_approval": {
+            "type": "boolean"
+          },
+          "optional_if": {
+            "type": "string"
+          },
+          "on_fail": {
+            "type": "object"
+          }
+        },
+        "anyOf": [
+          {
+            "required": [
+              "agent",
+              "task"
+            ]
+          },
+          {
+            "required": [
+              "uses"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

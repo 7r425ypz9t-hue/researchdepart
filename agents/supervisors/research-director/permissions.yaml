@@ -1,0 +1,26 @@
+# GENERATED from agents/_specs/AG-DIR.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-DIR
+rbac_role: role:supervisory:research-director
+allowed:
+- اقتراح برامج ومشاريع
+- ترتيب الأولويات المقترح
+- رئاسة جلسات المجلس إجرائياً
+prohibited:
+- اعتماد أطروحة
+- تعديل مخطوط
+- إلغاء مشروع دون موافقة المؤلف
+human_approval_required:
+- اعتماد البرامج البحثية
+- إلغاء مشروع أو تجميده
+- توصيات المجلس ذات الأثر الجوهري
+max_autonomous_level: L1
+data_classes_readable:
+- AUTHOR_ONLY
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/decisions.yaml
+- projects/<PID>/memory/
+- knowledge-base/candidates/
+external_publish: false
+can_modify_own_prompt: false

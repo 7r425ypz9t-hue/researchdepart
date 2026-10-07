@@ -1,0 +1,18 @@
+# سجل الموصلات — ما يحتاجه كل موصل ليعمل فعلاً (القسم 59: شرط الواقعية)
+version: 0.1.0
+connectors:
+  - {id: CN-GITHUB, service: GitHub, tools: [TL-GITHUB], status: available_now, needs: "المستودع الحالي متصل", secrets: [GITHUB_TOKEN (CI تلقائي)], owner: AG-VCS}
+  - {id: CN-GDRIVE, service: Google Drive / Docs / Sheets, tools: [TL-GDRIVE, TL-GDOCS, TL-GSHEETS], status: platform, needs: "تفعيل موصل Google في Claude أو OAuth client للتشغيل البرمجي", secrets: [GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET], owner: AG-AUT}
+  - {id: CN-ZOTERO, service: Zotero Web API, tools: [TL-ZOTERO], status: needs_account, needs: "حساب Zotero + API key بصلاحية القراءة/الكتابة + معرف المستخدم أو المجموعة", secrets: [ZOTERO_API_KEY, ZOTERO_LIBRARY_ID, ZOTERO_LIBRARY_TYPE], owner: AG-SRC}
+  - {id: CN-CROSSREF, service: Crossref REST, tools: [TL-CROSSREF], status: public_api, needs: "شبكة فقط؛ بريد للتواصل (polite pool) مستحسن", secrets: [RKPOS_CONTACT_EMAIL], owner: AG-SRC, implemented_in: runtime/rkpos/verify/doi.py}
+  - {id: CN-OPENALEX, service: OpenAlex, tools: [TL-OPENALEX], status: public_api, needs: "شبكة فقط", secrets: [RKPOS_CONTACT_EMAIL], owner: AG-DSC}
+  - {id: CN-S2, service: Semantic Scholar, tools: [TL-S2], status: public_api, needs: "شبكة؛ مفتاح اختياري لرفع الحدود", secrets: [S2_API_KEY], owner: AG-DSC}
+  - {id: CN-ELICIT, service: Elicit, tools: [TL-ELICIT], status: needs_account, needs: "اشتراك؛ يُستخدم عبر الواجهة ثم تُستورد النتائج CSV", secrets: [], owner: AG-DSC}
+  - {id: CN-LLM-ANTHROPIC, service: Anthropic API, tools: [TL-LLM], status: needs_account, needs: "API key", secrets: [ANTHROPIC_API_KEY], owner: AG-AUT}
+  - {id: CN-LLM-OPENAI, service: OpenAI API, tools: [TL-LLM], status: needs_account, needs: "API key — مقترح لطبقة المراجعة المستقلة T4", secrets: [OPENAI_API_KEY], owner: AG-AUT}
+  - {id: CN-LLM-GOOGLE, service: Google Gemini API, tools: [TL-LLM], status: needs_account, needs: "API key", secrets: [GOOGLE_API_KEY], owner: AG-AUT}
+  - {id: CN-LLM-LOCAL, service: Local LLM (Ollama/vLLM), tools: [TL-LLM], status: needs_install, needs: "خادم محلي متوافق مع OpenAI API", secrets: [LOCAL_LLM_BASE_URL], owner: AG-AUT}
+  - {id: CN-VDB, service: Vector DB (pgvector/Qdrant/Chroma), tools: [TL-VDB], status: needs_install, needs: "قاعدة متجهات + نموذج تضمين", secrets: [VECTOR_DB_URL, EMBEDDING_MODEL], owner: AG-KNW}
+  - {id: CN-SIMCHECK, service: Similarity check, tools: [TL-SIMCHECK], status: needs_account, needs: "اشتراك مؤسسي في خدمة فحص تشابه", secrets: [SIMCHECK_API_KEY], owner: AG-INT}
+  - {id: CN-OBSIDIAN, service: Obsidian vault, tools: [TL-OBSIDIAN], status: needs_install, needs: "مسار الخزنة محلياً", secrets: [OBSIDIAN_VAULT_PATH], owner: AG-KNW}
+  - {id: CN-NOTION, service: Notion, tools: [TL-NOTION], status: needs_account, needs: "Integration token + مشاركة الصفحات", secrets: [NOTION_TOKEN], owner: AG-KNW}

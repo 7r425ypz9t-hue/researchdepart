@@ -1,0 +1,23 @@
+# GENERATED from agents/_specs/AG-SUP-MTH.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-SUP-MTH
+receives_from:
+- AG-ORC
+- AG-MTH
+- AG-DAT
+- AG-LRV
+- AG-POL
+- AG-THR
+sends_to:
+- AG-ORC
+- AG-COUNCIL
+consult:
+- agent: AG-DAT
+  when: الحاجة لإعادة إنتاج نتيجة إحصائية
+escalation:
+- trigger: خلاف منهجي جوهري مع المنتج
+  to: AG-COUNCIL
+  level: L3
+fallback_agent: HUMAN-AUTHOR
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: REVIEW
