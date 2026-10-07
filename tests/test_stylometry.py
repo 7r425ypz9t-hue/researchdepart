@@ -33,3 +33,19 @@ def test_pole_classifies_by_structure():
     author, assisted = S.profile(FLOWING), S.profile(CHOPPY)
     assert S.pole(S.profile(FLOWING), author, assisted)["closer_to"] == "author"
     assert S.pole(S.profile(CHOPPY), author, assisted)["closer_to"] == "assisted"
+
+
+def test_style_contract_least_privilege(tmp_path, monkeypatch):
+    from rkpos import knowledge as K, runner
+    f = tmp_path / "items.jsonl"
+    import json
+    rows = [{"Memory_ID": "MEM-ESSAY-000001", "Type": "style_rule", "Version": 2, "Approved_By": "HUMAN-AUTHOR",
+             "Tags": ["essay"], "Content": "ملمح معتمد"},
+            {"Memory_ID": "MEM-ESSAY-000099", "Type": "style_rule", "Version": 1, "Approved_By": None,
+             "Tags": ["essay"], "Content": "مرشّح غير معتمد"}]
+    f.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in rows), encoding="utf-8")
+    monkeypatch.setattr(K, "LAYER_FILES", {**K.LAYER_FILES, "MEM-AUTHOR": f})
+    wrt = runner.compose_system_prompt("AG-WRT", "essay")
+    assert "ملمح معتمد" in wrt and "مرشّح غير معتمد" not in wrt and runner.AUTHOR_ONLY_BEGIN in wrt
+    assert "ملمح معتمد" not in runner.compose_system_prompt("AG-PUB", "essay")      # لا يقرأ MEM-AUTHOR
+    assert "ملمح معتمد" not in runner.compose_system_prompt("AG-WRT", "academic")   # سجلّ آخر

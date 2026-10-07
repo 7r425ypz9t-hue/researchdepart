@@ -54,7 +54,7 @@ def main(argv=None) -> int:
     ro = sub.add_parser("record-output"); ro.add_argument("project"); ro.add_argument("step"); ro.add_argument("file")
     c = sub.add_parser("complete"); c.add_argument("project"); c.add_argument("step"); c.add_argument("--actor", required=True)
     c.add_argument("--decision"); c.add_argument("--approved-file")
-    pr = sub.add_parser("prompt"); pr.add_argument("agent")
+    pr = sub.add_parser("prompt"); pr.add_argument("agent"); pr.add_argument("--register", choices=["essay", "narrative", "academic"])
     vd = sub.add_parser("verify-doi"); vd.add_argument("doi"); vd.add_argument("--title"); vd.add_argument("--year", type=int)
     cm = sub.add_parser("check-manuscript"); cm.add_argument("project"); cm.add_argument("file")
     se = sub.add_parser("select"); se.add_argument("--type", required=True); se.add_argument("--model", default="A")
@@ -104,7 +104,7 @@ def main(argv=None) -> int:
         _p(runner.complete(a.project, a.step, a.actor, a.decision, Path(a.approved_file) if a.approved_file else None)); return 0
     if a.cmd == "prompt":
         from . import runner
-        print(runner.compose_system_prompt(a.agent)); return 0
+        print(runner.compose_system_prompt(a.agent, a.register)); return 0
     if a.cmd == "verify-doi":
         from .verify import doi
         _p(doi.verify(a.doi, a.title, a.year)); return 0

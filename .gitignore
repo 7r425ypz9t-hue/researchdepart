@@ -12,3 +12,5 @@ validation/reports/
 snapshot-*.tar.gz
 # مواد المؤلف الخاصة لا تُتتبع في مستودع مشترك
 memory/author/private/
+# حزم البرومبت ومخرجات التشغيل قد تحوي مواد AUTHOR_ONLY
+projects/*/runs/

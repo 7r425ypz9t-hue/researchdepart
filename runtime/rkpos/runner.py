@@ -19,11 +19,36 @@ from .ids import now_iso
 from .paths import PROMPTS, PROJECTS, ROOT
 
 
-def compose_system_prompt(agent_id: str) -> str:
+AUTHOR_ONLY_BEGIN = "<!-- AUTHOR_ONLY:BEGIN -->"
+AUTHOR_ONLY_END = "<!-- AUTHOR_ONLY:END -->"
+
+
+def style_contract(agent_id: str, register: str | None) -> str:
+    """عقد الأسلوب: عناصر البصمة **المعتمدة** لسجلّ المشروع من MEM-AUTHOR.
+    لا يُحقن إلا للوكلاء الذين يملكون قراءة MEM-AUTHOR (Least Privilege)، ولا تدخل فيه المرشّحات."""
+    if not register or "MEM-AUTHOR" not in R.agents()[agent_id]["memory"]["read"]:
+        return ""
+    from . import knowledge
+    try:
+        items = knowledge.current("MEM-AUTHOR")
+    except FileNotFoundError:
+        return ""
+    rules = [it for it in items.values() if it["Type"] == "style_rule" and register in it.get("Tags", [])
+             and it.get("Approved_By") == "HUMAN-AUTHOR"]
+    if not rules:
+        return ""
+    rules.sort(key=lambda it: it["Memory_ID"])
+    lines = [f"- [{it['Memory_ID']} v{it['Version']}] {it['Content']}" for it in rules]
+    return (f"\n\n{AUTHOR_ONLY_BEGIN}\nAUTHOR STYLE CONTRACT — register: {register} (approved, MEM-AUTHOR)\n"
+            "التزم بهذه الملامح المعتمدة من المؤلف؛ ما يخالفها يُعلَّم للمحرر ولا يُفرض على النص:\n"
+            + "\n".join(lines) + f"\n{AUTHOR_ONLY_END}\n")
+
+
+def compose_system_prompt(agent_id: str, register: str | None = None) -> str:
     a = R.agents()[agent_id]
     sp = (agent_dir(a) / "system_prompt.md").read_text(encoding="utf-8")
     body = re.search(r"```text\n(.*)```", sp, re.S).group(1)
-    return body + "\n\n" + (PROMPTS / "constitution.md").read_text(encoding="utf-8")
+    return body + style_contract(agent_id, register) + "\n\n" + (PROMPTS / "constitution.md").read_text(encoding="utf-8")
 
 
 def _find_step(plan: dict, step_id: str | None) -> dict:
@@ -76,7 +101,8 @@ def run_step(pid: str, step_id: str | None = None, live: bool = False) -> Path:
         ST.save_plan(pid, plan)
         ST.refresh(pid)
         return run_dir / "author_task.md"
-    system = compose_system_prompt(agent)
+    from .stylometry import register_for
+    system = compose_system_prompt(agent, register_for(pid))
     user = f"TASK MESSAGE\n```yaml\n{yaml.safe_dump(msg, allow_unicode=True, sort_keys=False)}```\n"
     (run_dir / "prompt.md").write_text(f"# SYSTEM\n\n{system}\n\n# USER\n\n{user}", encoding="utf-8")
     out_path = run_dir / "prompt.md"

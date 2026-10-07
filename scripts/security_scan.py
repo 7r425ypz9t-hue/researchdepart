@@ -23,6 +23,8 @@ for f in files:
         txt = p.read_text(encoding="utf-8")
     except UnicodeDecodeError:
         continue
+    if "AUTHOR_ONLY:BEGIN" in txt and f not in ("runtime/rkpos/runner.py", "scripts/security_scan.py") and not f.startswith("tests/"):
+        hits.append(f"{f}: contains AUTHOR_ONLY style contract")
     for name, pat in PATTERNS.items():
         if re.search(pat, txt):
             hits.append(f"{f}: possible {name}")
