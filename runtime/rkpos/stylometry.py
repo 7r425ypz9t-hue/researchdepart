@@ -150,3 +150,27 @@ def load_reference(name: str | None) -> dict | None:
         return None
     p = ROOT / "memory/author/private" / f"style_reference_{name}.json"
     return json.loads(p.read_text(encoding="utf-8"))["profile"] if p.exists() else None
+
+
+def _log_gap(a: float, b: float) -> float:
+    import math
+    return abs(math.log((a + 0.5) / (b + 0.5)))
+
+
+def pole(sample: dict, author_ref: dict, assisted_ref: dict) -> dict:
+    """أيّ القطبين أقرب إليه النص: صوت المؤلف أم الصياغة المُعانة؟ (مؤشر تنبيه لا حكم).
+    يقارن الفجوة اللوغاريتمية على مؤشرات البنية التي تفصل القطبين."""
+    keys = [("sentence_len", "median"), ("comma_period_ratio",), ("punct_per_1k", "colon"),
+            ("template_markers_per_1k",), ("explanatory_per_1k",), ("diacritics_per_1k_chars",)]
+    da = sum(_log_gap(_get(sample, k), _get(author_ref, k)) for k in keys)
+    db = sum(_log_gap(_get(sample, k), _get(assisted_ref, k)) for k in keys)
+    share = round(da / (da + db), 2) if (da + db) else 0.5  # 0 = صوت المؤلف تماماً، 1 = الصياغة المُعانة تماماً
+    return {"closer_to": "author" if da <= db else "assisted", "assisted_share": share,
+            "gap_author": round(da, 2), "gap_assisted": round(db, 2)}
+
+
+def load_assisted_pole() -> dict | None:
+    import json
+    from .paths import ROOT
+    p = ROOT / "memory/author/private/style_pole_assisted.json"
+    return json.loads(p.read_text(encoding="utf-8"))["profile"] if p.exists() else None

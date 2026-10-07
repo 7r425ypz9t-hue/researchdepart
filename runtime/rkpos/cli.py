@@ -117,7 +117,11 @@ def main(argv=None) -> int:
         from . import stylometry
         ref = stylometry.load_reference(stylometry.register_for(a.project))
         if ref:  # تنبيه أسلوبي لا يحجب البوابة (القرار للمحرر والمؤلف)
-            rep["style_deviation"] = stylometry.distance(stylometry.profile(text), ref)
+            prof = stylometry.profile(text)
+            rep["style_deviation"] = stylometry.distance(prof, ref)
+            assisted = stylometry.load_assisted_pole()
+            if assisted:
+                rep["voice_pole"] = stylometry.pole(prof, ref, assisted)
         _p(rep); return 0 if rep["claims"]["passes"] and rep["citations"]["passes_qg4"] else 2
     if a.cmd == "select":
         from . import selection
@@ -131,6 +135,9 @@ def main(argv=None) -> int:
         if a.reference:
             ref = stylometry.load_reference(a.reference)
             out["deviation"] = stylometry.distance(prof, ref) if ref else f"no reference '{a.reference}' in memory/author/private/"
+            assisted = stylometry.load_assisted_pole()
+            if ref and assisted:
+                out["voice_pole"] = stylometry.pole(prof, ref, assisted)
         _p(out); return 0
     if a.cmd == "cost-report":
         from . import cost

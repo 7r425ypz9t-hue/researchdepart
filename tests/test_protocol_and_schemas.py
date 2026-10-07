@@ -89,3 +89,8 @@ def test_author_only_items_never_touch_tracked_files(tmp_path, monkeypatch):
     K.promote("MEM-STYLE-999999", "MEM-AUTHOR", "HUMAN-AUTHOR")
     assert (tmp_path / "private/items.jsonl").exists()
     assert "سر" not in (tmp_path / "logs/audit.jsonl").read_text(encoding="utf-8")
+    with pytest.raises(PermissionError):
+        K.amend("MEM-STYLE-999999", "MEM-AUTHOR", "سر معدّل", "AG-WRT", "test")
+    v2 = K.amend("MEM-STYLE-999999", "MEM-AUTHOR", "سر معدّل", "HUMAN-AUTHOR", "test")
+    assert v2["Version"] == 3 and K.current("MEM-AUTHOR")["MEM-STYLE-999999"]["Content"] == "سر معدّل"
+    assert len((tmp_path / "private/items.jsonl").read_text(encoding="utf-8").splitlines()) == 2  # التاريخ محفوظ

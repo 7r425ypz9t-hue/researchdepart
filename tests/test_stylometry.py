@@ -27,3 +27,9 @@ def test_distance_zero_against_itself():
 
 def test_missing_reference_is_none():
     assert S.load_reference("no-such-register") is None
+
+
+def test_pole_classifies_by_structure():
+    author, assisted = S.profile(FLOWING), S.profile(CHOPPY)
+    assert S.pole(S.profile(FLOWING), author, assisted)["closer_to"] == "author"
+    assert S.pole(S.profile(CHOPPY), author, assisted)["closer_to"] == "assisted"
