@@ -31,7 +31,7 @@
 | `SKL-CAUSAL` | الاستدلال السببي | فحص ادعاءات السببية وتصميم استراتيجيات التعرّف (DAG، الفرق في الفروق...). | prompt، code | available_now | AG-DAT, AG-MTH, AG-POL, AG-RED, AG-SUP-MTH |
 | `SKL-SCENARIO` | بناء السيناريوهات | سيناريوهات مستقبلية من محاور عدم اليقين مع مؤشرات إنذار. | prompt | available_now | AG-POL |
 | `SKL-SYSTEMS` | التفكير المنظومي | حلقات سببية، نقاط رافعة، نماذج مخزون/تدفق مبسطة. | prompt | available_now | AG-POL, AG-THR |
-| `SKL-STYLE` | البصمة الأسلوبية للمؤلف | مطابقة النص مع أسلوب المؤلف ومصطلحاته المعتمدة. | claude_skill:style-fingerprint-majed-ar، claude_skill:op-ed-column-ar | available_now | AG-ARE, AG-BKA, AG-SUP-EDT, AG-WRT |
+| `SKL-STYLE` | البصمة الأسلوبية للمؤلف | مطابقة النص مع أسلوب المؤلف ومصطلحاته المعتمدة. | code:runtime/rkpos/stylometry.py، claude_skill:style-fingerprint-majed-ar، claude_skill:op-ed-column-ar | available_now | AG-ARE, AG-BKA, AG-SUP-EDT, AG-WRT |
 | `SKL-TERMS` | إدارة المصطلحات | صيانة المسرد الثنائي وفرض الاتساق. | code:runtime/rkpos/verify/terms.py، prompt | available_now | AG-ARE, AG-CUL, AG-KNW, AG-SED, AG-SUP-EDT, AG-TRN, AG-WRT |
 | `SKL-RISKAUDIT` | تقدير خطر الانتحال | فحص التشابه وإعادة الصياغة القريبة والانتحال الذاتي. | api، code | needs_account | AG-INT, AG-SUP-INT |
 | `SKL-RIGHTS` | الحقوق والأذونات | سجل حقوق للمواد المستعارة وتقدير الاستخدام العادل/الأذونات. | prompt | available_now | AG-INT, AG-SUP-INT |

@@ -278,7 +278,7 @@ skills:
     purpose: "مطابقة النص مع أسلوب المؤلف ومصطلحاته المعتمدة."
     procedure: ["قراءة MEM-AUTHOR", "تطبيق السجل والإيقاع والمعجم", "رصد الانحرافات"]
     outputs: ["style notes"]
-    realization: ["claude_skill:style-fingerprint-majed-ar", "claude_skill:op-ed-column-ar"]
+    realization: ["code:runtime/rkpos/stylometry.py", "claude_skill:style-fingerprint-majed-ar", "claude_skill:op-ed-column-ar"]
     status: available_now
 
   - id: SKL-TERMS

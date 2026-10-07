@@ -60,6 +60,8 @@ def main(argv=None) -> int:
     se = sub.add_parser("select"); se.add_argument("--type", required=True); se.add_argument("--model", default="A")
     se.add_argument("--domain"); se.add_argument("--has-data", action="store_true"); se.add_argument("--risk", default="medium")
     se.add_argument("--evidence", default="standard"); se.add_argument("--target")
+    sp = sub.add_parser("style-profile", help="قياس البصمة الأسلوبية لنص ومقارنته بملف مرجعي")
+    sp.add_argument("file"); sp.add_argument("--reference", help="اسم الملف المرجعي في memory/author/private (مثل essay)")
     cr = sub.add_parser("cost-report"); cr.add_argument("--project")
     sub.add_parser("dashboard")
     ev = sub.add_parser("eval"); ev.add_argument("agent", nargs="?"); ev.add_argument("--live", action="store_true")
@@ -112,11 +114,24 @@ def main(argv=None) -> int:
         text = Path(a.file).read_text(encoding="utf-8")
         srcs = sources.load(PROJECTS / a.project / "research/sources.jsonl") + sources.load()
         rep = {"claims": claims.audit(text), "citations": citations.audit(text, srcs), "terminology": terms.check(text)}
+        from . import stylometry
+        ref = stylometry.load_reference(stylometry.register_for(a.project))
+        if ref:  # تنبيه أسلوبي لا يحجب البوابة (القرار للمحرر والمؤلف)
+            rep["style_deviation"] = stylometry.distance(stylometry.profile(text), ref)
         _p(rep); return 0 if rep["claims"]["passes"] and rep["citations"]["passes_qg4"] else 2
     if a.cmd == "select":
         from . import selection
         _p(selection.select({"project_type": a.type, "operating_model": a.model, "domain": a.domain, "has_data": a.has_data,
                              "risk": a.risk, "evidence_requirement": a.evidence, "publication_target": a.target})); return 0
+    if a.cmd == "style-profile":
+        from . import stylometry
+        prof = stylometry.profile(Path(a.file).read_text(encoding="utf-8"))
+        prof.pop("top_bigrams", None)
+        out = {"profile": prof}
+        if a.reference:
+            ref = stylometry.load_reference(a.reference)
+            out["deviation"] = stylometry.distance(prof, ref) if ref else f"no reference '{a.reference}' in memory/author/private/"
+        _p(out); return 0
     if a.cmd == "cost-report":
         from . import cost
         _p(cost.report(a.project)); return 0

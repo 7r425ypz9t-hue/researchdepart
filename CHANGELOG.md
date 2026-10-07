@@ -1,5 +1,10 @@
 # CHANGELOG — مِداد / RKPOS
 
+## rkpos-v0.2.0 — 2026-10-07
+- `runtime/rkpos/stylometry.py`: قياس البصمة الأسلوبية العربية (12 مؤشراً + مسافة عن ملف مرجعي)؛ أمر `rkpos style-profile`؛ تنبيه أسلوبي في `rkpos check-manuscript` عند وجود ملف مرجعي لسجلّ المشروع.
+- مراجعة البصمة السردية وبناء بصمة مستقلة للمقال من «ماء الثقافة» (2011): 13 مرشّحاً + 8 مقترحات تعديل، **بانتظار اعتماد المؤلف**؛ المحتوى في المسار الخاص.
+- منهج البصمة القابلة للقياس: documentation/phase-2/style-fingerprint-method.md.
+
 ## rkpos-v0.1.1 — 2026-10-07
 - اعتماد البصمة الأسلوبية للمؤلف في MEM-AUTHOR (MEM-STYLE-000001…000012، L4، المصدر: style-fingerprint-majed-ar).
 - مواد AUTHOR_ONLY تُحفظ حصراً في `memory/author/private/` غير المتتبع؛ المرشحات AUTHOR_ONLY لا تمر بملفات متتبعة؛ منع ترقيتها لغير MEM-AUTHOR؛ فحص أمني يرفض تتبع المسار الخاص.

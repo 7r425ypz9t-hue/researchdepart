@@ -64,6 +64,7 @@
 - [مصفوفة الصلاحيات](permissions-matrix.md)
 - [مصفوفة الذاكرة](memory-matrix.md)
 - [مصفوفة التسليم](handoff-matrix.md)
+- [منهج البصمة الأسلوبية القابلة للقياس](style-fingerprint-method.md)
 
 ## ٢.٥ إضافة وكيل أو تعديله
 1. حرّر/أنشئ `agents/_specs/AG-XXX.yaml`.
