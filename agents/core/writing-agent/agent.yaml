@@ -3,7 +3,7 @@ agent_id: AG-WRT
 name:
   ar: وكيل التأليف والكتابة
   en: Writing Agent
-version: 0.1.0
+version: 0.2.0
 department: DEP-05
 type: core
 seniority: L4-Senior

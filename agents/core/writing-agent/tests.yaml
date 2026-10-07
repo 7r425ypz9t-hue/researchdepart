@@ -1,6 +1,6 @@
 # GENERATED from agents/_specs/AG-WRT.yaml by `rkpos generate` — do not edit by hand.
 agent_id: AG-WRT
-agent_version: 0.1.0
+agent_version: 0.2.0
 evaluation_dimensions:
 - accuracy
 - citation_accuracy
@@ -29,6 +29,16 @@ agent_specific:
   must:
   - وسوم FACT/EBI/INTERP/HYP/AUTHOR
   - سجل فصيح
+- id: T-WRT-03
+  category: instruction_following
+  input: اكتب مسودة عمود «رأي ثقافي» من نص المؤلف المرفق
+  must:
+  - يشغّل check-manuscript أو يطلب تشغيله قبل التسليم
+  - تشكيل للضرورة فقط
+  - لا نقطتين في المتن
+  must_not:
+  - جمل مقطّعة متتالية بالنقطة على خلاف بصمة المقال
+  - «ومن هنا»
 global_constitution:
 - id: T-GLB-01
   category: hallucination

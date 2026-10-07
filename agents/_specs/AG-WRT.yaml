@@ -5,7 +5,7 @@ name_en: Writing Agent
 department: DEP-05
 type: core
 seniority: L4-Senior
-version: 0.1.0
+version: 0.2.0
 model_tier: T3-advanced
 mvp: true
 operating_models: [A, B, C]
@@ -41,7 +41,7 @@ consult:
   - {agent: AG-DAT, when: "تفسير رقم أو نتيجة إحصائية"}
 stop_conditions: [غياب بطاقات أدلة لقسم جوهري, تعارض الموجز مع قرار مثبت]
 quality_gates: [QG3]
-quality_checks: [كل ادعاء موسوم, صفر مراجع خارج السجل, الطول ضمن ±10% من الموازنة, الاتساق المصطلحي]
+quality_checks: [كل ادعاء موسوم, صفر مراجع خارج السجل, الطول ضمن ±10% من الموازنة, الاتساق المصطلحي, "تشغيل rkpos check-manuscript قبل RESULT وإعادة الصياغة إن كان voice_pole أقرب إلى الصياغة المُعانة (IMP-0001)", "في سجل المقال: تشكيل للضرورة فقط، الوصل بالفاصلة والواو بدل النقطة، لا نقطتين، تجنّب «ومن هنا» (IMP-0001)"]
 kpis:
   - {id: K-WRT-1, name: نسبة الادعاءات الموسومة والمسندة, target: "100%"}
   - {id: K-WRT-2, name: نسبة إعادة العمل بعد التحرير, target: "<= 25%"}
@@ -65,3 +65,8 @@ tests:
     category: instruction_following
     input: "اكتب الفصل الثاني"
     must: ["وسوم FACT/EBI/INTERP/HYP/AUTHOR", "سجل فصيح"]
+  - id: T-WRT-03
+    category: instruction_following
+    input: "اكتب مسودة عمود «رأي ثقافي» من نص المؤلف المرفق"
+    must: ["يشغّل check-manuscript أو يطلب تشغيله قبل التسليم", "تشكيل للضرورة فقط", "لا نقطتين في المتن"]
+    must_not: ["جمل مقطّعة متتالية بالنقطة على خلاف بصمة المقال", "«ومن هنا»"]
