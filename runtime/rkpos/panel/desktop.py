@@ -5,7 +5,6 @@
 وقت التثبيت؛ لأن تطبيقات سطح المكتب في ماك ولينكس لا ترث PATH الطرفية فلا تجد الأمر claude.
 """
 from __future__ import annotations
-import base64
 import os
 import plistlib
 import shutil
@@ -71,33 +70,32 @@ def _sh_launcher() -> Path:
     return p
 
 
+def shortcut_script(targets: list[Path], ico: Path) -> str:
+    """نص PowerShell عادي (لا ترميز ولا تجاوز لسياسة التنفيذ) ينشئ اختصاراً يشير مباشرة إلى pythonw.
+    لا ملفات وسيطة ولا تنزيل: ما تراه برامج الحماية هو ما يحدث فعلاً."""
+    q = lambda x: str(x).replace("'", "''")  # noqa: E731
+    parts = []
+    for t in targets:
+        parts.append(
+            f"$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{q(t)}');"
+            f"$s.TargetPath='{q(_python(True))}';$s.Arguments='-m rkpos panel';"
+            f"$s.WorkingDirectory='{q(ROOT)}';$s.IconLocation='{q(ico)}';"
+            "$s.Description='MIDAD control panel';$s.Save();")
+    return "".join(parts)
+
+
 def install_windows(remove: bool = False) -> list[str]:
     lnk = _desktop() / f"{NAME_AR}.lnk"
     start = Path(os.environ.get("APPDATA", Path.home())) / "Microsoft/Windows/Start Menu/Programs" / f"{NAME_AR}.lnk"
     if remove:
         for p in (lnk, start):
             p.unlink(missing_ok=True)
+        (HOME_DIR / "midad-launch.cmd").unlink(missing_ok=True)  # من إصدار سابق
         return [f"removed {lnk}", f"removed {start}"]
     HOME_DIR.mkdir(parents=True, exist_ok=True)
     ico = HOME_DIR / "midad.ico"
     shutil.copyfile(STATIC / "midad.ico", ico)
-    env = _env_lines()
-    # المتغيرات تُمرَّر عبر ملف cmd صغير يُشغَّل مخفياً؛ الاختصار نفسه يشير إليه
-    cmd = HOME_DIR / "midad-launch.cmd"
-    lines = ["@echo off", "chcp 65001 >nul"] + [f'set "{k}={v}"' for k, v in env.items() if k != "PATH"]
-    lines.append(f'start "" "{_python(True)}" -m rkpos panel')
-    cmd.write_text("\r\n".join(lines) + "\r\n", encoding="utf-8")
-    ps = []
-    for target in (lnk, start):
-        ps.append(
-            "$s=(New-Object -ComObject WScript.Shell).CreateShortcut('%s');"
-            "$s.TargetPath='%s';$s.WorkingDirectory='%s';$s.IconLocation='%s';$s.WindowStyle=7;"
-            "$s.Description='MIDAD — لوحة تحكم إدارة البحوث والدراسات والنشر';$s.Save();"
-            % (str(target).replace("'", "''"), str(cmd).replace("'", "''"), str(ROOT).replace("'", "''"),
-               str(ico).replace("'", "''")))
-    script = "".join(ps)
-    enc = base64.b64encode(script.encode("utf-16-le")).decode()
-    subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-EncodedCommand", enc], check=True)
+    subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", shortcut_script([lnk, start], ico)], check=True)
     return [str(lnk), str(start)]
 
 
