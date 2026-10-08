@@ -15,6 +15,19 @@
 
 ## ٢. التثبيت (مرة واحدة)
 
+### الطريق الأسهل في ويندوز: ملف واحد
+نزّلوا [`launchers/midad-setup.bat`](../../launchers/midad-setup.bat) وحده، ثم انقروا عليه مرتين. يتولى الملف ما يلي، ويمكن إعادة تشغيله للتحديث دون أن يمس ملفاتكم الخاصة:
+1. يتحقق من Python 3.10+، ويثبّته عبر winget إن غاب.
+2. ينزّل المستودع إلى `%USERPROFILE%\Midad`.
+3. يثبّت الحزمة.
+4. يستعيد `midad-private-backup.tar.gz` إن وجده في التنزيلات أو سطح المكتب.
+5. يعرض تثبيت Claude Code بالمثبّت الرسمي.
+6. يضع أيقونة «مداد» على سطح المكتب وفي قائمة ابدأ، ثم يفتح اللوحة.
+
+إن ظهرت رسالة «Windows protected your PC» فاختاروا **More info ← Run anyway**؛ الملف نصّي يمكن قراءته في المفكرة قبل تشغيله.
+
+### الطريق اليدوي
+
 1. ثبّتوا **Python 3.10+** (في ويندوز: من python.org مع خيار *Add python.exe to PATH*).
 2. نزّلوا المستودع: `git clone https://github.com/7r425ypz9t-hue/researchdepart.git` أو *Download ZIP* من GitHub.
 3. ضعوا ملف النسخة الاحتياطية الخاصة `midad-private-backup.tar.gz` في مجلد المستودع أو في مجلد التنزيلات.
