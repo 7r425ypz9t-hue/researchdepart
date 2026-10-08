@@ -76,9 +76,21 @@ const PTYPE_AR = {
   op_ed: "مقال رأي", strategic_report: "تقرير استراتيجي", translation: "ترجمة", re_edition: "إعادة إصدار",
   novel: "رواية", novella: "رواية قصيرة (نوفيلا)", short_story: "قصة قصيرة", essay_collection: "مجموعة مقالات فكرية",
 };
+const FILE_AR = { "output.md": "المخرج", "prompt.md": "حزمة البرومبت", "warnings.txt": "التنبيهات", "author_task.md": "مهمة المؤلف",
+  "refusal.txt": "سبب الامتناع", "output.prev.md": "المخرج السابق" };
 const UNIT_STATUS_AR = { PLANNED: "مخطّطة", CARDED: "بطاقة جاهزة", DRAFTED: "مسودة الوكيل", REVISED: "عدّلها المؤلف", APPROVED: "معتمدة" };
 const UNIT_STATUS_CLS = { APPROVED: "ok", REVISED: "gold", DRAFTED: "warn", CARDED: "" };
-let GEN = null;
+let GEN = null, LBL = null;
+async function loadLabels() { LBL = LBL || await G("labels"); return LBL; }
+const taskAr = (t) => (LBL && LBL.tasks[t]) || t || "";
+const statusAr = (x) => (LBL && LBL.statuses[x]) || x;
+const stateAr = (x) => (LBL && LBL.states[x]) || x;
+const levelAr = (x) => x ? x + " · " + ((LBL && LBL.levels[x]) || "") : "";
+const agentAr = (id) => (LBL && (LBL.agents[id] || LBL.actors[id])) || id || "";
+const agentCell = (id) => [agentAr(id), id && agentAr(id) !== id ? h("div", { class: "small muted" }, id) : null];
+const nextAr = (txt) => !txt || txt === "—" ? "—" : String(txt)
+  .replace(/(AG-[A-Z]+(?:-[A-Z]+)?|HUMAN-AUTHOR|AG-COUNCIL)/g, (m) => agentAr(m))
+  .replace(/\b([a-z][a-z0-9_]+(?:-[A-Z]+)?)\b/g, (m) => taskAr(m)).replace("→", "←");
 async function genresData() { GEN = GEN || await G("genres"); return GEN; }
 async function downloadRaw(path) {
   const r = await fetch("/api/raw?path=" + encodeURIComponent(path), { headers: { "X-Rkpos-Token": TOKEN } });
@@ -179,10 +191,11 @@ async function home() {
       btn("فحص نص", () => go("tools")), btn("اعتماد مرشّحات الذاكرة", () => go("governance"), "ghost"),
       btn("فحص سلامة المنظومة", () => go("tools"), "ghost")),
     h("h2", {}, "بانتظار قراركم"),
+    o.questions.length ? h("div", { class: "grid" }, o.questions.map((q) => questionCard(q.project, q, true))) : null,
     o.pending.length ? h("table", {}, h("tr", {}, h("th", {}, "المشروع"), h("th", {}, "المطلوب"), h("th", {}, "")),
       o.pending.map((p) => h("tr", {}, h("td", {}, p.project, h("br"), h("span", { class: "small muted" }, p.title)),
         h("td", {}, (p.items || []).join("، ") || p.next), h("td", {}, btn("افتح", () => openProject(p.project), "sm")))))
-      : h("p", { class: "muted" }, "لا قرارات معلّقة."),
+      : (o.questions.length ? null : h("p", { class: "muted" }, "لا قرارات معلّقة.")),
     h("h2", {}, "المشاريع"), projectsTable(o.projects),
   );
 }
@@ -190,7 +203,7 @@ function projectsTable(rows) {
   if (!rows.length) return h("p", { class: "muted" }, "لا مشاريع بعد. ابدأ بـ«مشروع جديد».");
   return h("table", {}, h("tr", {}, ["المعرّف", "العنوان", "النوع", "المرحلة", "الإنجاز", "الإجراء التالي", ""].map((x) => h("th", {}, x))),
     rows.map((p) => h("tr", {}, h("td", {}, p.id), h("td", {}, p.title), h("td", {}, PTYPE_AR[p.type] || p.type),
-      h("td", {}, pill(p.stage, STATUS_CLS[p.stage])), h("td", {}, (p.pct || 0) + "%"), h("td", { class: "small" }, p.next),
+      h("td", {}, pill(stateAr(p.stage), STATUS_CLS[p.stage])), h("td", {}, (p.pct || 0) + "%"), h("td", { class: "small" }, nextAr(p.next)),
       h("td", {}, btn("افتح", () => openProject(p.id), "sm")))));
 }
 
@@ -237,6 +250,9 @@ async function newProjectForm(preGenre, preType) {
     h("h3", {}, "٢. النوع والعنوان"), h("div", { class: "form" }, field("العنوان العامل", h("input", { id: "np-title" }), true)), typeBox,
     h("h3", {}, "٣. مستوى الإنتاج"), levelBox,
     h("h3", {}, "٤. الحجم"), sizeBox,
+    h("h3", {}, "٥. التشغيل"),
+    h("label", { class: "confirm" }, h("input", { type: "checkbox", id: "np-auto", checked: true }),
+      " شغّل الوكلاء آلياً فور الإنشاء، ولا تتوقف إلا لقراري بخيارات سريعة"),
     h("details", {}, h("summary", {}, "خيارات متقدمة"),
       h("div", { class: "form" },
         field("نموذج التشغيل", sel("np-model", [["A", "A — خفيف"], ["B", "B — قياسي"], ["C", "C — موسّع"]], "A")),
@@ -249,8 +265,10 @@ async function newProjectForm(preGenre, preType) {
     h("div", { class: "row" }, btn("أنشئ المشروع", async () => {
       const r = await api("new_project", { title: val("np-title"), type: val("np-type"), genre, level, pages: val("np-pages"), wpp: val("np-wpp"),
         model: val("np-model"), domain: val("np-domain"), risk: val("np-risk"), evidence: val("np-evidence"), target: val("np-target"),
-        deadline: val("np-deadline"), has_data: val("np-data") });
-      toast("أُنشئ " + r.project_id + " — " + r.workflow); openProject(r.project_id);
+        deadline: val("np-deadline"), has_data: val("np-data"), autopilot: val("np-auto"), engine: engine() });
+      if (val("np-auto") && engine() === "manual") toast("أُنشئ المشروع؛ التشغيل الآلي يحتاج محرّك Claude Code (أعلى الصفحة)", true);
+      else toast("أُنشئ " + r.project_id + (r.autopilot ? " — بدأ الوكلاء العمل" : ""));
+      openProject(r.project_id);
     }, "gold"), btn("محاكاة اختيار الوكلاء", async () => {
       const r = await api("select", { type: val("np-type"), model: val("np-model"), domain: val("np-domain"), risk: val("np-risk"),
         evidence: val("np-evidence"), target: val("np-target"), has_data: val("np-data") });
@@ -266,37 +284,39 @@ async function openProject(pid) {
   const runBox = h("div", { id: "run-box" });
   set(
     h("h2", {}, m.title), h("div", { class: "row" }, pill(pid), pill(PTYPE_AR[m.project_type] || m.project_type), pill(m.workflow),
-      pill("نموذج " + m.operating_model), pill(s.STATE, STATUS_CLS[s.STATE]), pill((s.COMPLETION_PCT || 0) + "%", "gold")),
-    h("div", { class: "card" }, h("b", {}, "الإجراء التالي: "), s.NEXT_ACTION, h("br"),
-      h("span", { class: "muted small" }, "الوكيل الحالي: " + s.CURRENT_AGENT + " — بانتظار: " + (s.WAITING_FOR || "—")),
+      pill("نموذج " + m.operating_model), pill(stateAr(s.STATE), STATUS_CLS[s.STATE]), pill((s.COMPLETION_PCT || 0) + "%", "gold")),
+    h("div", { class: "card" }, h("b", {}, "الإجراء التالي: "), nextAr(s.NEXT_ACTION), h("br"),
+      h("span", { class: "muted small" }, "الوكيل الحالي: " + agentAr(s.CURRENT_AGENT) + " — بانتظار: " + (s.WAITING_FOR ? agentAr(s.WAITING_FOR) : "—")),
       (s.BLOCKERS || []).length ? h("div", {}, pill("عوائق: " + s.BLOCKERS.join("، "), "bad")) : null),
     h("div", { class: "row" },
       steps.some((x) => x.status !== "DONE") ? btn("شغّل الخطوة التالية بالمحرّك المختار", () => runStep(pid, null), "gold") : pill("اكتملت الخطة", "ok"),
       btn("افتح مجلد المشروع", () => api("open_folder", { path: "projects/" + pid }), "ghost"),
       btn("تحديث", () => openProject(pid), "ghost")),
+    h("div", { id: "ap-box" }),
     h("div", { id: "book-box" }),
     runBox,
     h("h3", {}, "الخطة (الحوكمة)"),
     h("table", {}, h("tr", {}, ["الخطوة", "الوكيل", "المهمة", "المستوى", "البوابة", "الحالة", "الإجراءات"].map((x) => h("th", {}, x))),
-      steps.map((st) => h("tr", {}, h("td", {}, st.id), h("td", {}, st.assigned_agent || st.agent), h("td", { class: "small" }, st.task),
-        h("td", {}, st.decision_level || ""), h("td", {}, st.gate || ""), h("td", {}, pill(st.status, STATUS_CLS[st.status])),
+      steps.map((st) => h("tr", {}, h("td", {}, st.id), h("td", {}, agentCell(st.assigned_agent || st.agent)), h("td", {}, taskAr(st.task)),
+        h("td", { class: "small" }, levelAr(st.decision_level)), h("td", {}, st.gate || ""), h("td", {}, pill(statusAr(st.status), STATUS_CLS[st.status])),
         h("td", {}, h("div", { class: "row" },
           st.status !== "DONE" ? btn("تشغيل", () => runStep(pid, st.id), "sm") : null,
           st.status !== "DONE" ? btn("تسجيل مخرج", () => recordForm(pid, st.id), "sm ghost") : null,
           st.status !== "DONE" ? btn("اعتماد", () => completeForm(pid, st.id), "sm gold") : null))))),
     h("h3", {}, "التشغيلات والملفات"),
     d.runs.length ? h("table", {}, d.runs.map((r) => h("tr", {}, h("td", {}, r.id),
-      h("td", {}, h("div", { class: "row" }, r.files.map((f) => btn(f, () => showFile(`projects/${pid}/runs/${r.id}/${f}`, pid, r.id), "sm ghost")))))))
+      h("td", {}, h("div", { class: "row" }, r.files.map((f) => btn(FILE_AR[f] || f, () => showFile(`projects/${pid}/runs/${r.id}/${f}`, pid, r.id), "sm ghost")))))))
       : h("p", { class: "muted" }, "لا تشغيلات بعد."),
     h("details", {}, h("summary", {}, "ملفات المشروع (" + d.files.length + ")"),
       h("div", { class: "list" }, d.files.map((f) => h("div", { class: "item small", onclick: () => showFile(f, pid) }, f)))),
     h("h3", {}, "القرارات"),
     d.decisions.length ? h("table", {}, h("tr", {}, ["المعرّف", "الخطوة", "المستوى", "القرار", "المعتمِد"].map((x) => h("th", {}, x))),
-      d.decisions.map((x) => h("tr", {}, h("td", {}, x.id), h("td", {}, x.step), h("td", {}, x.level || ""), h("td", {}, x.decision), h("td", {}, x.approved_by))))
+      d.decisions.map((x) => h("tr", {}, h("td", {}, x.id), h("td", {}, x.step), h("td", {}, x.level || ""), h("td", {}, x.decision), h("td", {}, agentAr(x.approved_by)))))
       : h("p", { class: "muted" }, "لا قرارات."),
     h("h3", {}, "الكلفة"), h("p", {}, "$" + (d.cost.total_usd || 0).toFixed(4) + (m.budget_usd ? " من ميزانية $" + m.budget_usd : "")),
   );
   renderBook(pid);
+  renderAutopilot(pid);
 }
 async function runStep(pid, step) {
   const e = engine();
@@ -430,8 +450,8 @@ async function workflowDetail(id, type, model) {
       types.length ? btn("ابدأ مشروعاً بهذا المسار", () => newProjectForm(null, val("wf-type") || types[0]), "sm gold") : null),
     d.context.note ? h("p", { class: "muted small" }, d.context.note) : null,
     h("table", {}, h("tr", {}, ["الخطوة", "الوكيل", "المهمة", "المستوى", "البوابة", "موافقة بشرية"].map((x) => h("th", {}, x))),
-      d.steps.map((s) => h("tr", {}, h("td", {}, s.id), h("td", {}, s.assigned_agent || s.agent || ""), h("td", { class: "small" }, s.task || s.workflow || ""),
-        h("td", {}, s.decision_level || ""), h("td", {}, s.gate || ""), h("td", {}, s.human_approval ? "نعم" : "")))));
+      d.steps.map((s) => h("tr", {}, h("td", {}, s.id), h("td", {}, agentCell(s.assigned_agent || s.agent || "")), h("td", {}, s.task ? taskAr(s.task) : (s.uses ? "سير فرعي: " + s.uses : "")),
+        h("td", { class: "small" }, levelAr(s.decision_level)), h("td", {}, s.gate || ""), h("td", {}, s.human_approval ? "نعم" : "")))));
 }
 
 // ---------- الاعتمادات والذاكرة ----------
@@ -589,6 +609,51 @@ async function settingsView() {
     }, "danger")));
 }
 
+
+
+// ---------- الطيار الآلي ----------
+const AP_STATUS = { idle: "لم يبدأ", running: "الوكلاء يعملون", waiting: "بانتظار قراركم", paused: "متوقف مؤقتاً", ready: "يُستأنف", done: "اكتملت الخطة", error: "توقف عند خطأ" };
+function questionCard(pid, q, compact) {
+  const note = h("textarea", { placeholder: "ملاحظة أو توجيه (اختياري، ويلزم لبعض الخيارات)", style: "min-height:60px" });
+  const choose = async (c) => {
+    if (c.needs_note && !note.value.trim()) { note.focus(); return toast("هذا الخيار يحتاج ملاحظة منكم", true); }
+    await busy("يُنفَّذ قراركم…", () => api("autopilot_answer", { project: pid, qid: q.id, choice: c.id, note: note.value, engine: engine() }));
+    toast("سُجّل قراركم: " + c.label);
+    if (compact) home(); else openProject(pid);
+  };
+  return h("div", { class: "card question" },
+    compact ? h("div", { class: "small muted" }, pid) : null,
+    h("h4", {}, q.title), h("p", { class: "small" }, q.prompt), q.body ? pre(q.body) : null,
+    q.file ? btn("اقرأ النص المعني", () => compact ? openProject(pid).then(() => showFile(q.file, pid)) : showFile(q.file, pid), "sm ghost") : null,
+    note,
+    h("div", { class: "row" }, q.choices.map((c) => btn(c.label + (c.needs_note ? " ✎" : ""), () => choose(c), "sm " + (c.style === "gold" ? "gold" : "")))),
+    h("p", { class: "small muted" }, "النقر على خيار هو قراركم، ويُسجَّل باسمكم في سجل القرارات."));
+}
+async function renderAutopilot(pid) {
+  const box = $("#ap-box");
+  if (!box) return;
+  const ap = await G("autopilot", { id: pid });
+  const st = ap.running ? "running" : ap.status;
+  const log = (ap.log || []).slice(-8).reverse();
+  const card = h("div", { class: "card" },
+    h("h3", {}, "التشغيل الآلي"),
+    h("div", { class: "row" }, pill(AP_STATUS[st] || st, st === "waiting" ? "gold" : st === "done" ? "ok" : st === "error" ? "bad" : ""),
+      ap.engine ? pill("المحرّك: " + (ENGINE_LABEL[ap.engine] || ap.engine)) : null,
+      ap.running ? h("span", { class: "spin", style: "width:18px;height:18px;border-width:3px" }) : null,
+      !ap.running && !ap.question && st !== "done" ? btn(st === "idle" ? "شغّل المشروع آلياً" : "استأنف التشغيل الآلي", async () => {
+        await api("autopilot_start", { project: pid, engine: engine() }); renderAutopilot(pid);
+      }, "gold") : null,
+      ap.running ? btn("أوقف بعد الخطوة الجارية", async () => { await api("autopilot_stop", { project: pid }); toast("سيتوقف بعد الخطوة الجارية"); }, "ghost") : null),
+    st === "idle" ? h("p", { class: "small muted" }, "يمضي الوكلاء في الخطة تباعاً بالمحرّك المختار، ولا يتوقفون إلا لقرار يملكه المؤلف، فيعرضونه عليكم بخيارات جاهزة.") : null,
+    ap.question ? questionCard(pid, ap.question, false) : null,
+    log.length ? h("details", { open: ap.running }, h("summary", {}, "ما يجري الآن"),
+      h("ul", { class: "small" }, log.map((l) => h("li", {}, nextAr(l.msg) + " ", h("span", { class: "muted" }, (l.t || "").slice(11, 16)))))) : null);
+  box.replaceChildren(card);
+  // أثناء العمل يُحدَّث هذا القسم وقسم البناء وحدهما (دون إعادة الصفحة وموضع القراءة)، وعند التوقف تُحدَّث الصفحة مرة
+  if (ap.running) { AP_WATCH[pid] = true; setTimeout(() => { if ($("#ap-box")) { renderAutopilot(pid); renderBook(pid); } }, 4000); }
+  else if (AP_WATCH[pid]) { AP_WATCH[pid] = false; openProject(pid); }
+}
+const AP_WATCH = {};
 
 // ---------- بناء العمل (الأجناس ومستويات الإنتاج) ----------
 const voicePill = (u) => {
@@ -775,5 +840,5 @@ $("#tabs").addEventListener("click", (ev) => { const b = ev.target.closest("butt
 
 (async function boot() {
   if (!TOKEN) { set(h("div", { class: "note" }, "افتحوا اللوحة من أيقونة سطح المكتب أو بالأمر rkpos panel (الرابط يحمل رمز الجلسة).")); return; }
-  try { await refreshEngines(); await home(); } catch (e) { console.error(e); }
+  try { await loadLabels(); await refreshEngines(); await home(); } catch (e) { console.error(e); }
 })();

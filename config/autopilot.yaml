@@ -1,0 +1,57 @@
+# الطيار الآلي — أسئلة المؤلف وخياراتها السريعة المعدّة مسبقاً.
+# يمضي الوكلاء آلياً في كل خطوة لا تحتاج قرار المؤلف؛ ويتوقف الطيار عند السؤال، ويعرض خيارات جاهزة.
+# النقر على خيار هو قرار المؤلف نفسه (L4) ويُسجَّل باسمه في decisions.yaml مع نص الخيار والملاحظة.
+# action: اسم الإجراء في runtime/rkpos/autopilot.py — لا تغيّره؛ label وhint قابلان للتحرير.
+version: 0.1.0
+questions:
+  step_approval:
+    title: "اعتماد «{task}»"
+    prompt: "أنجز الوكيل هذه الخطوة وتحتاج قراركم قبل المتابعة."
+    choices:
+      - {id: approve, label: "اعتمد وتابع", action: approve_step, style: gold}
+      - {id: approve_note, label: "اعتمد مع ملاحظة", action: approve_step, needs_note: true}
+      - {id: redo, label: "أعد التنفيذ بتوجيهي", action: redo_step, needs_note: true}
+      - {id: pause, label: "أوقف لأراجع بنفسي", action: pause}
+  outline_approval:
+    title: "اعتماد مخطط العمل"
+    prompt: "اقترح الوكيل مخطط الوحدات وموازنة الطول؛ لا تُكتب الوحدات قبل اعتماده."
+    choices:
+      - {id: approve, label: "اعتمد المخطط وتابع", action: approve_outline, style: gold}
+      - {id: repropose, label: "اقترح مخططاً آخر بتوجيهي", action: repropose_outline, needs_note: true}
+      - {id: edit, label: "سأحرّر المخطط بنفسي", action: pause}
+  unit_approval:
+    title: "اعتماد الوحدة «{unit}»"
+    prompt: "كُتبت الوحدة وقيس صوتها؛ في المستوى التدرّجي لا تُكتب التالية قبل اعتمادها."
+    choices:
+      - {id: approve, label: "اعتمدها كما هي", action: approve_unit, style: gold}
+      - {id: align_approve, label: "واءم صوتها ثم اعتمدها", action: align_then_approve}
+      - {id: redraft, label: "أعد كتابتها بتوجيهي", action: redraft_unit, needs_note: true}
+      - {id: review, label: "سأراجعها بنفسي", action: pause}
+  book_review:
+    title: "المسودة الكاملة جاهزة للمراجعة"
+    prompt: "كُتبت الوحدات كلها وجُمّع العمل؛ الوحدات الأقرب إلى الصياغة المُعانة معلَّمة في تقرير الصوت."
+    choices:
+      - {id: review, label: "سأراجع الوحدات بنفسي", action: pause, style: gold}
+      - {id: align_flagged, label: "واءم صوت الوحدات المعلَّمة آلياً ثم اسألني", action: align_flagged}
+      - {id: approve_all, label: "اعتمد الوحدات كلها كما هي", action: approve_all_units}
+  scaffold_write:
+    title: "الدور لقلمكم: الوحدة «{unit}»"
+    prompt: "مستوى الهيكل: أعدّ النظام بطاقات الوحدات، وتكتبون النص بأنفسكم ثم تعتمدونه."
+    choices:
+      - {id: write, label: "سأكتبها الآن", action: pause, style: gold}
+  budget:
+    title: "بلغت الكلفة ميزانية المشروع"
+    prompt: "توقّف الطيار الآلي حمايةً للميزانية."
+    choices:
+      - {id: continue, label: "تابع رغم ذلك", action: continue_budget}
+      - {id: pause, label: "أوقف", action: pause, style: gold}
+  error:
+    title: "تعذّرت الخطوة «{task}»"
+    prompt: "توقّف الطيار الآلي عند خطأ."
+    choices:
+      - {id: retry, label: "أعد المحاولة", action: retry, style: gold}
+      - {id: skip, label: "تخطَّ هذه الخطوة", action: skip_step}
+      - {id: pause, label: "أوقف", action: pause}
+# المهام التي يتولاها محرّك بناء العمل بدل التشغيل العام
+outline_tasks: [build_structure, build_argument_arc, propose_plot_outline, report_structure_exec_summary_first]
+draft_tasks: [draft_chapter, draft_units_per_production_level, draft_op_ed, draft_study, draft_policy_paper, draft_review]

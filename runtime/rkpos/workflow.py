@@ -62,7 +62,11 @@ def expand(workflow_id: str, ctx: dict, _depth: int = 0) -> list[dict]:
 
 
 def workflow_for(project_type: str) -> str:
-    for wid, w in R.workflows().items():
-        if project_type in w.get("project_types", []) and wid not in ("WF-BOOK-PRODUCTION",):
+    """سير العمل الرئيس للنوع. تُستبعد السيور الفرعية (التي تُستدعى بـ uses داخل غيرها، مثل دورة الفصل
+    والإغلاق والإنتاج)، فلا يُختار سير فرعي لمجرد أنه يذكر النوع وسبق أبجدياً."""
+    W = R.workflows()
+    sub = {st["uses"] for w in W.values() for st in w["steps"] if "uses" in st}
+    for wid, w in W.items():
+        if project_type in w.get("project_types", []) and wid not in sub:
             return wid
     return "WF-BOOK-PRODUCTION"

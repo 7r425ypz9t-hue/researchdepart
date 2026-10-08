@@ -87,7 +87,8 @@ def build_task(pid: str, step: dict) -> tuple[dict, dict]:
     return pkg, msg
 
 
-def run_step(pid: str, step_id: str | None = None, live: bool = False, engine: str | None = None) -> Path:
+def run_step(pid: str, step_id: str | None = None, live: bool = False, engine: str | None = None,
+             extra_context: str = "") -> Path:
     plan = ST.plan(pid)
     step = _find_step(plan, step_id)
     agent = step.get("assigned_agent", step.get("agent"))
@@ -116,6 +117,8 @@ def run_step(pid: str, step_id: str | None = None, live: bool = False, engine: s
     from .genres import genre_of
     system = compose_system_prompt(agent, register_for(pid), genre_of(pid))
     user = f"TASK MESSAGE\n```yaml\n{yaml.safe_dump(msg, allow_unicode=True, sort_keys=False)}```\n"
+    if extra_context:  # نصوص المدخلات الفعلية (الطيار الآلي): الوكيل يعمل على المحتوى لا على أسماء الملفات
+        user += f"\nINPUT MATERIALS (للقراءة والعمل عليها؛ لا تُنسب إلى مصادر خارجية):\n{extra_context}\n"
     (run_dir / "prompt.md").write_text(f"# SYSTEM\n\n{system}\n\n# USER\n\n{user}", encoding="utf-8")
     out_path = run_dir / "prompt.md"
     if live:

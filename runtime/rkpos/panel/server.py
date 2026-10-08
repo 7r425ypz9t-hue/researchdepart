@@ -99,7 +99,8 @@ def overview(_q) -> dict:
     projects = dashboard.collect()
     pending = [{"project": p["id"], "title": p["title"], "items": p["pending"], "next": p["next"]}
                for p in projects if p["pending"] or "AWAITING_AUTHOR" in str(p["stage"])]
-    return {"root": str(ROOT), "engines": engines(), "agents": len(R.agents()), "workflows": len(R.workflows()),
+    from .. import autopilot as AP
+    return {"questions": AP.pending_questions(), "root": str(ROOT), "engines": engines(), "agents": len(R.agents()), "workflows": len(R.workflows()),
             "projects": projects, "pending": pending, "candidates": len(candidates(None)["items"])}
 
 
@@ -218,6 +219,38 @@ def _running(pid: str) -> dict | None:
     return next((j for j in JOBS.values() if j["project"] == pid and j["state"] == "running"), None)
 
 
+def labels_view(_q) -> dict:
+    L = R.load_yaml(ROOT / "config/labels_ar.yaml")
+    L["agents"] = {aid: a["name_ar"] for aid, a in R.agents().items()}
+    return L
+
+
+def autopilot_view(q) -> dict:
+    from .. import autopilot as AP
+    pid = _proj(q.get("id")).name
+    ap = AP.load(pid)
+    j = _running(pid)
+    return {**ap, "running": bool(j and j.get("kind") == "autopilot"), "job": j}
+
+
+def _start_autopilot(pid: str, engine: str) -> dict:
+    from .. import autopilot as AP
+    if _running(pid):
+        raise ApiError("يعمل لهذا المشروع تشغيل آخر الآن")
+    jid = secrets.token_hex(6)
+    job = {"id": jid, "project": pid, "kind": "autopilot", "state": "running", "error": None}
+    JOBS[jid] = job
+
+    def work():
+        try:
+            AP.run(pid, engine)
+            job["state"] = "done"
+        except Exception as e:  # noqa: BLE001
+            job.update(state="error", error=f"{type(e).__name__}: {e}")
+    threading.Thread(target=work, daemon=True).start()
+    return job
+
+
 def book_view(q) -> dict:
     from .. import book as B
     pid = _proj(q.get("id")).name
@@ -226,7 +259,7 @@ def book_view(q) -> dict:
     except FileNotFoundError:
         return {"outline": None}
     return {"outline": ob, "voice": B.voice_report(pid), "estimate": B.estimate(pid) if ob["level"] == "full" else None,
-            "job": _running(pid), "book": str((PROJECTS / pid / "manuscript/book_full.md").relative_to(ROOT))
+            "job": (lambda j: j if j and j.get("kind") != "autopilot" else None)(_running(pid)), "book": str((PROJECTS / pid / "manuscript/book_full.md").relative_to(ROOT))
             if (PROJECTS / pid / "manuscript/book_full.md").exists() else None}
 
 
@@ -249,7 +282,7 @@ def job_view(q) -> dict:
     return j
 
 
-GET = {"genres": genres_view, "book": book_view, "book_unit": book_unit, "job": job_view, "overview": overview, "agents": agents, "agent": agent, "workflows": workflows, "project": project,
+GET = {"labels": labels_view, "autopilot": autopilot_view, "genres": genres_view, "book": book_view, "book_unit": book_unit, "job": job_view, "overview": overview, "agents": agents, "agent": agent, "workflows": workflows, "project": project,
        "file": read_file, "candidates": candidates, "memory": memory, "audit": audit_log, "cost": cost_report,
        "governance": governance, "engines": lambda q: engines(bool(q.get("fresh"))), "ping": lambda q: {"ok": True, "root": str(ROOT)}}
 
@@ -267,7 +300,10 @@ def a_new_project(d):
                       production_level=d.get("level") or None,
                       target_pages=int(d["pages"]) if d.get("pages") else None,
                       words_per_page=int(d["wpp"]) if d.get("wpp") else None)
-    return {"project_id": m["project_id"], "workflow": m["workflow"], "agents": m["agents"]}
+    out = {"project_id": m["project_id"], "workflow": m["workflow"], "agents": m["agents"], "autopilot": None}
+    if d.get("autopilot") and (d.get("engine") or "manual") != "manual":
+        out["autopilot"] = _start_autopilot(m["project_id"], d["engine"])
+    return out
 
 
 def _run_result(path: Path) -> dict:
@@ -571,6 +607,33 @@ def a_claude_login(_d):
     return {"opened": True}
 
 
+def a_autopilot_start(d):
+    _need(d, "project")
+    pid = _proj(d["project"]).name
+    eng = d.get("engine") or "manual"
+    if eng == "manual":
+        raise ApiError("التشغيل الآلي يحتاج محرّكاً آلياً: اختاروا Claude Code أعلى الصفحة")
+    return _start_autopilot(pid, eng)
+
+
+def a_autopilot_answer(d):
+    from .. import autopilot as AP
+    _need(d, "project", "qid", "choice")
+    pid = _proj(d["project"]).name
+    if _running(pid):
+        raise ApiError("ينتظر انتهاء الخطوة الجارية")
+    ap = AP.answer(pid, d["qid"], d["choice"], d.get("note") or "")
+    if ap["status"] != "paused":
+        _start_autopilot(pid, ap.get("engine") or d.get("engine") or "claude_code")
+    return {"status": ap["status"]}
+
+
+def a_autopilot_stop(d):
+    from .. import autopilot as AP
+    _need(d, "project")
+    return AP.request_stop(_proj(d["project"]).name)
+
+
 def a_claude_add_path(_d):
     from ..adapters.claude_code_adapter import add_to_user_path, AdapterUnavailable
     try:
@@ -579,7 +642,8 @@ def a_claude_add_path(_d):
         raise ApiError(str(e)) from e
 
 
-POST = {"claude_add_path": a_claude_add_path, "claude_login": a_claude_login, "book_skeleton": b_skeleton, "book_set_units": b_set_units, "book_propose": b_propose,
+POST = {"autopilot_start": a_autopilot_start, "autopilot_answer": a_autopilot_answer, "autopilot_stop": a_autopilot_stop,
+        "claude_add_path": a_claude_add_path, "claude_login": a_claude_login, "book_skeleton": b_skeleton, "book_set_units": b_set_units, "book_propose": b_propose,
         "book_import_outline": b_import_outline, "book_approve_outline": b_approve_outline, "book_draft": b_draft,
         "book_record": b_record, "book_revise": b_revise, "book_align": b_align, "book_adopt_aligned": b_adopt_aligned,
         "book_approve_unit": b_approve_unit, "book_assemble": b_assemble, "book_draft_all": b_draft_all,

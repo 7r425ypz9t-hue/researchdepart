@@ -102,6 +102,10 @@ def main(argv=None) -> int:
     cr = sub.add_parser("cost-report"); cr.add_argument("--project")
     sub.add_parser("dashboard")
     ev = sub.add_parser("eval"); ev.add_argument("agent", nargs="?"); ev.add_argument("--live", action="store_true")
+    au = sub.add_parser("autopilot", help="الطيار الآلي: الوكلاء يعملون تباعاً ويتوقفون عند قرار المؤلف")
+    au.add_argument("project"); au.add_argument("--engine", default="claude_code", choices=["auto", "claude_code", "api"])
+    au.add_argument("--answer", help="معرّف الخيار للإجابة عن السؤال القائم"); au.add_argument("--note", default="")
+    au.add_argument("--status", action="store_true")
     ac = sub.add_parser("activate", help="تفعيل وكيل مباشرة بتكليف من المؤلف")
     ac.add_argument("agent"); ac.add_argument("task"); ac.add_argument("--register", choices=["essay", "narrative", "academic"])
     ac.add_argument("--project"); ac.add_argument("--context", default="")
@@ -203,6 +207,22 @@ def main(argv=None) -> int:
             return 0
         errs = [e for i in ids for e in evals.offline_check(i)]
         _p("\n".join(errs) if errs else f"✓ {len(ids)} test suite(s) structurally valid"); return 1 if errs else 0
+    if a.cmd == "autopilot":
+        from . import autopilot as AP
+        if a.status:
+            _p(AP.load(a.project)); return 0
+        if a.answer:
+            q = AP.load(a.project).get("question") or {}
+            AP.answer(a.project, q.get("id", ""), a.answer, a.note)
+        ap = AP.run(a.project, a.engine)
+        q = ap.get("question")
+        if q:
+            _p({"status": ap["status"], "question": q["title"], "prompt": q["prompt"], "body": q.get("body"), "file": q.get("file"),
+                "choices": {c["id"]: c["label"] for c in q["choices"]},
+                "answer_with": f"rkpos autopilot {a.project} --answer <id> [--note \"…\"]"})
+        else:
+            _p({"status": ap["status"]})
+        return 0
     if a.cmd == "book":
         from . import book as B
         pid, act, uid = a.project, a.action, a.unit

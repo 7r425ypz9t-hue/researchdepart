@@ -151,6 +151,18 @@ def approve_outline(pid: str, actor: str) -> dict:
     return ob
 
 
+def approve_trivial_outline(pid: str) -> dict:
+    """مخطط الوحدة الواحدة (عمود الرأي): لا قرار فيه يملكه المؤلف، فيُثبَّت آلياً (L1) ويُسجَّل."""
+    ob = load(pid)
+    if len(ob["units"]) != 1:
+        raise ValueError("التثبيت الآلي لمخطط الوحدة الواحدة وحده")
+    ob["outline_approved"] = True
+    save(pid, ob)
+    audit.log("AG-ORC", "book_outline_single_unit", project=pid, files_changed=[str(_p(pid).relative_to(ROOT))],
+              decision_level="L1")
+    return ob
+
+
 def parse_outline(text: str) -> list[dict]:
     """يستخرج قائمة الوحدات من ردّ الوكيل (كتلة yaml فيها units)."""
     m = re.search(r"```(?:yaml)?\s*\n(.*?)```", text, re.S)

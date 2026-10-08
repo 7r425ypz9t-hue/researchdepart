@@ -1,0 +1,186 @@
+# التسميات العربية لما تعرضه لوحة التحكم — مصدر واحد للمهام والحالات ومستويات القرار.
+# أي مهمة جديدة في workflows/ يجب أن تُضاف هنا (يتحقق منها اختبار test_labels).
+version: 0.1.0
+tasks:
+  # التهيئة والتعريف
+  initialize_project: تهيئة المشروع
+  initialize_light_project: تهيئة مشروع خفيف
+  initialize_project_with_target_journal: تهيئة المشروع وفق المجلة المستهدفة
+  initialize_project_with_client_brief: تهيئة المشروع وفق موجز الجهة
+  initialize_project_from_previous_edition: تهيئة المشروع من الطبعة السابقة
+  define_scope: تحديد الإشكالية والنطاق
+  define_problem_and_thesis_hypothesis: تحديد الإشكالية وفرضية الأطروحة
+  define_policy_problem: تحديد مشكلة السياسة
+  define_focal_question_and_horizon: تحديد السؤال المحوري والأفق الزمني
+  define_strategic_questions: تحديد الأسئلة الاستراتيجية
+  define_review_question_pcc_pico: صياغة سؤال المراجعة (PCC/PICO)
+  define_edition_scope_and_witnesses: تحديد نطاق التحقيق والنسخ الخطية
+  define_revision_scope: تحديد نطاق المراجعة للطبعة الجديدة
+  idea_assessment_council: تقييم الفكرة في المجلس
+  # المصادر والأدبيات
+  discover_sources: استكشاف المصادر
+  discover_sources_incl_official_docs: استكشاف المصادر والوثائق الرسمية
+  horizon_scanning_sources: مسح مصادر الأفق
+  execute_registered_search: تنفيذ البحث المسجّل
+  verify_sources: التحقق من المصادر
+  verify_and_deduplicate: التحقق من المصادر وإزالة المكرر
+  register_witnesses: تسجيل النسخ الخطية
+  structured_literature_review: مراجعة الأدبيات المنظمة
+  synthesize_literature: تركيب الأدبيات
+  thematic_synthesis: التركيب الموضوعي
+  evidence_synthesis: تركيب الأدلة
+  map_intellectual_traditions: رسم خريطة التقاليد الفكرية
+  screen_title_abstract_dual: فرز العناوين والملخصات (مزدوج)
+  screen_full_text_and_extract: فرز النصوص الكاملة واستخلاص البيانات
+  risk_of_bias_assessment: تقييم مخاطر التحيز
+  prisma_flow_and_synthesis: مخطط PRISMA والتركيب
+  selection_bias_challenge: مساءلة تحيز الانتقاء
+  re_verify_all_references_and_retractions: إعادة التحقق من المراجع والسحوبات
+  update_literature_since_publication: تحديث الأدبيات منذ النشر
+  what_changed_since_report: ما الذي تغيّر منذ الإصدار
+  retrieve_previous_edition_and_decisions: استرجاع الطبعة السابقة وقراراتها
+  # الأطر والمناهج والتحليل
+  build_framework: بناء الإطار النظري
+  build_conceptual_framework: بناء الإطار المفاهيمي
+  design_method: تصميم المنهج
+  write_protocol: كتابة بروتوكول المراجعة
+  analyze_data: تحليل البيانات
+  indicator_analysis: تحليل المؤشرات
+  indicator_dashboard_analysis: تحليل لوحة المؤشرات
+  synthesis_or_meta_analysis: التركيب أو التحليل البعدي
+  quantitative_projection_or_simulation: الإسقاط الكمي أو المحاكاة
+  drivers_and_signals_steep: المحركات والإشارات (STEEP)
+  systems_map: خريطة النظم
+  build_scenarios: بناء السيناريوهات
+  options_analysis: تحليل البدائل
+  strategic_options_and_scenarios: الخيارات والسيناريوهات الاستراتيجية
+  domain_review: مراجعة الخبير في المجال
+  # البناء والمخطط
+  build_structure: بناء هيكل العمل
+  build_argument_arc: بناء قوس الحجة والمخطط
+  report_structure_exec_summary_first: هيكل التقرير (الملخص التنفيذي أولاً)
+  revision_map: خريطة المراجعة
+  build_story_bible: بناء كرّاسة الرواية
+  propose_plot_outline: اقتراح مخطط الحبكة
+  # الكتابة
+  draft_chapter: كتابة الفصول
+  draft_units_per_production_level: كتابة الوحدات بحسب مستوى الإنتاج
+  draft_op_ed: كتابة العمود
+  draft_study: كتابة الدراسة
+  draft_policy_paper: كتابة ورقة السياسات
+  draft_review: كتابة المراجعة
+  draft_edition_introduction: كتابة مقدمة التحقيق
+  translate_by_chapter: الترجمة فصلاً فصلاً
+  build_bilingual_glossary: بناء المسرد الثنائي
+  produce_figures: إعداد الأشكال
+  infographics: الإنفوغرافيك
+  # التدقيق والمراجعة
+  audit_claims_and_citations: تدقيق الادعاءات والاستشهادات
+  fact_check_light: تدقيق الوقائع (خفيف)
+  challenge_arguments: مساءلة الحجج (الفريق الأحمر)
+  challenge_recommendations: مساءلة التوصيات
+  challenge_scenarios_plausibility: مساءلة معقولية السيناريوهات
+  whole_book_challenge: مساءلة الكتاب كاملاً
+  cross_chapter_consistency: اتساق الفصول
+  continuity_check: فحص الاتساق السردي
+  blind_review: التحكيم المعمّى
+  external_human_peer_review: التحكيم الخارجي البشري
+  revise_per_reviews: المراجعة وفق التحكيم
+  revise_per_external_review: المراجعة وفق التحكيم الخارجي
+  segment_fidelity_sampling: عيّنات أمانة الترجمة
+  verify_takhrij_and_attributions: التحقق من التخريج والنسبة
+  ocr_transcription: النسخ الآلي للمخطوط
+  collation: المقابلة بين النسخ
+  takhrij_candidates: مقترحات التخريج
+  editor_adjudication_session: جلسة ترجيح المحقق
+  # التحرير والنزاهة
+  structural_edit: التحرير البنيوي
+  edit_and_language: التحرير اللغوي
+  language_and_terminology: اللغة والمصطلحات
+  language_and_voice_alignment: اللغة ومواءمة الصوت
+  language_edit_apparatus: تحرير الجهاز النقدي
+  translator_notes_and_intro_review: مراجعة حواشي المترجم والمقدمة
+  integrity_check: فحص النزاهة
+  integrity_check_sources_in_bible: فحص نزاهة مصادر الكرّاسة
+  rights_clearance_check: فحص الحقوق
+  editorial_readiness: الجاهزية التحريرية
+  # الاعتماد والنشر
+  request_author_approval: طلب اعتماد المؤلف
+  request_final_approval: طلب الاعتماد النهائي
+  convene_council_final: انعقاد المجلس للنسخة النهائية
+  prepare_final_files: إعداد ملفات النشر
+  prepare_new_edition_files: إعداد ملفات الطبعة الجديدة
+  format_to_journal_guidelines: التنسيق وفق دليل المجلة
+  tag_release_v1_0: وسم الإصدار 1.0
+  # الإغلاق والمعرفة
+  archive_and_index: الأرشفة والفهرسة
+  tag_and_backup_all_versions: وسم النسخ ونسخها احتياطياً
+  archive_project_with_checksums: أرشفة المشروع ببصمات التحقق
+  extract_knowledge: استخلاص المعرفة
+  archive_gate: بوابة الأرشفة
+  request_kb_promotion_approval: طلب اعتماد ترقية المعرفة
+  promote_approved_items_and_reindex: ترقية المعتمد وإعادة الفهرسة
+  evaluate_temporary_agents: تقييم الوكلاء المؤقتين
+  evaluate_permanence_at_project_close: تقييم دوام الوكيل المؤقت
+  # الرصد
+  run_watch_queries: تشغيل استعلامات الرصد
+  verify_new_items: التحقق من الجديد
+  classify_and_link_to_claims: تصنيف الجديد وربطه بالادعاءات
+  send_recommendation_no_auto_edit: إرسال التوصية (بلا تعديل آلي)
+  route_to_author_if_material: إحالة الجوهري إلى المؤلف
+  # النزاع
+  register_dispute: تسجيل النزاع
+  collect_evidence_from_both_parties: جمع أدلة الطرفين
+  route_to_competent_supervisor: الإحالة إلى المشرف المختص
+  escalate_to_council_if_unresolved: الرفع إلى المجلس إن لم يُحسم
+  escalate_to_author_if_substantive: الرفع إلى المؤلف إن كان جوهرياً
+  # الوكلاء
+  collect_improvement_proposal_from_log: جمع مقترح التحسين من السجل
+  apply_change_on_branch: تطبيق التغيير في فرع مستقل
+  run_regression_suite: تشغيل اختبارات الانحدار
+  security_compliance_check: فحص الأمن والامتثال
+  request_management_approval: طلب الاعتماد
+  merge_and_bump_agent_version: الدمج ورفع إصدار الوكيل
+  check_skill_registry_for_fit: البحث في سجل المهارات
+  check_existing_agent_can_perform_with_skill: هل يؤديها وكيل قائم بمهارة؟
+  draft_temporary_specialist_from_AG-TMP: صياغة وكيل مؤقت من القالب
+  request_author_approval_for_temp_agent: طلب اعتماد الوكيل المؤقت
+statuses:
+  PENDING: بانتظار التنفيذ
+  CONDITIONAL: مشروطة
+  SKIPPED: متخطاة
+  IN_PROGRESS: قيد التنفيذ
+  IN_REVIEW: قيد المراجعة
+  AWAITING_AUTHOR: بانتظار المؤلف
+  REJECTED: مرفوضة
+  DONE: منجزة
+states:
+  INITIALIZED: مُهيّأ
+  SCOPING: تحديد النطاق
+  DISCOVERY: الاستكشاف
+  EVIDENCE: الأدلة
+  THEORY_METHOD: النظرية والمنهج
+  ANALYSIS: التحليل
+  ARCHITECTURE: البناء والمخطط
+  DRAFTING: الكتابة
+  AUDIT: التدقيق
+  RED_TEAM: المساءلة
+  REVISION: المراجعة
+  LANGUAGE_EDIT: التحرير اللغوي
+  INTEGRITY: النزاهة
+  PRODUCTION: الإنتاج
+  AWAITING_AUTHOR: بانتظار المؤلف
+  PUBLISHED: منشور
+  ARCHIVING: الأرشفة
+  CLOSED: مغلق
+  ON_HOLD: معلّق
+levels:
+  L1: ذاتي للوكيل
+  L2: موافقة المشرف
+  L3: قرار المجلس
+  L4: موافقة المؤلف
+actors:
+  HUMAN-AUTHOR: المؤلف
+  HUMAN-TECH: المشرف التقني
+  AG-COUNCIL: المجلس
+  ALL: الجميع

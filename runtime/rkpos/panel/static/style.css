@@ -48,3 +48,5 @@ pre.code{direction:ltr;text-align:left;font-family:Consolas,Menlo,monospace;font
 details{margin:6px 0}summary{cursor:pointer;color:var(--blue)}
 .card.sel{border:2px solid var(--gold);background:#fffaf0}
 progress{accent-color:var(--gold);height:14px}
+.card.question{border:2px solid var(--gold);background:#fffaf0}
+.card.question h4{font-size:1.1rem}
