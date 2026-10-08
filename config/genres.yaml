@@ -1,0 +1,123 @@
+# الأجناس الكتابية — لكل جنس صفاته الفكرية والأسلوبية وضوابطه ووكيله وسير عمله.
+# هذا الملف يحمل قواعد الصنعة العامة لكل جنس؛ أما ملامح بصمة المؤلف الخاصة فتأتي من MEM-AUTHOR (AUTHOR_ONLY)
+# عبر «عقد الأسلوب» بحسب السجلّ (register)، ولا تُكتب هنا.
+version: 0.1.0
+genres:
+
+  creative:
+    name_ar: الإبداع الروائي والسردي
+    name_en: Creative Fiction
+    project_types: [novel, novella, short_story]
+    register: narrative                 # مرجع البصمة: style_reference_narrative
+    lead_agent: AG-NOV
+    outline_agent: AG-NOV
+    voice_agent: AG-ARE
+    workflow: WF-NOVEL
+    citation_style: none
+    unit_kind: chapter                  # الفصل، ويتفرع إلى مشاهد
+    intellectual:
+      - "المعنى يُستخلص من المشهد والشخصية لا يُقال تقريراً"
+      - "الفكرة الصوفية أو الفلسفية تذوب في الفعل والحوار والصورة (ذوبان من الدرجة الأولى) ولا تُقتبس وعظاً"
+      - "الالتباس المقصود والفراغ الذي يملؤه القارئ جزء من البناء"
+    stylistic:
+      - "المشهد وحدة البناء: مكان وزمن وحركة وحسّ"
+      - "الحوار يكشف الشخصية، ويجوز فيه المحكيّ المحلي بقدر يخدم الصدق"
+      - "الإيقاع يتنوع بين السرد البطيء واللقطة السريعة"
+      - "الاتساق إلزامي: الأسماء والأمكنة والتسلسل الزمني والألفاظ المحلية كما ثُبّتت في كرّاسة الرواية"
+    evidence: "الوقائع التاريخية والجغرافية والتراثية تُوثَّق في كرّاسة المشروع (bible) لا في المتن؛ لا وسوم ادعاءات ولا إحالات داخل النص"
+    claim_tags: ledger                  # في سجل موازٍ لا في المتن
+    prohibited:
+      - "التقرير المباشر للمغزى"
+      - "اقتباس نصوص صوفية حرفياً دون إذابتها"
+      - "تغيير مصير شخصية أو حدث مفصلي دون قرار المؤلف"
+    skills_claude: [fiction-writer-agent-ar, style-fingerprint-majed-ar, novel-continuity-ar, sufi-dissolution-ar, literary-agent-orchestrator-ar]
+    levels: [scaffold, staged, full]
+
+  research:
+    name_ar: البحث العلمي والأكاديمي
+    name_en: Academic Research
+    project_types: [academic_book, journal_article, systematic_review, literature_review, policy_study, foresight_study, critical_edition, strategic_report]
+    register: academic
+    lead_agent: AG-WRT
+    outline_agent: AG-BKA
+    voice_agent: AG-ARE
+    workflow: null                      # لكل نوع سير عمله القائم
+    citation_style: APA7
+    unit_kind: axis                     # المقدمة ← المحاور/الفصول ← الخاتمة
+    intellectual:
+      - "سؤال بحثي محدد، ومنهج معلن، ونتائج تُشتق من الأدلة لا من الرغبة"
+      - "عرض الآراء المخالفة ومناقشتها قبل الترجيح"
+      - "التمييز الصريح بين الواقعة والتفسير والفرضية"
+    stylistic:
+      - "مصطلح ثابت معرَّف عند أول ورود"
+      - "فقرة واحدة لفكرة واحدة، وجملة واضحة البناء"
+      - "إحالة دقيقة لكل ادعاء جوهري"
+    evidence: "كل ادعاء موسوم [FACT/EBI/INTERP/HYP/AUTHOR] ومسند بمعرّف مصدر متحقق؛ [NEEDS-EVIDENCE] بدل التخمين"
+    claim_tags: inline
+    prohibited:
+      - "مرجع خارج سجل المصادر"
+      - "تعميم بلا دليل"
+      - "تغيير الأطروحة أو الاستنتاجات دون قرار المؤلف"
+    skills_claude: [grmm-master-manifest-ar, source-integrity-ar, academic-integrity-sunni-sources-ar, council-orchestration-ar]
+    levels: [scaffold, staged, full]
+
+  intellectual:
+    name_ar: الكتابة الفكرية والمقالية الطويلة
+    name_en: Intellectual Essay
+    project_types: [intellectual_book, essay_collection]
+    register: essay
+    lead_agent: AG-WRT
+    outline_agent: AG-BKA
+    voice_agent: AG-ARE
+    workflow: WF-BOOK-INTELLECTUAL
+    citation_style: Chicago
+    unit_kind: axis
+    intellectual:
+      - "أطروحة يتبناها المؤلف ويدافع عنها بالحجة والتأمل والمثال"
+      - "الحفر في المفهوم وتاريخه والمسكوت عنه فيه"
+      - "الذات الكاتبة حاضرة: المؤلف يرى ويقترح لا يكتفي بالعرض"
+    stylistic:
+      - "نفَس مقالي متصل يحمل الفكرة من فقرة إلى أخرى"
+      - "المثال المحلي والمثل والذاكرة شواهد على الفكرة"
+      - "الإحالة في الحواشي بقدر الحاجة، لا تُثقل المتن"
+    evidence: "الوقائع موسومة ومسندة؛ الرأي موسوم [AUTHOR] أو [INTERP]؛ الشاهد التراثي يُوثّق"
+    claim_tags: inline
+    prohibited:
+      - "صياغة موقف للمؤلف لم يعتمده"
+      - "الحشو التفسيري («بمعنى آخر»، «وخلاصة القول») بديلاً عن الحجة"
+    skills_claude: [council-orchestration-ar, source-integrity-ar, academic-integrity-sunni-sources-ar]
+    levels: [scaffold, staged, full]
+
+  op_ed:
+    name_ar: أعمدة الرأي («رأي ثقافي»)
+    name_en: Op-Ed Column
+    project_types: [op_ed]
+    register: essay
+    lead_agent: AG-WRT
+    outline_agent: AG-WRT
+    voice_agent: AG-ARE
+    workflow: WF-OPED
+    citation_style: none
+    unit_kind: column
+    max_words: 300
+    intellectual:
+      - "فكرة واحدة حادة تُقال في وقتها (مناسبة أو خبر أو ذكرى)"
+      - "تحليل يتجاوز السطح إلى السبب والأثر والاقتراح"
+      - "موقف واضح للكاتب لا عرض محايد"
+    stylistic:
+      - "مدخل يمسك القارئ من السطر الأول (صورة أو حكاية أو مفارقة)"
+      - "سقف 300 كلمة، وفقرات قصيرة، وخاتمة ترجع إلى المدخل"
+      - "لغة صحفية إنسانية لا إنشاء أدبي"
+    evidence: "صفر تلفيق؛ كل رقم أو اقتباس موثّق خارج المتن في ملف المراجعة"
+    claim_tags: review_file
+    prohibited:
+      - "تجاوز 300 كلمة"
+      - "تعدد الأفكار"
+      - "رقم أو اقتباس غير موثّق"
+    skills_claude: [op-ed-column-ar, source-integrity-ar]
+    levels: [full]
+
+# الأنواع العابرة للأجناس: يُختار جنسها عند الإنشاء (الافتراضي بين قوسين)
+cross_genre:
+  translation: intellectual
+  re_edition: intellectual

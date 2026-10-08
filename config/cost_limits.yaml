@@ -15,6 +15,10 @@ defaults_by_project_type:
   translation: 300
   re_edition: 150
   critical_edition: 400
+  novel: 400
+  novella: 200
+  short_story: 40
+  essay_collection: 200
 per_chapter_soft_limit: 40
 monthly_unit_limit: 1500
 pricing_source: "يُحدَّث جدول الأسعار في config/pricing.yaml من صفحات المزودين الرسمية؛ لا تُفترض أسعار من الذاكرة"

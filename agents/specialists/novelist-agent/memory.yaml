@@ -1,0 +1,28 @@
+# GENERATED from agents/_specs/AG-NOV.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-NOV
+read:
+- id: MEM-AUTHOR
+  name_ar: ذاكرة المؤلف
+  path: memory/author/private/
+  classification: AUTHOR_ONLY
+- id: MEM-PROJECT
+  name_ar: ذاكرة المشروع
+  path: projects/<PID>/memory/
+  classification: CONFIDENTIAL
+- id: ST-OUTLINE
+  name_ar: الهيكل
+  path: projects/<PID>/outline.yaml
+  classification: CONFIDENTIAL
+- id: ST-REVIEWS
+  name_ar: المراجعات والتحكيم
+  path: projects/<PID>/reviews/
+  classification: CONFIDENTIAL
+write:
+- id: ST-DRAFT
+  name_ar: المسودات
+  path: projects/<PID>/manuscript/drafts/
+  classification: CONFIDENTIAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

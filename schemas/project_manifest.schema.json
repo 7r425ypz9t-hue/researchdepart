@@ -51,7 +51,11 @@
         "op_ed",
         "strategic_report",
         "translation",
-        "re_edition"
+        "re_edition",
+        "novel",
+        "novella",
+        "short_story",
+        "essay_collection"
       ]
     },
     "workflow": {
@@ -170,7 +174,8 @@
         "APA7",
         "Chicago",
         "Harvard",
-        "MLA"
+        "MLA",
+        "none"
       ]
     },
     "language": {
@@ -234,6 +239,48 @@
     },
     "created": {
       "type": "string"
+    },
+    "genre": {
+      "enum": [
+        "creative",
+        "research",
+        "intellectual",
+        "op_ed"
+      ]
+    },
+    "production": {
+      "type": "object",
+      "required": [
+        "level"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "enum": [
+            "scaffold",
+            "staged",
+            "full"
+          ]
+        },
+        "target_pages": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "words_per_page": {
+          "type": "integer",
+          "minimum": 100
+        },
+        "target_words": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 50
+        }
+      }
     }
   },
   "additionalProperties": false

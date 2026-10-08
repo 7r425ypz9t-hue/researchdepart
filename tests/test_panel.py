@@ -162,3 +162,28 @@ def test_panel_adhoc_and_memory_governance(panel):
     assert code == 200 and r["data"]["Approved_By"] == "HUMAN-AUTHOR"
     assert "MEM-LESSON-009999" not in ids()
     assert panel("memory")[1]["data"]["layers"]["MEM-INSTITUTIONAL"]["count"] == 1
+
+
+def test_panel_book_production(panel):
+    code, r = panel("new_project", {"title": "رواية", "type": "novel", "genre": "creative", "level": "full", "pages": 4})
+    assert code == 200, r
+    pid = r["data"]["project_id"]
+    assert panel("genres")[1]["data"]["genres"]["creative"]["lead_agent"] == "AG-NOV"
+    assert panel("book_skeleton", {"project": pid, "n": 2})[0] == 200
+    assert panel("book_approve_outline", {"project": pid})[0] == 400                       # بلا إقرار المؤلف
+    assert panel("book_draft_all", {"project": pid, "engine": "claude_code", "confirm_cost": True})[0] == 400  # المخطط غير معتمد
+    assert panel("book_approve_outline", {"project": pid, "confirm_author": True})[0] == 200
+    assert panel("book_draft_all", {"project": pid, "engine": "claude_code"})[0] == 400     # بلا إقرار الكلفة
+    code, job = panel("book_draft_all", {"project": pid, "engine": "claude_code", "confirm_cost": True})
+    assert code == 200
+    for _ in range(100):
+        j = panel("job", q=f"?id={job['data']['id']}")[1]["data"]
+        if j["state"] != "running":
+            break
+        time.sleep(0.2)
+    assert j["state"] == "done", j
+    b = panel("book", q=f"?id={pid}")[1]["data"]
+    assert all(u["status"] == "DRAFTED" for u in b["outline"]["units"]) and b["book"]
+    assert panel("book_approve_unit", {"project": pid, "unit": "U01", "text": "نص المؤلف"})[0] == 400
+    code, r = panel("book_approve_unit", {"project": pid, "unit": "U01", "text": "نص المؤلف", "confirm_author": True})
+    assert code == 200 and r["data"]["author_change"] > 0.5

@@ -1,7 +1,7 @@
 workflow_id: WF-BOOK-INTELLECTUAL
 name_ar: تأليف كتاب فكري
 version: 0.1.0
-project_types: [intellectual_book]
+project_types: [intellectual_book, essay_collection]
 operating_model_min: A
 citation_style: Chicago
 notes: "الكتاب الفكري: حجة وأطروحة وسجل أدبي رفيع؛ المنهج استدلالي-تأويلي؛ QG2 بصيغة مخففة؛ Red Team إلزامي للفصول المركزية."

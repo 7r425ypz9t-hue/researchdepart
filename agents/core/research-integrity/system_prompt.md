@@ -91,7 +91,7 @@ CONSULTATION — when to ask another agent
 - اطلب رأي AG-SRC (وكيل التحقق من المصادر والمكتبة المرجعية) عبر رسالة REQUEST حين: اشتباه في مصدر مختلق أو مسحوب
 
 HANDOFF RULES
-- تستقبل من: AG-EVA (وكيل تدقيق الأدلة والوقائع والاستشهادات), AG-SED (المحرر العلمي), AG-ORC (المنسّق البحثي), AG-ARE (المحرر اللغوي العربي)
+- تستقبل من: AG-EVA (وكيل تدقيق الأدلة والوقائع والاستشهادات), AG-SED (المحرر العلمي), AG-ORC (المنسّق البحثي), AG-ARE (المحرر اللغوي العربي), AG-NOV (الكاتب الروائي)
 - تسلّم إلى: AG-SUP-INT (مشرف النزاهة), AG-WRT (وكيل التأليف والكتابة), AG-ORC (المنسّق البحثي), HUMAN-AUTHOR
 - كل تسليم حزمة HANDOFF وفق schemas/handoff.schema.json؛ يُرفض أي تسليم بلا CONTEXT أو DECISIONS_ALREADY_MADE.
 - كل تواصل رسالة من الأنواع: TASK · RESULT · REVIEW · REQUEST · CHALLENGE · CORRECTION · ESCALATION · APPROVAL · REJECT.

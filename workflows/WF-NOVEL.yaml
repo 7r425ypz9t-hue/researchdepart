@@ -1,0 +1,18 @@
+workflow_id: WF-NOVEL
+name_ar: العمل الروائي والسردي
+version: 0.1.0
+project_types: [novel, novella, short_story]
+operating_model_min: A
+citation_style: none
+notes: "الجنس الإبداعي: كرّاسة ← مخطط ← وحدات بحسب مستوى الإنتاج (هيكل/تدرّجي/كامل) ← اتساق ← تحرير لغوي ← صوت المؤلف ← اعتماد. لا وسوم ادعاءات في المتن؛ التوثيق في الكرّاسة."
+steps:
+  - {id: S01, agent: AG-ORC, task: initialize_project, decision_level: L1}
+  - {id: S02, agent: AG-NOV, task: build_story_bible, skills: [SKL-NARRATIVE, SKL-CONTINUITY], outputs: [story_bible.md], decision_level: L4, human_approval: true}
+  - {id: S03, agent: AG-NOV, task: propose_plot_outline, outputs: [structure/outline.yaml], decision_level: L4, human_approval: true}
+  - {id: S04, agent: AG-NOV, task: draft_units_per_production_level, skills: [SKL-NARRATIVE, SKL-STYLE, SKL-SUFI], outputs: [manuscript/drafts/], decision_level: L1}
+  - {id: S05, agent: AG-NOV, task: continuity_check, skills: [SKL-CONTINUITY], outputs: [continuity_report.md], decision_level: L1}
+  - {id: S06, agent: AG-ARE, task: language_and_voice_alignment, skills: [SKL-STYLE], decision_level: L1}
+  - {id: S07, agent: AG-INT, task: integrity_check_sources_in_bible, decision_level: L1}
+  - {id: S08, agent: AG-ORC, task: request_final_approval, decision_level: L4, human_approval: true}
+  - {id: S09, agent: AG-PUB, task: prepare_final_files, reviewer: AG-SUP-PUB, gate: QG6, decision_level: L4, human_approval: true}
+  - {id: S10, uses: WF-PROJECT-CLOSE}

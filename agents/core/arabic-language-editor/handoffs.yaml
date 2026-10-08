@@ -6,6 +6,7 @@ receives_from:
 - AG-ORC
 - AG-SUP-EDT
 - AG-TAH
+- AG-NOV
 sends_to:
 - AG-SUP-EDT
 - AG-PUB

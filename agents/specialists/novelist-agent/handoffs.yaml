@@ -1,0 +1,24 @@
+# GENERATED from agents/_specs/AG-NOV.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-NOV
+receives_from:
+- AG-ORC
+- AG-BKA
+- AG-ARE
+- AG-SED
+- AG-INT
+sends_to:
+- AG-ARE
+- AG-INT
+consult:
+- agent: AG-CUL
+  when: تفصيل تراثي أو اجتماعي محلي يحتاج دقة
+- agent: AG-TAH
+  when: نص تراثي أو مخطوط يُستلهم في السرد
+escalation:
+- trigger: المشهد يقتضي تغيير مصير شخصية أو حدث مفصلي
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: HUMAN-AUTHOR
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

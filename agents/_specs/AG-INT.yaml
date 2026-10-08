@@ -33,7 +33,7 @@ permissions:
   prohibited: [إصلاح النص بنفسه, منح إذن حقوق, إخفاء نتيجة فحص]
 human_approval: [استعمال مادة محمية, نشر مع خطر متوسط موثق]
 handoffs:
-  receives_from: [AG-EVA, AG-SED, AG-ORC, AG-ARE]
+  receives_from: [AG-EVA, AG-SED, AG-ORC, AG-ARE, AG-NOV]
   sends_to: [AG-SUP-INT, AG-WRT, AG-ORC, HUMAN-AUTHOR]
 consult:
   - {agent: AG-SRC, when: "اشتباه في مصدر مختلق أو مسحوب"}

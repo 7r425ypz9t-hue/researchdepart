@@ -144,12 +144,18 @@ POLE_REGISTERS = {"essay", "narrative"}  # القطب المُعان لا يُق
 
 
 def register_for(project_id: str) -> str | None:
+    """السجلّ من جنس المشروع (config/genres.yaml)؛ والجدول أعلاه احتياط للمشاريع القديمة."""
     import yaml
     from .paths import PROJECTS
     mf = PROJECTS / project_id / "manifest.yaml"
     if not mf.exists():
         return None
-    return REGISTER_BY_TYPE.get(yaml.safe_load(mf.read_text(encoding="utf-8")).get("project_type"))
+    m = yaml.safe_load(mf.read_text(encoding="utf-8"))
+    from .genres import genres, genre_for_type
+    try:
+        return genres()[m.get("genre") or genre_for_type(m["project_type"])]["register"]
+    except (ValueError, KeyError):
+        return REGISTER_BY_TYPE.get(m.get("project_type"))
 
 
 def load_reference(name: str | None) -> dict | None:

@@ -16,6 +16,10 @@ DEFAULT_DELIVERABLES = {
     "academic_book": ["مخطوط محكّم", "PDF", "EPUB", "فهارس", "ببليوغرافيا"],
     "policy_study": ["ورقة سياسات", "ملخص تنفيذي", "توصيات"],
     "op_ed": ["مقال رأي ≤ 300 كلمة"],
+    "novel": ["كرّاسة الرواية", "مخطوط الرواية المعتمد", "PDF/EPUB", "سجل المشروع"],
+    "novella": ["كرّاسة العمل", "مخطوط معتمد", "سجل المشروع"],
+    "short_story": ["قصة معتمدة", "سجل المشروع"],
+    "essay_collection": ["مخطوط المجموعة المعتمد", "PDF", "EPUB", "سجل المشروع"],
 }
 
 
@@ -23,7 +27,13 @@ def new_project(title: str, project_type: str, author: str = "د. ماجد بو�
                 operating_model: str = "A", has_data: bool = False, risk: str = "medium",
                 evidence_requirement: str = "standard", publication_target: str | None = None,
                 deadline: str | None = None, citation_style: str | None = None,
-                governing_manifest: str | None = None) -> dict:
+                governing_manifest: str | None = None, genre: str | None = None,
+                production_level: str | None = None, target_pages: int | None = None,
+                words_per_page: int | None = None) -> dict:
+    from . import genres as GN
+    genre = GN.genre_for_type(project_type, genre)
+    production_level = production_level or ("full" if genre == "op_ed" else "staged")
+    GN.check_level(genre, production_level)
     pid = next_project_id()
     root = PROJECTS / pid
     for d in PROJECT_DIRS:
@@ -34,12 +44,14 @@ def new_project(title: str, project_type: str, author: str = "د. ماجد بو�
     sel = selection.select(ctx)
     wid = WF.workflow_for(project_type)
     wf = R.workflows()[wid]
-    style = citation_style or {"Chicago": "Chicago", "APA7": "APA7"}.get(wf.get("citation_style"), "APA7")
+    gstyle = GN.genres()[genre]["citation_style"]
+    style = citation_style or ("none" if gstyle == "none" else
+                               {"Chicago": "Chicago", "APA7": "APA7"}.get(wf.get("citation_style"), gstyle))
     budget = R.load_yaml(CONFIG / "cost_limits.yaml")["defaults_by_project_type"].get(project_type)
 
     manifest = {
         "project_id": pid, "slug": slugify(title), "title": title, "title_status": "WORKING",
-        "project_type": project_type, "workflow": wid, "operating_model": operating_model, "author": author,
+        "project_type": project_type, "genre": genre, "workflow": wid, "operating_model": operating_model, "author": author,
         "governing_manifest": governing_manifest,
         "objectives": ["(تُستكمل في S02 بواسطة AG-RQA وتُعتمد عند QG0)"],
         "thesis": None,
@@ -55,6 +67,10 @@ def new_project(title: str, project_type: str, author: str = "د. ماجد بو�
         "deliverables": DEFAULT_DELIVERABLES.get(project_type, ["المخرج الرئيس", "سجل المشروع"]),
         "quality_gates": ["QG0", "QG1", "QG2", "QG3", "QG4", "QG5", "QG6", "QG7"],
         "human_approvals": ["العنوان", "الأطروحة", "الهيكل", "الاستنتاجات الجوهرية", "النشر النهائي"],
+        "production": {"level": production_level, "target_pages": target_pages,
+                       "words_per_page": words_per_page or GN.levels()["words_per_page_default"],
+                       "target_words": GN.genres()[genre].get("max_words") or
+                       (target_pages * (words_per_page or GN.levels()["words_per_page_default"]) if target_pages else None)},
         "budget_usd": budget, "deadline": deadline, "data_classification": "CONFIDENTIAL",
         "status": "ACTIVE", "version": "v0.1", "created": now_iso(),
     }
@@ -80,13 +96,15 @@ def new_project(title: str, project_type: str, author: str = "د. ماجد بو�
                                                    allow_unicode=True, sort_keys=False), encoding="utf-8")
     (root / "decisions.yaml").write_text(yaml.safe_dump({"project_id": pid, "decisions": []}, allow_unicode=True), encoding="utf-8")
     (root / "outline.yaml").write_text("chapters: []\nfigures_plan: []\n", encoding="utf-8")
+    from . import book
+    book.init(pid, production_level, target_pages, words_per_page, genre)
     (root / "evidence/claims.jsonl").touch()
     (root / "research/sources.jsonl").touch()
     (root / "CHANGELOG.md").write_text(f"# CHANGELOG — {pid}\n\n## v0.1 Draft — {dt.date.today()}\n- فتح المشروع «{title}» وفق {wid}.\n", encoding="utf-8")
 
     first = WF.expand(wid, {"project": ctx})[0]
     state = {"PROJECT_ID": pid, "STATE": "INITIALIZED", "STAGE_ID": first["id"],
-             "NEXT_ACTION": "S02: AG-RQA → define_scope (ثم QG0 بموافقة المؤلف)", "CURRENT_AGENT": "AG-ORC",
+             "NEXT_ACTION": "S02", "CURRENT_AGENT": "AG-ORC",
              "WAITING_FOR": None, "BLOCKERS": [], "VERSION": "v0.1", "QUALITY_GATE": {"current": "QG0", "status": "PENDING"},
              "COMPLETION_PCT": 0, "LAST_WORK_POINT": "initialize_project", "PINNED_DECISIONS": [],
              "PENDING_HUMAN_DECISIONS": [], "OPEN_ISSUES": 0, "COST_USD": 0.0, "DEADLINE": deadline, "UPDATED": now_iso()}

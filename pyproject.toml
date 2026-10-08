@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rkpos"
-version = "0.5.0"
+version = "0.6.0"
 description = "MIDAD — Research, Knowledge & Publishing Intelligence Unit (RKPIU/RKPOS) runtime"
 requires-python = ">=3.10"
 dependencies = ["PyYAML>=6.0", "jsonschema>=4.20"]

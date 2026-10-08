@@ -411,15 +411,46 @@ skills:
     status: available_now
 
 # مهارات Claude القائمة لدى المؤلف والمربوطة بالمنظومة (تُستدعى بالاسم داخل بيئة Claude):
+  - id: SKL-NARRATIVE
+    name_ar: "صنعة السرد"
+    name_en: "Narrative Craft"
+    purpose: "بناء المشهد والشخصية والحوار والإيقاع في العمل الروائي بصوت المؤلف."
+    procedure: ["تحديد غاية المشهد في القوس الكلي", "المكان والزمن والحسّ", "الفعل قبل الشرح", "حوار يكشف الشخصية", "خاتمة مشهد تفتح التالي"]
+    outputs: ["drafts/Unn.md"]
+    realization: ["prompt", "claude_skill:fiction-writer-agent-ar", "claude_skill:literary-agent-orchestrator-ar"]
+    status: available_now
+
+  - id: SKL-CONTINUITY
+    name_ar: "حفظ الاتساق السردي"
+    name_en: "Narrative Continuity"
+    purpose: "مطابقة كل مشهد جديد لكرّاسة الرواية والفصول المعتمدة: الأسماء والأمكنة والزمن والألفاظ."
+    procedure: ["استخراج الكيانات من المسودة", "مطابقتها بالكرّاسة", "رصد التعارضات والقفزات الزمنية", "اقتراح تحديثات الكرّاسة للاعتماد"]
+    outputs: ["continuity_report.md", "story_bible.md (مقترح)"]
+    realization: ["prompt", "claude_skill:novel-continuity-ar"]
+    status: available_now
+
+  - id: SKL-SUFI
+    name_ar: "إذابة المادة الصوفية"
+    name_en: "Sufi Dissolution"
+    purpose: "إدخال المعنى الصوفي في السرد ذوباناً من الدرجة الأولى، مع توثيق الأصل خارج المتن."
+    procedure: ["تحديد الأصل وتوثيقه في الكرّاسة", "استخلاص المعنى", "تحويله إلى فعل أو صورة أو صمت", "فحص خلو المتن من الاقتباس الوعظي"]
+    outputs: ["drafts/Unn.md", "bible: sufi_sources"]
+    realization: ["prompt", "claude_skill:sufi-dissolution-ar"]
+    status: available_now
+
 existing_claude_skills:
   - {name: council-orchestration-ar, binds_to: [AG-ORC, AG-COUNCIL], note: "الأصوات الستة تقابل: Intake=AG-RQA، الإطار=AG-THR/AG-LRV، المنهج=AG-BKA/AG-MTH، المنفذ=AG-WRT، QA=AG-EVA/AG-INT، المحكّم=AG-RED/AG-PRV"}
   - {name: source-integrity-ar, binds_to: [AG-SRC, AG-EVA, AG-INT, AG-SUP-EVD, AG-SUP-INT]}
   - {name: grmm-master-manifest-ar, binds_to: [AG-ORC, AG-RQA], note: "المشاريع البحثية المركبة: project manifest يحيل إلى GRMM"}
   - {name: project-runtime-protocol-ar, binds_to: [AG-ORC], note: "بطاقة الحالة ودورة الجلسة = state.yaml"}
-  - {name: style-fingerprint-majed-ar, binds_to: [AG-WRT, AG-ARE, AG-SUP-EDT]}
+  - {name: style-fingerprint-majed-ar, binds_to: [AG-WRT, AG-NOV, AG-ARE, AG-SUP-EDT]}
   - {name: op-ed-column-ar, binds_to: [AG-WRT], note: "سير عمل WF-OPED"}
   - {name: arabic-math-econ, binds_to: [AG-DAT, AG-WRT]}
   - {name: academic-integrity-sunni-sources-ar, binds_to: [AG-SRC, AG-DSC, AG-INT], note: "سياسة انتقاء المراجع الخاصة بالمؤلف"}
   - {name: graphify-knowledge-graph, binds_to: [AG-KNW, AG-THR]}
   - {name: arabic-personal-library-builder, binds_to: [AG-KNW], note: "تكامل مع PKC/MajLib"}
   - {name: ccap-project, binds_to: [AG-ORC], note: "مشروع BCCM-2026 عند فتحه داخل الوحدة"}
+  - {name: fiction-writer-agent-ar, binds_to: [AG-NOV], note: "جنس الإبداع الروائي — WF-NOVEL"}
+  - {name: literary-agent-orchestrator-ar, binds_to: [AG-NOV, AG-ORC], note: "مجلس الإنتاج السردي"}
+  - {name: novel-continuity-ar, binds_to: [AG-NOV], note: "SKL-CONTINUITY"}
+  - {name: sufi-dissolution-ar, binds_to: [AG-NOV], note: "SKL-SUFI"}

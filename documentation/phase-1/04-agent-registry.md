@@ -5,10 +5,10 @@
 |---|---|
 | أساسي دائم (Core) | 12 |
 | خدمي (Utility) | 5 |
-| متخصص (Specialist) | 8 |
+| متخصص (Specialist) | 9 |
 | إشرافي (Supervisory) | 7 |
 | عند الطلب (On-Demand) | 3 |
-| **المجموع** | **35** (منها قالب مؤقت واحد) |
+| **المجموع** | **36** (منها قالب مؤقت واحد) |
 
 | المعرّف | الاسم | English | الإدارة | التصنيف | النموذج | MVP | A/B/C | يستوعب |
 |---|---|---|---|---|---|---|---|---|
@@ -25,6 +25,7 @@
 | `AG-KNW` | أمين المعرفة والأرشيف | Knowledge Steward Agent | المعرفة والأرشيف | core | T2-standard | ✅ | ABC | Chief Knowledge Officer (التشغيلي)، Knowledge Base Architect (التشغيل)، Metadata Agent، Archive Agent |
 | `AG-LRV` | وكيل مراجعة الأدبيات | Literature Review Agent | الاستكشاف العلمي والمصادر | core | T3-advanced |  | BC | Systematic Review Agent (وضع PRISMA) |
 | `AG-MTH` | وكيل المناهج البحثية | Research Methods Agent | المناهج والتحليل | specialist | T3-advanced |  | BC | Quantitative Methods Agent، Qualitative Methods Agent، Mixed Methods Agent، Causal Analysis Agent |
+| `AG-NOV` | الكاتب الروائي | Novelist Agent | التأليف والكتابة | specialist | T3-advanced |  | ABC | Fiction Writer Agent، Scene Builder، Story Bible Keeper، Narrative Continuity Agent |
 | `AG-ORC` | المنسّق البحثي | Research Orchestrator | مكتب مدير الإدارة والبرامج وإدارة المشاريع | supervisory | T3-advanced | ✅ | ABC | Research Program Manager، Project Management Agent |
 | `AG-POL` | وكيل السياسات والاستشراف | Policy & Foresight Agent | السياسات والاستشراف | specialist | T3-advanced |  | BC | Public Policy Agent، Strategic Foresight Agent، Systems Thinking Agent، Scenario Planning Agent، Economic Analysis Agent |
 | `AG-PRV` | المحكّم العلمي | Peer Reviewer Agent | التحرير والتحكيم | specialist | T4-independent |  | BC |  |

@@ -30,7 +30,8 @@ READABLE = ("projects", "workspace", "publishing/dashboard")
 WRITE_LOCK = threading.Lock()
 PROJECT_TYPES = ["intellectual_book", "academic_book", "policy_study", "systematic_review", "literature_review",
                  "foresight_study", "critical_edition", "journal_article", "op_ed", "strategic_report",
-                 "translation", "re_edition"]
+                 "translation", "re_edition", "novel", "novella", "short_story", "essay_collection"]
+JOBS: dict[str, dict] = {}          # مهام الخلفية (الكتابة الكاملة) — في الذاكرة فقط
 MIME = {".html": "text/html; charset=utf-8", ".js": "application/javascript; charset=utf-8",
         ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".ico": "image/x-icon"}
 
@@ -127,7 +128,7 @@ def project(q) -> dict:
     runs = []
     if (p / "runs").exists():
         for d in sorted((p / "runs").iterdir()):
-            if d.is_dir():
+            if d.is_dir() and any(d.iterdir()):
                 runs.append({"id": d.name, "files": sorted(f.name for f in d.iterdir() if f.is_file())})
     files = sorted(str(f.relative_to(ROOT)) for f in p.rglob("*") if f.is_file() and "runs" not in f.relative_to(p).parts)
     return {"manifest": _y(p / "manifest.yaml"), "state": _y(p / "state.yaml"), "plan": _y(p / "plan.yaml"),
@@ -190,7 +191,47 @@ def governance(_q) -> dict:
             "council": R.load_yaml(g / "council.yaml")}
 
 
-GET = {"overview": overview, "agents": agents, "agent": agent, "workflows": workflows, "project": project,
+def genres_view(_q) -> dict:
+    from .. import genres as GN
+    return {"genres": GN.genres(), "levels": GN.levels(), "cross_genre": R.load_yaml(ROOT / "config/genres.yaml").get("cross_genre", {})}
+
+
+def _running(pid: str) -> dict | None:
+    return next((j for j in JOBS.values() if j["project"] == pid and j["state"] == "running"), None)
+
+
+def book_view(q) -> dict:
+    from .. import book as B
+    pid = _proj(q.get("id")).name
+    try:
+        ob = B.load(pid)
+    except FileNotFoundError:
+        return {"outline": None}
+    return {"outline": ob, "voice": B.voice_report(pid), "estimate": B.estimate(pid) if ob["level"] == "full" else None,
+            "job": _running(pid), "book": str((PROJECTS / pid / "manuscript/book_full.md").relative_to(ROOT))
+            if (PROJECTS / pid / "manuscript/book_full.md").exists() else None}
+
+
+def book_unit(q) -> dict:
+    pid = _proj(q.get("project")).name
+    uid = q.get("unit", "")
+    if not uid.isalnum():
+        raise ApiError("وحدة غير صالحة")
+    d = PROJECTS / pid / "manuscript/drafts"
+    rd = lambda f: f.read_text(encoding="utf-8") if f.exists() else None  # noqa: E731
+    return {"current": rd(d / f"{uid}.md"), "ai": rd(d / f"{uid}.ai.md"), "aligned": rd(d / f"{uid}.aligned.md"),
+            "card": rd(d / f"{uid}.card.md"), "notes": rd(d / f"{uid}.notes.md"),
+            "approved": rd(PROJECTS / pid / "manuscript/approved" / f"{uid}.md")}
+
+
+def job_view(q) -> dict:
+    j = JOBS.get(q.get("id", ""))
+    if not j:
+        raise ApiError("مهمة غير معروفة")
+    return j
+
+
+GET = {"genres": genres_view, "book": book_view, "book_unit": book_unit, "job": job_view, "overview": overview, "agents": agents, "agent": agent, "workflows": workflows, "project": project,
        "file": read_file, "candidates": candidates, "memory": memory, "audit": audit_log, "cost": cost_report,
        "governance": governance, "engines": lambda q: engines(), "ping": lambda q: {"ok": True, "root": str(ROOT)}}
 
@@ -204,7 +245,10 @@ def a_new_project(d):
     m = P.new_project(d["title"], d["type"], domain=d.get("domain") or None, operating_model=d.get("model") or "A",
                       has_data=bool(d.get("has_data")), risk=d.get("risk") or "medium",
                       evidence_requirement=d.get("evidence") or "standard", publication_target=d.get("target") or None,
-                      deadline=d.get("deadline") or None)
+                      deadline=d.get("deadline") or None, genre=d.get("genre") or None,
+                      production_level=d.get("level") or None,
+                      target_pages=int(d["pages"]) if d.get("pages") else None,
+                      words_per_page=int(d["wpp"]) if d.get("wpp") else None)
     return {"project_id": m["project_id"], "workflow": m["workflow"], "agents": m["agents"]}
 
 
@@ -269,7 +313,7 @@ def a_adhoc(d):
     _need(d, "agent", "task")
     engine = d.get("engine") or "manual"
     return runner.run_adhoc(d["agent"], d["task"], register=d.get("register") or None, project=d.get("project") or None,
-                            context=d.get("context") or "", engine=engine)
+                            context=d.get("context") or "", engine=engine, genre=d.get("genre") or None)
 
 
 def a_check_text(d):
@@ -372,7 +416,138 @@ def a_open_folder(d):
     return {"opened": target}
 
 
-POST = {"new_project": a_new_project, "run_step": a_run_step, "record_output": a_record_output, "complete": a_complete,
+def _book_guard(d):
+    _need(d, "project")
+    pid = _proj(d["project"]).name
+    if _running(pid):
+        raise ApiError("الكتابة الكاملة جارية لهذا المشروع؛ انتظروا انتهاءها")
+    return pid
+
+
+def _eng(d):
+    return d.get("engine") or "manual"
+
+
+def b_skeleton(d):
+    from .. import book as B
+    return B.skeleton(_book_guard(d), int(d.get("n") or 5))
+
+
+def b_set_units(d):
+    from .. import book as B
+    pid = _book_guard(d)
+    return B.set_units(pid, d.get("units") or [], force=bool(d.get("force") and d.get("confirm_author")))
+
+
+def b_propose(d):
+    from .. import book as B
+    return B.propose_outline(_book_guard(d), _eng(d), int(d["n"]) if d.get("n") else None, d.get("guidance") or "")
+
+
+def b_import_outline(d):
+    from .. import book as B
+    pid = _book_guard(d)
+    _need(d, "text")
+    return B.set_units(pid, B.parse_outline(d["text"]))
+
+
+def b_approve_outline(d):
+    from .. import book as B
+    pid = _book_guard(d)
+    _author(d)
+    return B.approve_outline(pid, "HUMAN-AUTHOR")
+
+
+def b_draft(d):
+    from .. import book as B
+    pid = _book_guard(d)
+    _need(d, "unit")
+    try:
+        return B.draft_unit(pid, d["unit"], _eng(d))
+    except PermissionError as e:
+        raise ApiError(str(e)) from e
+
+
+def b_record(d):
+    from .. import book as B
+    pid = _book_guard(d)
+    _need(d, "unit", "text")
+    text = B.extract(d["text"])[0] if B.BEGIN in d["text"] else d["text"]
+    return B.record_unit(pid, d["unit"], text, source="ai" if d.get("source") != "author" else "author")
+
+
+def b_revise(d):
+    from .. import book as B
+    pid = _book_guard(d)
+    _need(d, "unit", "text")
+    return B.revise_unit(pid, d["unit"], d["text"])
+
+
+def b_align(d):
+    from .. import book as B
+    pid = _book_guard(d)
+    _need(d, "unit")
+    return B.align_voice(pid, d["unit"], _eng(d))
+
+
+def b_adopt_aligned(d):
+    from .. import book as B
+    pid = _book_guard(d)
+    _need(d, "unit")
+    f = PROJECTS / pid / "manuscript/drafts" / f"{d['unit']}.aligned.md"
+    if not f.exists():
+        raise ApiError("لا نسخة مواءمة لهذه الوحدة")
+    return B.revise_unit(pid, d["unit"], f.read_text(encoding="utf-8"))
+
+
+def b_approve_unit(d):
+    from .. import book as B
+    pid = _book_guard(d)
+    _need(d, "unit")
+    _author(d)
+    return B.approve_unit(pid, d["unit"], "HUMAN-AUTHOR", d.get("text") or None)
+
+
+def b_assemble(d):
+    from .. import book as B
+    return B.assemble(_book_guard(d))
+
+
+def b_draft_all(d):
+    """تشغيل في الخلفية مع تقدّم قابل للمتابعة؛ يتطلب إقرار التقدير والكلفة."""
+    from .. import book as B
+    pid = _book_guard(d)
+    if _eng(d) == "manual":
+        raise ApiError("الكتابة الكاملة تحتاج محرّكاً آلياً: اختاروا Claude Code أو API")
+    if d.get("confirm_cost") is not True:
+        raise ApiError("أقرّوا تقدير الحجم والكلفة أولاً")
+    ob = B.load(pid)
+    if ob["level"] != "full":
+        raise ApiError("الكتابة الكاملة لمستوى «الكامل» وحده")
+    if not ob["outline_approved"]:
+        raise ApiError("اعتمدوا المخطط أولاً (L4)")
+    jid = secrets.token_hex(6)
+    job = {"id": jid, "project": pid, "state": "running", "done": 0, "total": 0, "current": None, "error": None, "result": None}
+    JOBS[jid] = job
+
+    def prog(i, n, uid):
+        job.update(done=i, total=n, current=uid)
+
+    def work():
+        try:
+            job["result"] = B.draft_all(pid, _eng(d), prog)
+            job["state"] = "done"
+        except Exception as e:  # noqa: BLE001 — يُعرض في اللوحة؛ الوحدات المكتوبة قبل الخطأ محفوظة
+            job.update(state="error", error=f"{type(e).__name__}: {e}")
+    threading.Thread(target=work, daemon=True).start()
+    return job
+
+
+POST = {"book_skeleton": b_skeleton, "book_set_units": b_set_units, "book_propose": b_propose,
+        "book_import_outline": b_import_outline, "book_approve_outline": b_approve_outline, "book_draft": b_draft,
+        "book_record": b_record, "book_revise": b_revise, "book_align": b_align, "book_adopt_aligned": b_adopt_aligned,
+        "book_approve_unit": b_approve_unit, "book_assemble": b_assemble, "book_draft_all": b_draft_all,
+        "new_project": a_new_project, "run_step": a_run_step, "record_output": a_record_output, "complete": a_complete,
         "adhoc": a_adhoc, "check_text": a_check_text, "verify_doi": a_verify_doi, "select": a_select,
         "validate": a_validate, "generate": a_generate, "eval": a_eval, "dashboard": a_dashboard,
         "security_scan": a_security_scan, "promote": a_promote, "amend": a_amend, "open_folder": a_open_folder}
@@ -426,6 +601,12 @@ def make_handler(token: str, port_ref: dict):
                 return self._send(200, f.read_bytes(), MIME.get(f.suffix, "application/octet-stream"))
             if not self._auth():
                 return
+            if u.path == "/api/raw":
+                q = {k: v[0] for k, v in parse_qs(u.query).items()}
+                f = (ROOT / q.get("path", "")).resolve()
+                if not any(f.is_relative_to((ROOT / r).resolve()) for r in READABLE) or not f.is_file():
+                    return self._json(400, {"ok": False, "error": "مسار غير مسموح"})
+                return self._send(200, f.read_bytes(), "application/octet-stream")
             fn = GET.get(u.path[5:])
             if not fn:
                 return self._json(404, {"ok": False, "error": "unknown endpoint"})

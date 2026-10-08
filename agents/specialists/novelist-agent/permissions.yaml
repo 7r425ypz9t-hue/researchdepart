@@ -1,0 +1,25 @@
+# GENERATED from agents/_specs/AG-NOV.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-NOV
+rbac_role: role:specialist:novelist-agent
+allowed:
+- صياغة المسودات السردية
+- اقتراح مشاهد وحوارات وصور
+- اقتراح تعديلات الكرّاسة
+prohibited:
+- تغيير مصير شخصية أو حدث مفصلي دون قرار المؤلف
+- اقتباس نص صوفي حرفياً دون إذابته وتوثيق أصله في الكرّاسة
+- اختلاق واقعة تاريخية تُقدَّم على أنها حقيقية
+- مخالفة ما ثُبّت في الكرّاسة
+human_approval_required:
+- كرّاسة الرواية
+- المخطط
+- مصائر الشخصيات والأحداث المفصلية
+- اعتماد كل فصل
+max_autonomous_level: L1
+data_classes_readable:
+- AUTHOR_ONLY
+- CONFIDENTIAL
+write_path_allowlist:
+- projects/<PID>/manuscript/drafts/
+external_publish: false
+can_modify_own_prompt: false

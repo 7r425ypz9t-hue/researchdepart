@@ -44,11 +44,14 @@ def style_contract(agent_id: str, register: str | None) -> str:
             + "\n".join(lines) + f"\n{AUTHOR_ONLY_END}\n")
 
 
-def compose_system_prompt(agent_id: str, register: str | None = None) -> str:
+def compose_system_prompt(agent_id: str, register: str | None = None, genre: str | None = None) -> str:
+    """برومبت الوكيل + صفات الجنس (عامة) + عقد الأسلوب (خاص، بحسب السجلّ) + الدستور."""
+    from .genres import profile_block
     a = R.agents()[agent_id]
     sp = (agent_dir(a) / "system_prompt.md").read_text(encoding="utf-8")
     body = re.search(r"```text\n(.*)```", sp, re.S).group(1)
-    return body + style_contract(agent_id, register) + "\n\n" + (PROMPTS / "constitution.md").read_text(encoding="utf-8")
+    return (body + profile_block(genre) + style_contract(agent_id, register) + "\n\n"
+            + (PROMPTS / "constitution.md").read_text(encoding="utf-8"))
 
 
 def _find_step(plan: dict, step_id: str | None) -> dict:
@@ -110,7 +113,8 @@ def run_step(pid: str, step_id: str | None = None, live: bool = False, engine: s
         ST.refresh(pid)
         return run_dir / "author_task.md"
     from .stylometry import register_for
-    system = compose_system_prompt(agent, register_for(pid))
+    from .genres import genre_of
+    system = compose_system_prompt(agent, register_for(pid), genre_of(pid))
     user = f"TASK MESSAGE\n```yaml\n{yaml.safe_dump(msg, allow_unicode=True, sort_keys=False)}```\n"
     (run_dir / "prompt.md").write_text(f"# SYSTEM\n\n{system}\n\n# USER\n\n{user}", encoding="utf-8")
     out_path = run_dir / "prompt.md"
@@ -191,7 +195,7 @@ WORKSPACE = ROOT / "workspace"  # تشغيلات خارج المشاريع — �
 
 
 def run_adhoc(agent_id: str, task: str, register: str | None = None, project: str | None = None,
-              context: str = "", engine: str | None = "manual") -> dict:
+              context: str = "", engine: str | None = "manual", genre: str | None = None) -> dict:
     """تفعيل وكيل مباشرة بتكليف من المؤلف خارج خطة المشروع (لوحة التحكم).
     الضوابط نفسها: برومبت الوكيل + عقد الأسلوب إن كان يقرأ MEM-AUTHOR + الدستور؛ القرار L4 يبقى للمؤلف."""
     from .ids import short_id
@@ -202,12 +206,17 @@ def run_adhoc(agent_id: str, task: str, register: str | None = None, project: st
         raise ValueError("task is empty")
     if project and not (PROJECTS / project / "manifest.yaml").exists():
         raise KeyError(project)
+    from .genres import genre_of, genres
+    if project and not genre:
+        genre = genre_of(project)
+    if genre and not register:
+        register = genres()[genre]["register"]
     if project and not register:
         from .stylometry import register_for
         register = register_for(project)
-    system = compose_system_prompt(agent_id, register)
+    system = compose_system_prompt(agent_id, register, genre)
     msg = {"TYPE": "TASK", "FROM": "HUMAN-AUTHOR", "TO": agent_id, "MODE": "ad-hoc (control panel)",
-           "PROJECT": project, "REGISTER": register, "TASK": task.strip(), "CONTEXT": context.strip() or None,
+           "PROJECT": project, "GENRE": genre, "REGISTER": register, "TASK": task.strip(), "CONTEXT": context.strip() or None,
            "EXPECTED_OUTPUT": "RESULT وفق OUTPUT CONTRACT في برومبتك؛ ما يحتاج قراراً L4 يُرفع للمؤلف ولا يُحسم"}
     user = f"TASK MESSAGE\n```yaml\n{yaml.safe_dump(msg, allow_unicode=True, sort_keys=False)}```\n"
     rid = short_id("ADH")

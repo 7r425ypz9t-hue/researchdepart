@@ -74,7 +74,18 @@ const PTYPE_AR = {
   intellectual_book: "كتاب فكري", academic_book: "كتاب أكاديمي", policy_study: "دراسة سياسات", systematic_review: "مراجعة منهجية",
   literature_review: "مراجعة أدبيات", foresight_study: "دراسة استشرافية", critical_edition: "تحقيق تراثي", journal_article: "بحث محكّم",
   op_ed: "مقال رأي", strategic_report: "تقرير استراتيجي", translation: "ترجمة", re_edition: "إعادة إصدار",
+  novel: "رواية", novella: "رواية قصيرة (نوفيلا)", short_story: "قصة قصيرة", essay_collection: "مجموعة مقالات فكرية",
 };
+const UNIT_STATUS_AR = { PLANNED: "مخطّطة", CARDED: "بطاقة جاهزة", DRAFTED: "مسودة الوكيل", REVISED: "عدّلها المؤلف", APPROVED: "معتمدة" };
+const UNIT_STATUS_CLS = { APPROVED: "ok", REVISED: "gold", DRAFTED: "warn", CARDED: "" };
+let GEN = null;
+async function genresData() { GEN = GEN || await G("genres"); return GEN; }
+async function downloadRaw(path) {
+  const r = await fetch("/api/raw?path=" + encodeURIComponent(path), { headers: { "X-Rkpos-Token": TOKEN } });
+  if (!r.ok) return toast("تعذّر التنزيل", true);
+  const a = h("a", { href: URL.createObjectURL(await r.blob()), download: path.split("/").pop() });
+  document.body.append(a); a.click(); a.remove();
+}
 const authorBox = (id) => h("label", { class: "confirm" }, h("input", { type: "checkbox", id }), " أقرّ بصفتي المؤلف (قرار L4)");
 
 async function copyAndOpen(text) {
@@ -179,28 +190,64 @@ async function projects() {
   const o = await G("overview");
   set(h("h2", {}, "المشاريع"), h("div", { class: "row" }, btn("مشروع جديد", () => newProjectForm(), "gold")), projectsTable(o.projects));
 }
-function newProjectForm() {
+async function newProjectForm(preGenre, preType) {
+  const g = await genresData();
+  let genre = preGenre || "intellectual", level = null;
+  const typeBox = h("div"), levelBox = h("div", { class: "grid" }), sizeBox = h("div"), genreBox = h("div", { class: "grid" });
+  const paintSize = () => {
+    const gs = g.genres[genre];
+    if (gs.max_words) { sizeBox.replaceChildren(h("p", { class: "muted" }, "سقف الطول " + gs.max_words + " كلمة.")); return; }
+    const calc = h("span", { class: "pill gold" }, "—");
+    const upd = () => { const p = +val("np-pages"), w = +val("np-wpp") || 250; calc.textContent = p ? (p * w).toLocaleString("ar") + " كلمة تقريباً" : "حدّدوا عدد الصفحات"; };
+    sizeBox.replaceChildren(h("div", { class: "form" },
+      field("عدد الصفحات المطلوب", h("input", { id: "np-pages", type: "number", min: 1, placeholder: "مثال: 200", oninput: upd })),
+      field("كلمات الصفحة", h("input", { id: "np-wpp", type: "number", min: 100, value: g.levels.words_per_page_default, oninput: upd })),
+      h("label", {}, "الحجم", calc)));
+    upd();
+  };
+  const paintLevels = () => {
+    const allowed = g.genres[genre].levels;
+    if (!allowed.includes(level)) level = allowed.includes("staged") ? "staged" : allowed[0];
+    levelBox.replaceChildren(...Object.entries(g.levels.levels).filter(([k]) => allowed.includes(k)).map(([k, L]) =>
+      h("div", { class: "card click" + (k === level ? " sel" : ""), onclick: () => { level = k; paintLevels(); } },
+        h("h4", {}, L.order + ". " + L.name_ar), h("p", { class: "small" }, L.summary))));
+  };
+  const paintTypes = () => {
+    const types = g.genres[genre].project_types.concat(Object.keys(g.cross_genre));
+    typeBox.replaceChildren(field("نوع المشروع", sel("np-type", types.map((t) => [t, PTYPE_AR[t] || t]), preType && types.includes(preType) ? preType : types[0])));
+  };
+  const paintGenres = () => {
+    genreBox.replaceChildren(...Object.entries(g.genres).map(([k, G2]) =>
+      h("div", { class: "card click" + (k === genre ? " sel" : ""), onclick: () => { genre = k; preType = null; paintAll(); } },
+        h("h4", {}, G2.name_ar), h("p", { class: "small muted" }, G2.intellectual[0]),
+        h("div", { class: "row" }, pill(G2.register), pill(G2.lead_agent, "gold")))));
+  };
+  const paintAll = () => { paintGenres(); paintTypes(); paintLevels(); paintSize(); };
   set(h("h2", {}, "مشروع جديد"),
-    h("div", { class: "note" }, "تختار المنظومة سير العمل والوكلاء آلياً وفق نوع المشروع، مع تعليل مكتوب لكل اختيار."),
-    h("div", { class: "form" },
-      field("العنوان العامل", h("input", { id: "np-title" }), true),
-      field("نوع المشروع", sel("np-type", Object.entries(PTYPE_AR), "op_ed")),
-      field("نموذج التشغيل", sel("np-model", [["A", "A — خفيف"], ["B", "B — قياسي"], ["C", "C — موسّع"]], "A")),
-      field("المجال", h("input", { id: "np-domain", placeholder: "cultural_policy" })),
-      field("المخاطر", sel("np-risk", [["low", "منخفضة"], ["medium", "متوسطة"], ["high", "عالية"]], "medium")),
-      field("متطلب الأدلة", sel("np-evidence", [["light", "خفيف"], ["standard", "قياسي"], ["high", "مرتفع"]], "standard")),
-      field("جهة النشر المستهدفة", h("input", { id: "np-target" })),
-      field("الموعد", h("input", { id: "np-deadline", type: "date" })),
-      field("بيانات كمية؟", h("input", { id: "np-data", type: "checkbox" }))),
+    h("h3", {}, "١. الجنس"), genreBox,
+    h("h3", {}, "٢. النوع والعنوان"), h("div", { class: "form" }, field("العنوان العامل", h("input", { id: "np-title" }), true)), typeBox,
+    h("h3", {}, "٣. مستوى الإنتاج"), levelBox,
+    h("h3", {}, "٤. الحجم"), sizeBox,
+    h("details", {}, h("summary", {}, "خيارات متقدمة"),
+      h("div", { class: "form" },
+        field("نموذج التشغيل", sel("np-model", [["A", "A — خفيف"], ["B", "B — قياسي"], ["C", "C — موسّع"]], "A")),
+        field("المجال", h("input", { id: "np-domain", placeholder: "cultural_policy" })),
+        field("المخاطر", sel("np-risk", [["low", "منخفضة"], ["medium", "متوسطة"], ["high", "عالية"]], "medium")),
+        field("متطلب الأدلة", sel("np-evidence", [["light", "خفيف"], ["standard", "قياسي"], ["high", "مرتفع"]], "standard")),
+        field("جهة النشر المستهدفة", h("input", { id: "np-target" })),
+        field("الموعد", h("input", { id: "np-deadline", type: "date" })),
+        field("بيانات كمية؟", h("input", { id: "np-data", type: "checkbox" })))),
     h("div", { class: "row" }, btn("أنشئ المشروع", async () => {
-      const r = await api("new_project", { title: val("np-title"), type: val("np-type"), model: val("np-model"), domain: val("np-domain"),
-        risk: val("np-risk"), evidence: val("np-evidence"), target: val("np-target"), deadline: val("np-deadline"), has_data: val("np-data") });
+      const r = await api("new_project", { title: val("np-title"), type: val("np-type"), genre, level, pages: val("np-pages"), wpp: val("np-wpp"),
+        model: val("np-model"), domain: val("np-domain"), risk: val("np-risk"), evidence: val("np-evidence"), target: val("np-target"),
+        deadline: val("np-deadline"), has_data: val("np-data") });
       toast("أُنشئ " + r.project_id + " — " + r.workflow); openProject(r.project_id);
-    }, "gold"), btn("محاكاة الاختيار فقط", async () => {
+    }, "gold"), btn("محاكاة اختيار الوكلاء", async () => {
       const r = await api("select", { type: val("np-type"), model: val("np-model"), domain: val("np-domain"), risk: val("np-risk"),
         evidence: val("np-evidence"), target: val("np-target"), has_data: val("np-data") });
       $("#np-sim").replaceChildren(json(r));
     }, "ghost")), h("div", { id: "np-sim" }));
+  paintAll();
 }
 
 async function openProject(pid) {
@@ -218,8 +265,9 @@ async function openProject(pid) {
       steps.some((x) => x.status !== "DONE") ? btn("شغّل الخطوة التالية بالمحرّك المختار", () => runStep(pid, null), "gold") : pill("اكتملت الخطة", "ok"),
       btn("افتح مجلد المشروع", () => api("open_folder", { path: "projects/" + pid }), "ghost"),
       btn("تحديث", () => openProject(pid), "ghost")),
+    h("div", { id: "book-box" }),
     runBox,
-    h("h3", {}, "الخطة"),
+    h("h3", {}, "الخطة (الحوكمة)"),
     h("table", {}, h("tr", {}, ["الخطوة", "الوكيل", "المهمة", "المستوى", "البوابة", "الحالة", "الإجراءات"].map((x) => h("th", {}, x))),
       steps.map((st) => h("tr", {}, h("td", {}, st.id), h("td", {}, st.assigned_agent || st.agent), h("td", { class: "small" }, st.task),
         h("td", {}, st.decision_level || ""), h("td", {}, st.gate || ""), h("td", {}, pill(st.status, STATUS_CLS[st.status])),
@@ -239,6 +287,7 @@ async function openProject(pid) {
       : h("p", { class: "muted" }, "لا قرارات."),
     h("h3", {}, "الكلفة"), h("p", {}, "$" + (d.cost.total_usd || 0).toFixed(4) + (m.budget_usd ? " من ميزانية $" + m.budget_usd : "")),
   );
+  renderBook(pid);
 }
 async function runStep(pid, step) {
   const e = engine();
@@ -328,13 +377,14 @@ async function agentDetail(aid) {
         h("div", { class: "form" },
           field("التكليف", h("textarea", { id: "ad-task", placeholder: "مثال: اكتب مسودة عمود من 300 كلمة عن…" }), true),
           field("سياق أو مواد (اختياري)", h("textarea", { id: "ad-ctx", placeholder: "الصق نصوصاً أو ملاحظات يعتمد عليها الوكيل" }), true),
+          field("الجنس", sel("ad-genre", [["", "— بلا جنس —"], ["creative", "الإبداع الروائي"], ["research", "البحث العلمي"], ["intellectual", "الفكري"], ["op_ed", "عمود الرأي"]], "")),
           field("السجلّ الأسلوبي", sel("ad-reg", REGISTERS, "")),
           field("داخل مشروع", sel("ad-proj", [["", "— خارج المشاريع —"], ...ov.projects.map((p) => [p.id, p.id + " " + p.title])], ""))),
         h("div", { class: "row" },
           btn("فعّل الوكيل بالمحرّك المختار", async () => {
             const e = engine();
             const r = await busy(e === "manual" ? "تُعدّ الحزمة…" : "يعمل " + a.name_ar + "…", () => api("adhoc", {
-              agent: aid, task: val("ad-task"), context: $("#ad-ctx").value, register: val("ad-reg"), project: val("ad-proj"), engine: e }));
+              agent: aid, task: val("ad-task"), context: $("#ad-ctx").value, register: val("ad-reg"), genre: val("ad-genre"), project: val("ad-proj"), engine: e }));
             out.replaceChildren(runView(r.output != null ? { ...r, kind: "output.md", text: r.output } : r, { project: val("ad-proj") || null }));
           }, "gold"),
           btn("معاينة البرومبت", async () => {
@@ -368,7 +418,7 @@ async function workflowDetail(id, type, model) {
       types.length ? sel("wf-type", types.map((t) => [t, PTYPE_AR[t] || t]), d.context.project_type) : null,
       sel("wf-model", [["A", "A"], ["B", "B"], ["C", "C"]], d.context.operating_model || "A"),
       btn("وسّع الخطة", () => workflowDetail(id, val("wf-type"), val("wf-model")), "sm"),
-      types.length ? btn("ابدأ مشروعاً بهذا المسار", () => { newProjectForm(); $("#np-type").value = val("wf-type") || types[0]; }, "sm gold") : null),
+      types.length ? btn("ابدأ مشروعاً بهذا المسار", () => newProjectForm(null, val("wf-type") || types[0]), "sm gold") : null),
     d.context.note ? h("p", { class: "muted small" }, d.context.note) : null,
     h("table", {}, h("tr", {}, ["الخطوة", "الوكيل", "المهمة", "المستوى", "البوابة", "موافقة بشرية"].map((x) => h("th", {}, x))),
       d.steps.map((s) => h("tr", {}, h("td", {}, s.id), h("td", {}, s.assigned_agent || s.agent || ""), h("td", { class: "small" }, s.task || s.workflow || ""),
@@ -516,8 +566,184 @@ async function settingsView() {
     }, "danger")));
 }
 
+
+// ---------- بناء العمل (الأجناس ومستويات الإنتاج) ----------
+const voicePill = (u) => {
+  const sh = u.voice && u.voice.pole ? u.voice.pole.assisted_share : null;
+  if (sh == null) return u.voice && u.voice.deviation_mean != null ? pill("انحراف " + u.voice.deviation_mean) : "";
+  return pill((sh <= 0.35 ? "صوت المؤلف " : sh <= 0.5 ? "قريب " : "مُعان ") + sh, sh <= 0.35 ? "ok" : sh <= 0.5 ? "gold" : "bad");
+};
+async function renderBook(pid) {
+  const box = $("#book-box");
+  if (!box) return;
+  const [b, g] = await Promise.all([G("book", { id: pid }), genresData()]);
+  if (!b.outline) { box.replaceChildren(); return; }
+  const ob = b.outline, GN = g.genres[ob.genre], L = g.levels.levels[ob.level];
+  const approved = ob.units.filter((u) => u.status === "APPROVED").length;
+  const card = h("div", { class: "card" },
+    h("h3", {}, "بناء العمل"),
+    h("div", { class: "row" }, pill(GN.name_ar, "gold"), pill("المستوى: " + L.name_ar), ob.target_pages ? pill(ob.target_pages + " صفحة") : null,
+      ob.target_words ? pill((ob.target_words).toLocaleString("ar") + " كلمة") : null,
+      pill("معتمد " + approved + " / " + ob.units.length, approved && approved === ob.units.length ? "ok" : ""),
+      pill("مكتوب " + (b.voice.total_words || 0).toLocaleString("ar") + " كلمة")),
+    h("p", { class: "small muted" }, L.summary));
+  const body = h("div");
+  card.append(body);
+  box.replaceChildren(card);
+  if (b.job) return jobView(pid, b.job, body);
+  if (!ob.units.length) return outlineStart(pid, ob, body);
+  if (!ob.outline_approved) return outlineEditor(pid, ob, body);
+  // جدول الوحدات
+  body.append(h("table", {}, h("tr", {}, ["الوحدة", "العنوان", "الموازنة", "المكتوب", "الحالة", "الصوت", "تعديل المؤلف", ""].map((x) => h("th", {}, x))),
+    ob.units.map((u) => h("tr", {}, h("td", {}, u.id), h("td", {}, u.title, u.brief ? h("div", { class: "small muted" }, u.brief) : null),
+      h("td", {}, u.target_words || "—"), h("td", {}, u.words || 0), h("td", {}, pill(UNIT_STATUS_AR[u.status] || u.status, UNIT_STATUS_CLS[u.status])),
+      h("td", {}, voicePill(u)), h("td", {}, u.author_change != null ? Math.round(u.author_change * 100) + "%" : "—"),
+      h("td", {}, h("div", { class: "row" },
+        u.status !== "APPROVED" ? btn(ob.level === "scaffold" && u.status === "PLANNED" ? "بطاقة" : (u.status === "PLANNED" ? "اكتب" : "أعد الكتابة"), () => draftUnit(pid, u.id), "sm") : null,
+        btn("افتح", () => unitEditor(pid, u.id), "sm ghost")))))));
+  const actions = h("div", { class: "row" },
+    btn("جمّع الكتاب", async () => {
+      const r = await busy("يُجمَّع الكتاب…", () => api("book_assemble", { project: pid }));
+      toast(r.words.toLocaleString("ar") + " كلمة ≈ " + r.pages + " صفحة" + (r.missing.length ? " — ناقص: " + r.missing.join("، ") : ""));
+      renderBook(pid);
+    }, "ghost"),
+    b.book ? btn("تنزيل الكتاب (Markdown)", () => downloadRaw(b.book), "ghost") : null,
+    b.book ? btn("تنزيل Word", () => downloadRaw(b.book.replace(/\.md$/, ".docx")), "ghost") : null);
+  body.append(actions);
+  if (ob.level === "full" && b.estimate && b.estimate.units) {
+    const e = b.estimate;
+    body.append(h("div", { class: "note" },
+      h("b", {}, "الكتابة الكاملة: "), e.units + " وحدة، " + e.calls + " استدعاء، نحو " + e.words.toLocaleString("ar") + " كلمة (≈ " + e.pages + " صفحة). ",
+      "الكلفة التقديرية: " + (e.usd_estimate != null ? "$" + e.usd_estimate : "غير محددة") + (e.budget_usd ? " من ميزانية $" + e.budget_usd : "") + ". ",
+      h("div", { class: "small muted" }, e.assumptions),
+      e.over_budget ? pill("تتجاوز الميزانية", "bad") : null,
+      h("div", { class: "row" }, h("label", { class: "confirm" }, h("input", { type: "checkbox", id: "bk-cost" }), " أقرّ بالتقدير وأبدأ الكتابة"),
+        btn("اكتب الكتاب كاملاً بالمحرّك المختار", async () => {
+          const j = await api("book_draft_all", { project: pid, engine: engine(), confirm_cost: val("bk-cost") });
+          renderBook(pid);
+        }, "gold"))));
+  }
+  const flagged = b.voice.flagged || [];
+  body.append(h("details", {}, h("summary", {}, "تقرير الصوت" + (flagged.length ? " — " + flagged.length + " وحدة تحتاج عودة إلى صوتكم" : "")),
+    h("p", { class: "small muted" }, b.voice.note), b.voice.author_change_mean != null ? h("p", {}, "متوسط تعديل المؤلف: " + Math.round(b.voice.author_change_mean * 100) + "%") : null,
+    flagged.length ? h("p", {}, "ابدؤوا بـ: " + flagged.join("، ")) : null));
+}
+function jobView(pid, job, body) {
+  const bar = h("progress", { max: job.total || 1, value: job.done || 0, style: "width:100%" });
+  body.append(h("div", { class: "note" }, h("b", {}, "تُكتب الوحدات الآن… "), (job.done || 0) + " / " + (job.total || "…") + (job.current ? " — " + job.current : ""), bar,
+    h("p", { class: "small muted" }, "يمكنكم إغلاق هذه الصفحة؛ العمل مستمر ما دامت اللوحة تعمل.")));
+  setTimeout(async () => {
+    const j = await G("job", { id: job.id }).catch(() => null);
+    if (!j || j.state === "running") return $("#book-box") && renderBook(pid);
+    if (j.state === "error") toast("توقفت الكتابة: " + j.error, true); else toast("اكتملت الكتابة وجُمّع الكتاب");
+    openProject(pid);
+  }, 3000);
+}
+function outlineStart(pid, ob, body) {
+  const paste = h("textarea", { placeholder: "الصقوا هنا ردّ Claude الذي يحوي كتلة yaml للمخطط" });
+  body.append(h("h4", {}, "المخطط"),
+    h("div", { class: "form" }, field("عدد الوحدات/المحاور", h("input", { id: "ol-n", type: "number", value: 5, min: 1 })),
+      field("توجيهكم للمخطط (اختياري)", h("input", { id: "ol-g", placeholder: "مثال: ابدأ بالتاريخ وانته بالاستشراف" }), true)),
+    h("div", { class: "row" },
+      btn("مخطط افتراضي أحرّره بنفسي", async () => { await api("book_skeleton", { project: pid, n: val("ol-n") }); renderBook(pid); }, "ghost"),
+      btn("اقترح المخطط (الوكيل)", async () => {
+        const r = await busy("يقترح الوكيل المخطط…", () => api("book_propose", { project: pid, engine: engine(), n: val("ol-n"), guidance: val("ol-g") }));
+        if (r.manual) {
+          body.append(h("div", { class: "card" }, h("div", { class: "row" }, btn("انسخ وافتح Claude", () => copyAndOpen(r.text), "gold")), paste,
+            btn("استورد المخطط", async () => { await api("book_import_outline", { project: pid, text: paste.value }); renderBook(pid); })));
+        } else renderBook(pid);
+      }, "gold")));
+}
+function outlineEditor(pid, ob, body) {
+  const rows = ob.units.map((u) => ({ ...u }));
+  const tbl = h("table");
+  const paint = () => tbl.replaceChildren(h("tr", {}, ["#", "العنوان", "الموجز", "الكلمات", ""].map((x) => h("th", {}, x))),
+    rows.map((u, i) => h("tr", {}, h("td", {}, i + 1),
+      h("td", {}, h("input", { value: u.title, oninput: (e) => (u.title = e.target.value) })),
+      h("td", {}, h("textarea", { style: "min-height:50px", oninput: (e) => (u.brief = e.target.value) }, u.brief || "")),
+      h("td", {}, h("input", { type: "number", value: u.target_words || "", style: "width:90px", oninput: (e) => (u.target_words = +e.target.value || null) })),
+      h("td", {}, h("div", { class: "row" },
+        i > 0 ? btn("↑", () => { [rows[i - 1], rows[i]] = [rows[i], rows[i - 1]]; paint(); }, "sm ghost") : null,
+        btn("✕", () => { rows.splice(i, 1); paint(); }, "sm ghost"),
+        btn("+", () => { rows.splice(i + 1, 0, { title: "وحدة جديدة", brief: "", kind: u.kind }); paint(); }, "sm ghost"))))));
+  paint();
+  body.append(h("h4", {}, "حرّروا المخطط ثم اعتمدوه"),
+    h("p", { class: "small muted" }, "اتركوا خانة الكلمات فارغة لتوزَّع آلياً على الطول الكلي؛ المقدمة والخاتمة نصف وزن المحور."), tbl,
+    h("div", { class: "row" },
+      btn("احفظ المخطط", async () => { await api("book_set_units", { project: pid, units: rows }); toast("حُفظ"); renderBook(pid); }, "ghost"),
+      authorBox("ol-confirm"),
+      btn("اعتمد المخطط", async () => {
+        await api("book_set_units", { project: pid, units: rows });
+        await api("book_approve_outline", { project: pid, confirm_author: val("ol-confirm") });
+        toast("اعتُمد المخطط"); renderBook(pid);
+      }, "gold")));
+}
+async function draftUnit(pid, uid) {
+  const e = engine();
+  const r = await busy(e === "manual" ? "تُعدّ الحزمة…" : "يكتب الوكيل " + uid + "… قد يستغرق دقائق", () => api("book_draft", { project: pid, unit: uid, engine: e }));
+  if (r.manual) return unitEditor(pid, uid, r.text);
+  toast(uid + ": " + r.words + " كلمة"); await renderBook(pid); unitEditor(pid, uid);
+}
+async function unitEditor(pid, uid, manualPrompt) {
+  const [u, b] = await Promise.all([G("book_unit", { project: pid, unit: uid }), G("book", { id: pid })]);
+  const meta = b.outline.units.find((x) => x.id === uid);
+  const box = $("#run-box");
+  const ta = h("textarea", { style: "min-height:420px", dir: "rtl" }, u.current || u.approved || "");
+  const out = h("div");
+  const parts = [h("h3", {}, uid + " — " + meta.title), h("div", { class: "row" }, pill(UNIT_STATUS_AR[meta.status], UNIT_STATUS_CLS[meta.status]),
+    pill((meta.words || 0) + " / " + (meta.target_words || "—") + " كلمة"), voicePill(meta),
+    meta.author_change != null ? pill("تعديلكم " + Math.round(meta.author_change * 100) + "%", "gold") : null)];
+  if (manualPrompt) {
+    const paste = h("textarea", { placeholder: "الصقوا ردّ Claude هنا" });
+    parts.push(h("div", { class: "note" }, "الوضع اليدوي: انسخوا الحزمة إلى Claude ثم الصقوا الرد.",
+      h("div", { class: "row" }, btn("انسخ وافتح Claude", () => copyAndOpen(manualPrompt), "gold")), paste,
+      btn("سجّل نص الوكيل", async () => { await api("book_record", { project: pid, unit: uid, text: paste.value }); await renderBook(pid); unitEditor(pid, uid); })));
+  }
+  if (u.card) parts.push(h("details", { open: !u.current }, h("summary", {}, "بطاقة الوحدة"), pre(u.card)));
+  parts.push(h("p", { class: "small muted" }, b.outline.level === "scaffold" ? "اكتبوا نص الوحدة هنا بأقلامكم، ثم احفظوا أو اعتمدوا." :
+    "حرّروا النص بحرية: كل حفظ يُقاس، ومسودة الوكيل الأصلية محفوظة للمقارنة."), ta,
+    h("div", { class: "row" },
+      btn("احفظ تعديلي", async () => { await api("book_revise", { project: pid, unit: uid, text: ta.value }); toast("حُفظ وقيس"); await renderBook(pid); unitEditor(pid, uid); }),
+      btn("مواءمة الصوت (اقتراح)", async () => {
+        const r = await busy("يواءم المحرر الصوت…", () => api("book_align", { project: pid, unit: uid, engine: engine() }));
+        if (r.manual) return out.replaceChildren(h("div", { class: "row" }, btn("انسخ وافتح Claude", () => copyAndOpen(r.text), "gold")));
+        const sh = (v) => v && v.pole ? v.pole.assisted_share : "—";
+        out.replaceChildren(h("div", { class: "card" }, h("h4", {}, "نسخة المواءمة"), h("p", {}, "القطب قبل: " + sh(r.before) + " ← بعد: " + sh(r.after)),
+          pre(r.text), h("div", { class: "row" }, btn("اعتمدها نسخة عمل", async () => { await api("book_adopt_aligned", { project: pid, unit: uid }); await renderBook(pid); unitEditor(pid, uid); }, "gold"))));
+      }, "ghost"),
+      btn("فحص النص", () => checkTextView(ta.value, pid), "ghost"),
+      authorBox("un-confirm"),
+      btn("اعتمد الوحدة", async () => {
+        const r = await api("book_approve_unit", { project: pid, unit: uid, text: ta.value, confirm_author: val("un-confirm") });
+        toast("اعتُمدت " + uid + " — " + r.decision); openProject(pid);
+      }, "gold")),
+    out);
+  if (u.ai && u.ai !== u.current) parts.push(h("details", {}, h("summary", {}, "مسودة الوكيل الأصلية"), pre(u.ai)));
+  if (u.notes) parts.push(h("details", {}, h("summary", {}, "ملاحظات الوكيل"), pre(u.notes)));
+  box.replaceChildren(h("div", { class: "card" }, ...parts));
+  box.scrollIntoView({ behavior: "smooth" });
+}
+
+async function genresView() {
+  const g = await genresData();
+  set(h("h2", {}, "الأجناس الكتابية"),
+    h("div", { class: "note" }, "لكل جنس صفاته الفكرية والأسلوبية ووكيله وسير عمله؛ تُحقن صفاته في برومبت الوكيل، ويُقاس النص بمرجع بصمتكم في سجلّه."),
+    h("div", { class: "grid" }, Object.entries(g.genres).map(([k, G2]) => h("div", { class: "card" },
+      h("h4", {}, G2.name_ar), h("div", { class: "row" }, pill("السجلّ: " + G2.register), pill(G2.lead_agent, "gold"), G2.max_words ? pill("≤ " + G2.max_words + " كلمة") : null),
+      h("p", { class: "small" }, G2.project_types.map((t) => PTYPE_AR[t] || t).join("، ")),
+      h("b", { class: "small" }, "فكرياً"), h("ul", { class: "small" }, G2.intellectual.map((x) => h("li", {}, x))),
+      h("b", { class: "small" }, "أسلوبياً"), h("ul", { class: "small" }, G2.stylistic.map((x) => h("li", {}, x))),
+      h("p", { class: "small muted" }, G2.evidence),
+      h("div", { class: "row" }, btn("مشروع من هذا الجنس", () => newProjectForm(k), "sm gold"))))),
+    h("h2", {}, "مستويات الإنتاج"),
+    h("div", { class: "grid" }, Object.entries(g.levels.levels).map(([k, L]) => h("div", { class: "card" },
+      h("h4", {}, L.order + ". " + L.name_ar), h("p", { class: "small" }, L.summary),
+      h("ol", { class: "small" }, L.steps.map((x) => h("li", {}, x)))))),
+    h("p", { class: "muted small" }, "في كل المستويات تبقى مسودة الوكيل الأصلية محفوظة، ويُرصد مقدار تعديلكم عليها؛ ولا يدخل نص المخطوط المعتمد إلا بإقراركم."));
+}
+
 // ---------- التنقل ----------
-const VIEWS = { home, projects, agents: agentsView, workflows: workflowsView, governance: governanceView, tools: toolsView, log: () => logView(), settings: settingsView };
+const VIEWS = { home, projects, agents: agentsView, genres: genresView, workflows: workflowsView, governance: governanceView, tools: toolsView, log: () => logView(), settings: settingsView };
 function go(tab, noRender) {
   document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
   if (!noRender) VIEWS[tab]().catch((e) => console.error(e));

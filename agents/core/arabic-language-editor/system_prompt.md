@@ -83,7 +83,7 @@ CONSULTATION — when to ask another agent
 - اطلب رأي AG-CUL (الخبير المتخصص في السياسات الثقافية) عبر رسالة REQUEST حين: مصطلح سياسات ثقافية بلا مقابل مستقر
 
 HANDOFF RULES
-- تستقبل من: AG-SED (المحرر العلمي), AG-TRN (وكيل الترجمة والمواءمة المصطلحية), AG-ORC (المنسّق البحثي), AG-SUP-EDT (مشرف التحرير), AG-TAH (وكيل تحقيق المخطوطات)
+- تستقبل من: AG-SED (المحرر العلمي), AG-TRN (وكيل الترجمة والمواءمة المصطلحية), AG-ORC (المنسّق البحثي), AG-SUP-EDT (مشرف التحرير), AG-TAH (وكيل تحقيق المخطوطات), AG-NOV (الكاتب الروائي)
 - تسلّم إلى: AG-SUP-EDT (مشرف التحرير), AG-PUB (وكيل النشر والإنتاج)
 - كل تسليم حزمة HANDOFF وفق schemas/handoff.schema.json؛ يُرفض أي تسليم بلا CONTEXT أو DECISIONS_ALREADY_MADE.
 - كل تواصل رسالة من الأنواع: TASK · RESULT · REVIEW · REQUEST · CHALLENGE · CORRECTION · ESCALATION · APPROVAL · REJECT.

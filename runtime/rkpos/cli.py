@@ -73,6 +73,17 @@ def main(argv=None) -> int:
     n.add_argument("--target")
     n.add_argument("--deadline")
     n.add_argument("--grmm", help="مسار GRMM الحاكم إن وُجد")
+    n.add_argument("--genre", choices=["creative", "research", "intellectual", "op_ed"], help="يُشتق من النوع إن لم يُذكر")
+    n.add_argument("--level", choices=["scaffold", "staged", "full"], help="مستوى الإنتاج")
+    n.add_argument("--pages", type=int, help="عدد الصفحات المستهدف")
+    n.add_argument("--words-per-page", type=int)
+    bk = sub.add_parser("book", help="بناء العمل: المخطط والوحدات والصوت والتجميع")
+    bk.add_argument("project")
+    bk.add_argument("action", choices=["show", "skeleton", "propose-outline", "approve-outline", "draft", "draft-all",
+                                       "record", "align", "approve", "assemble", "voice", "estimate"])
+    bk.add_argument("unit", nargs="?"); bk.add_argument("--n", type=int, default=5); bk.add_argument("--file")
+    bk.add_argument("--engine", default="manual", choices=["auto", "claude_code", "api", "manual"])
+    bk.add_argument("--actor", default=None)
 
     s = sub.add_parser("status"); s.add_argument("project")
     r = sub.add_parser("run-step"); r.add_argument("project"); r.add_argument("--step"); r.add_argument("--live", action="store_true")
@@ -122,8 +133,10 @@ def main(argv=None) -> int:
     if a.cmd == "new-project":
         from . import project
         m = project.new_project(a.title, a.type, domain=a.domain, operating_model=a.model, has_data=a.has_data, risk=a.risk,
-                                evidence_requirement=a.evidence, publication_target=a.target, deadline=a.deadline, governing_manifest=a.grmm)
-        _p({"project_id": m["project_id"], "workflow": m["workflow"], "agents": m["agents"], "next": "rkpos run-step " + m["project_id"]})
+                                evidence_requirement=a.evidence, publication_target=a.target, deadline=a.deadline, governing_manifest=a.grmm,
+                                genre=a.genre, production_level=a.level, target_pages=a.pages, words_per_page=a.words_per_page)
+        _p({"project_id": m["project_id"], "genre": m["genre"], "production": m["production"], "workflow": m["workflow"],
+            "agents": m["agents"], "next": "rkpos run-step " + m["project_id"]})
         return 0
     if a.cmd == "status":
         from . import state
@@ -190,6 +203,23 @@ def main(argv=None) -> int:
             return 0
         errs = [e for i in ids for e in evals.offline_check(i)]
         _p("\n".join(errs) if errs else f"✓ {len(ids)} test suite(s) structurally valid"); return 1 if errs else 0
+    if a.cmd == "book":
+        from . import book as B
+        pid, act, uid = a.project, a.action, a.unit
+        need = lambda: uid or (_ for _ in ()).throw(SystemExit("حدّد الوحدة"))  # noqa: E731
+        if act == "show": _p(B.load(pid))
+        elif act == "skeleton": _p(B.skeleton(pid, a.n))
+        elif act == "propose-outline": r = B.propose_outline(pid, a.engine, a.n); print(r["text"]) if r.get("manual") else _p(r)
+        elif act == "approve-outline": _p(B.approve_outline(pid, a.actor or ""))
+        elif act == "draft": r = B.draft_unit(pid, need(), a.engine); print(r["text"]) if r.get("manual") else _p(r)
+        elif act == "draft-all": _p(B.draft_all(pid, a.engine, lambda i, n, u: print(f"[{i}/{n}] {u or 'تم'}", flush=True)))
+        elif act == "record": _p(B.record_unit(pid, need(), Path(a.file).read_text(encoding="utf-8"), source="ai"))
+        elif act == "align": _p(B.align_voice(pid, need(), a.engine))
+        elif act == "approve": _p(B.approve_unit(pid, need(), a.actor or "", Path(a.file).read_text(encoding="utf-8") if a.file else None))
+        elif act == "assemble": _p(B.assemble(pid))
+        elif act == "voice": _p(B.voice_report(pid))
+        elif act == "estimate": _p(B.estimate(pid))
+        return 0
     if a.cmd == "activate":
         from . import runner
         r = runner.run_adhoc(a.agent, a.task, register=a.register, project=a.project, context=a.context, engine=a.engine)

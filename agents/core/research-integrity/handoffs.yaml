@@ -5,6 +5,7 @@ receives_from:
 - AG-SED
 - AG-ORC
 - AG-ARE
+- AG-NOV
 sends_to:
 - AG-SUP-INT
 - AG-WRT

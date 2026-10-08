@@ -31,8 +31,8 @@
 | `SKL-CAUSAL` | الاستدلال السببي | فحص ادعاءات السببية وتصميم استراتيجيات التعرّف (DAG، الفرق في الفروق...). | prompt، code | available_now | AG-DAT, AG-MTH, AG-POL, AG-RED, AG-SUP-MTH |
 | `SKL-SCENARIO` | بناء السيناريوهات | سيناريوهات مستقبلية من محاور عدم اليقين مع مؤشرات إنذار. | prompt | available_now | AG-POL |
 | `SKL-SYSTEMS` | التفكير المنظومي | حلقات سببية، نقاط رافعة، نماذج مخزون/تدفق مبسطة. | prompt | available_now | AG-POL, AG-THR |
-| `SKL-STYLE` | البصمة الأسلوبية للمؤلف | مطابقة النص مع أسلوب المؤلف ومصطلحاته المعتمدة. | code:runtime/rkpos/stylometry.py، claude_skill:style-fingerprint-majed-ar، claude_skill:op-ed-column-ar | available_now | AG-ARE, AG-BKA, AG-SUP-EDT, AG-WRT |
-| `SKL-TERMS` | إدارة المصطلحات | صيانة المسرد الثنائي وفرض الاتساق. | code:runtime/rkpos/verify/terms.py، prompt | available_now | AG-ARE, AG-CUL, AG-KNW, AG-SED, AG-SUP-EDT, AG-TRN, AG-WRT |
+| `SKL-STYLE` | البصمة الأسلوبية للمؤلف | مطابقة النص مع أسلوب المؤلف ومصطلحاته المعتمدة. | code:runtime/rkpos/stylometry.py، claude_skill:style-fingerprint-majed-ar، claude_skill:op-ed-column-ar | available_now | AG-ARE, AG-BKA, AG-NOV, AG-SUP-EDT, AG-WRT |
+| `SKL-TERMS` | إدارة المصطلحات | صيانة المسرد الثنائي وفرض الاتساق. | code:runtime/rkpos/verify/terms.py، prompt | available_now | AG-ARE, AG-CUL, AG-KNW, AG-NOV, AG-SED, AG-SUP-EDT, AG-TRN, AG-WRT |
 | `SKL-RISKAUDIT` | تقدير خطر الانتحال | فحص التشابه وإعادة الصياغة القريبة والانتحال الذاتي. | api، code | needs_account | AG-INT, AG-SUP-INT |
 | `SKL-RIGHTS` | الحقوق والأذونات | سجل حقوق للمواد المستعارة وتقدير الاستخدام العادل/الأذونات. | prompt | available_now | AG-INT, AG-SUP-INT |
 | `SKL-REDTEAM` | بروتوكول الفريق الأحمر | الأنماط الثمانية لاختبار الحجة (انظر governance/red_team_protocol.md). | prompt | available_now | AG-RED |
@@ -46,3 +46,6 @@
 | `SKL-VERSION` | إدارة الإصدارات | Commits، وسوم، CHANGELOG، نسخ احتياطي. | code:runtime/rkpos/versioning.py | available_now | AG-VCS |
 | `SKL-PIPELINE` | تشغيل خطوط الأتمتة | تشغيل ومراقبة CI والمزامنة والاستيعاب. | code:.github/workflows | available_now | AG-AUT |
 | `SKL-SECAUDIT` | التدقيق الأمني | فحص الأسرار ومطابقة الصلاحيات ومراجعة سجلات الوصول. | code:scripts/security_scan.py | available_now | AG-SEC |
+| `SKL-NARRATIVE` | صنعة السرد | بناء المشهد والشخصية والحوار والإيقاع في العمل الروائي بصوت المؤلف. | prompt، claude_skill:fiction-writer-agent-ar، claude_skill:literary-agent-orchestrator-ar | available_now | AG-NOV |
+| `SKL-CONTINUITY` | حفظ الاتساق السردي | مطابقة كل مشهد جديد لكرّاسة الرواية والفصول المعتمدة: الأسماء والأمكنة والزمن والألفاظ. | prompt، claude_skill:novel-continuity-ar | available_now | AG-NOV |
+| `SKL-SUFI` | إذابة المادة الصوفية | إدخال المعنى الصوفي في السرد ذوباناً من الدرجة الأولى، مع توثيق الأصل خارج المتن. | prompt، claude_skill:sufi-dissolution-ar | available_now | AG-NOV |

@@ -33,7 +33,7 @@ permissions:
   prohibited: [تغيير المضمون, اعتماد مصطلح جديد في المسرد (يقترح فقط), تبسيط السجل]
 human_approval: [إضافة مصطلح إلى المسرد المعتمد]
 handoffs:
-  receives_from: [AG-SED, AG-TRN, AG-ORC, AG-SUP-EDT, AG-TAH]
+  receives_from: [AG-SED, AG-TRN, AG-ORC, AG-SUP-EDT, AG-TAH, AG-NOV]
   sends_to: [AG-SUP-EDT, AG-PUB]
 consult:
   - {agent: AG-CUL, when: "مصطلح سياسات ثقافية بلا مقابل مستقر"}
