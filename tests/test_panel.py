@@ -284,3 +284,32 @@ def test_panel_docs_and_word_export(panel):
     doc = Document(io.BytesIO(to_docx(f.read_text(encoding="utf-8"), "عمود")))
     text = "\n".join(p.text for p in doc.paragraphs)
     assert "[FACT]" not in text and "فقرة أولى." in text and "• بند" in text
+
+
+def test_outdated_background_panel_is_replaced(sandbox, tmp_path):
+    """بعد التحديث: النقر على الأيقونة يوقف نسخة قديمة بقيت تعمل في الخلفية ويشغّل الجديدة."""
+    state = tmp_path / "panel.json"
+    env = {**os.environ, "RKPOS_ROOT": str(sandbox.root), "PYTHONPATH": str(REPO / "runtime"), "RKPOS_PANEL_STATE": str(state)}
+    old = subprocess.Popen([sys.executable, "-m", "rkpos", "panel", "--no-browser", "--new"], cwd=sandbox.root, env=env,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    for _ in range(100):
+        if state.exists():
+            break
+        time.sleep(0.1)
+    st = json.loads(state.read_text())
+    st.pop("version")                                   # نسخة قديمة لا تعرف بصمة الشيفرة
+    state.write_text(json.dumps(st))
+    new = subprocess.Popen([sys.executable, "-m", "rkpos", "panel", "--no-browser"], cwd=sandbox.root, env=env,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        assert old.wait(timeout=15) is not None          # أُوقفت القديمة
+        for _ in range(100):
+            st2 = json.loads(state.read_text()) if state.exists() else {}
+            if st2.get("version"):
+                break
+            time.sleep(0.1)
+        assert st2.get("version") and st2["pid"] == new.pid
+    finally:
+        for p in (old, new):
+            if p.poll() is None:
+                p.terminate()

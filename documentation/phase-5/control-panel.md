@@ -107,4 +107,5 @@ rkpos eval AG-WRT --live                      # يتبع RKPOS_ENGINE
 | «الذاكرة الخاصة: غير موجودة» | فكّوا `midad-private-backup.tar.gz` في جذر المستودع |
 | «Claude Code غير مسجّل الدخول» (Not logged in) | الإعدادات ← «تسجيل الدخول إلى Claude» ← سجّلوا الدخول في المتصفح ← «تحقق من الحالة»؛ أو في PowerShell: `claude auth login` |
 | PowerShell: «'claude' is not recognized» | المجلد خارج مسار النظام: `& "$env:USERPROFILE\.local\bin\claude.exe" auth login`، أو الإعدادات ← «أضف Claude Code إلى مسار النظام» ثم نافذة جديدة |
+| نافذة سوداء فارغة بعنوان «claude» | نسخة قديمة من اللوحة ما زالت تعمل في الخلفية: الإعدادات ← «إيقاف اللوحة» ثم الأيقونة (من v0.8.1 تتولى الأيقونة ذلك تلقائياً) |
 | خطأ `claude exited …` | افتحوا الطرفية واكتبوا `claude` لتسجيل الدخول، ثم أعيدوا المحاولة |

@@ -325,7 +325,7 @@ def ST_plan(pid):
 
 GET = {"live": live_view, "docs": docs_view, "labels": labels_view, "autopilot": autopilot_view, "genres": genres_view, "book": book_view, "book_unit": book_unit, "job": job_view, "overview": overview, "agents": agents, "agent": agent, "workflows": workflows, "project": project,
        "file": read_file, "candidates": candidates, "memory": memory, "audit": audit_log, "cost": cost_report,
-       "governance": governance, "engines": lambda q: engines(bool(q.get("fresh"))), "ping": lambda q: {"ok": True, "root": str(ROOT)}}
+       "governance": governance, "engines": lambda q: engines(bool(q.get("fresh"))), "ping": lambda q: {"ok": True, "root": str(ROOT), "version": code_version(), "pid": os.getpid()}}
 
 
 # ------------------------------------------------------------------ أفعال
@@ -811,18 +811,42 @@ def make_handler(token: str, port_ref: dict):
     return H
 
 
+def code_version() -> str:
+    """بصمة نسخة الشيفرة الجارية: تتغير مع كل تحديث للمنظومة."""
+    import hashlib
+    pkg = Path(__file__).resolve().parents[1]
+    h = hashlib.sha1()
+    for f in sorted(pkg.rglob("*")):
+        if f.suffix in (".py", ".js", ".html", ".css") and "__pycache__" not in f.parts:
+            h.update(f.name.encode())
+            h.update(str(f.stat().st_mtime_ns).encode())
+    return h.hexdigest()[:12]
+
+
 def _existing() -> dict | None:
-    """لوحة تعمل مسبقاً لهذا المستودع؟ (نقرة ثانية على الأيقونة تفتح النافذة نفسها)."""
+    """لوحة تعمل مسبقاً لهذا المستودع؟ إن كانت من النسخة نفسها تُفتح نافذتها؛
+    وإن كانت أقدم (بقيت تعمل في الخلفية بعد التحديث) تُوقَف ليعمل الإصدار الجديد."""
+    import time
     import urllib.request
     try:
         st = json.loads(STATE_FILE.read_text(encoding="utf-8"))
         if st.get("root") != str(ROOT):
             return None
-        req = urllib.request.Request(f"http://127.0.0.1:{st['port']}/api/ping", headers={"X-Rkpos-Token": st["token"]})
+        hdr = {"X-Rkpos-Token": st["token"]}
+        req = urllib.request.Request(f"http://127.0.0.1:{st['port']}/api/ping", headers=hdr)
         with urllib.request.urlopen(req, timeout=1.5) as r:
-            return st if r.status == 200 else None
+            if r.status != 200:
+                return None
+        if st.get("version") == code_version():
+            return st
+        stop = urllib.request.Request(f"http://127.0.0.1:{st['port']}/api/shutdown", data=b"{}", method="POST",
+                                      headers={**hdr, "Content-Type": "application/json"})
+        urllib.request.urlopen(stop, timeout=3).read()
+        time.sleep(1.5)
+        _say("أُوقفت نسخة قديمة من اللوحة كانت تعمل في الخلفية.")
     except Exception:  # noqa: BLE001
-        return None
+        pass
+    return None
 
 
 def _say(msg: str) -> None:
@@ -846,7 +870,8 @@ def serve(port: int = 0, open_browser: bool = True, reuse: bool = True) -> None:
     port = httpd.server_address[1]
     port_ref["httpd"] = httpd
     STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    STATE_FILE.write_text(json.dumps({"port": port, "token": token, "root": str(ROOT), "pid": os.getpid()}), encoding="utf-8")
+    STATE_FILE.write_text(json.dumps({"port": port, "token": token, "root": str(ROOT), "pid": os.getpid(),
+                                      "version": code_version()}), encoding="utf-8")
     try:
         os.chmod(STATE_FILE, 0o600)
     except OSError:

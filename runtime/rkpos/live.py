@@ -21,8 +21,14 @@ NO_WINDOW = 0x08000000 if sys.platform.startswith("win") else 0   # CREATE_NO_WI
 
 
 def hidden() -> dict:
-    """وسائط subprocess لتشغيل أداة في الخلفية دون إظهار نافذة."""
-    return {"creationflags": NO_WINDOW} if NO_WINDOW else {}
+    """وسائط subprocess لتشغيل أداة في الخلفية دون إظهار نافذة (ويندوز): بلا نافذة طرفية،
+    ومع أمر إخفاء صريح لأي نافذة تحاول الأداة إظهارها (يشمل الطرفية الافتراضية Windows Terminal)."""
+    if not NO_WINDOW:
+        return {}
+    si = subprocess.STARTUPINFO()
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    si.wShowWindow = 0  # SW_HIDE
+    return {"creationflags": NO_WINDOW, "startupinfo": si}
 
 
 class Interrupted(RuntimeError):
