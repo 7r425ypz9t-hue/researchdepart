@@ -45,6 +45,14 @@ questions:
     choices:
       - {id: continue, label: "تابع رغم ذلك", action: continue_budget}
       - {id: pause, label: "أوقف", action: pause, style: gold}
+  interrupted:
+    title: "أوقفتم «{task}» أثناء الكتابة"
+    prompt: "النص الجزئي محفوظ في الشاشة الجانبية. وجّهوا المسار ثم استأنفوا."
+    choices:
+      - {id: redo_note, label: "أعد الخطوة بتوجيهي", action: redo_step, needs_note: true, style: gold}
+      - {id: redo, label: "أعد الخطوة كما هي", action: redo_step}
+      - {id: skip, label: "تخطَّ هذه الخطوة", action: skip_step}
+      - {id: pause, label: "أوقف", action: pause}
   error:
     title: "تعذّرت الخطوة «{task}»"
     prompt: "توقّف الطيار الآلي عند خطأ."

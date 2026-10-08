@@ -11,7 +11,7 @@ import secrets
 
 import yaml
 
-from . import audit, book as B, cost as C, genres as GN, registry as R, runner, state as ST
+from . import audit, book as B, cost as C, genres as GN, live, registry as R, runner, state as ST
 from .ids import now_iso
 from .paths import CONFIG, PROJECTS
 
@@ -76,8 +76,9 @@ def _out(pid, step_id):
 
 def materials(pid: str, step: dict | None = None, ap: dict | None = None) -> str:
     parts = []
-    if ap and step and ap.get("guidance", {}).get(step["id"]):
-        parts.append(f"## توجيه المؤلف لهذه الخطوة\n{ap['guidance'][step['id']]}")
+    g = guidance_for(ap, step)
+    if g:
+        parts.append(f"## توجيه المؤلف\n{g}")
     bible = PROJECTS / pid / "story_bible.md"
     if bible.exists():
         parts.append("## كرّاسة الرواية\n" + bible.read_text(encoding="utf-8")[:12000])
@@ -88,6 +89,23 @@ def materials(pid: str, step: dict | None = None, ap: dict | None = None) -> str
     if full.exists():
         parts.append("## المسودة المجمّعة للعمل\n" + full.read_text(encoding="utf-8")[:MAX_MATERIAL_CHARS])
     return "\n\n".join(parts)
+
+
+def guidance_for(ap: dict | None, step: dict | None) -> str:
+    """توجيه المؤلف: العام للخطوات القادمة («*») ثم الخاص بهذه الخطوة."""
+    if not ap:
+        return ""
+    g = ap.get("guidance") or {}
+    return "\n".join(x for x in (g.get("*"), g.get(step["id"]) if step else None) if x)
+
+
+def add_note(pid: str, note: str) -> dict:
+    """ملاحظة للخطوات القادمة دون إيقاف العمل؛ تُمرَّر لكل وكيل بعدها."""
+    ap = load(pid)
+    g = ap.setdefault("guidance", {})
+    g["*"] = ((g.get("*") or "") + "\n- " + note.strip()).strip()
+    _log(pid, ap, f"ملاحظة المؤلف للخطوات القادمة: {note.strip()}")
+    return ap
 
 
 # ------------------------------------------------------------------ التشغيل
@@ -124,7 +142,7 @@ def _outline(pid, ap, step, engine, completes_step: bool) -> str | None:
             B.approve_trivial_outline(pid)
             return None
         _log(pid, ap, "يقترح الوكيل مخطط العمل")
-        B.propose_outline(pid, engine, guidance=ap.get("guidance", {}).get(step["id"], ""))
+        B.propose_outline(pid, engine, guidance=guidance_for(ap, step))
         ob = B.load(pid)
     if not ob["outline_approved"]:
         body = "\n".join(f"{u['id']} — {u['title']} ({u['target_words'] or '—'} كلمة): {u['brief']}" for u in ob["units"])
@@ -149,21 +167,22 @@ def _drafting(pid, ap, step, engine) -> str | None:
     if level == "scaffold":
         for u in [u for u in ob["units"] if u["status"] == "PLANNED"]:
             _log(pid, ap, f"بطاقة {u['id']} — {u['title']}")
-            B.draft_unit(pid, u["id"], engine)
+            B.draft_unit(pid, u["id"], engine, guidance=guidance_for(ap, step))
         u = next(u for u in B.load(pid)["units"] if u["status"] != "APPROVED")
         return _ask(pid, ap, "scaffold_write", step, unit=u, file=f"projects/{pid}/manuscript/drafts/{u['id']}.card.md")
     if level == "staged":
         u = pending[0]
         if u["status"] in ("PLANNED", "CARDED"):
             _log(pid, ap, f"يكتب الوكيل {u['id']} — {u['title']}")
-            B.draft_unit(pid, u["id"], engine)
+            B.draft_unit(pid, u["id"], engine, guidance=guidance_for(ap, step))
             u = next(x for x in B.load(pid)["units"] if x["id"] == u["id"])
         return _ask(pid, ap, "unit_approval", step, unit=u, body=_voice_line(u),
                     file=f"projects/{pid}/manuscript/drafts/{u['id']}.md")
     # full
     if any(u["status"] in ("PLANNED", "CARDED") for u in ob["units"]):
         _log(pid, ap, f"تُكتب الوحدات كلها ({len(ob['units'])})")
-        B.draft_all(pid, engine, lambda i, n, uid: uid and _log(pid, ap, f"[{i + 1}/{n}] {uid}"))
+        B.draft_all(pid, engine, lambda i, n, uid: uid and _log(pid, ap, f"[{i + 1}/{n}] {uid}"),
+                    guidance=guidance_for(ap, step))
     rep = B.voice_report(pid)
     body = (f"{rep['total_words']} كلمة من {rep.get('target_words') or '—'}؛ "
             + (f"وحدات أقرب إلى الصياغة المُعانة: {'، '.join(rep['flagged'])}" if rep["flagged"] else "لا وحدات معلَّمة"))
@@ -225,6 +244,10 @@ def run(pid: str, engine: str, max_steps: int = 400) -> dict:
         try:
             if _step(pid, ap, step, engine) == "wait":
                 break
+        except live.Interrupted:
+            ap = load(pid)
+            _ask(pid, ap, "interrupted", step)
+            break
         except Exception as e:  # noqa: BLE001 — يُعرض سؤالاً للمؤلف؛ لا يُبتلع
             ap = load(pid)
             _ask(pid, ap, "error", step, body=f"{type(e).__name__}: {e}")
@@ -253,7 +276,8 @@ def answer(pid: str, qid: str, choice_id: str, note: str = "") -> dict:
     if act == "approve_step":
         runner.complete(pid, step["id"], "HUMAN-AUTHOR", f"{task_ar(step['task'])}: {decision}")
     elif act == "redo_step":
-        ap.setdefault("guidance", {})[step["id"]] = note.strip()
+        if note.strip():
+            ap.setdefault("guidance", {})[step["id"]] = note.strip()
         out = _out(pid, step["id"])
         if out:
             out.rename(out.with_name("output.prev.md"))

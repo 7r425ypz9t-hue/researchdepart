@@ -220,3 +220,67 @@ def test_claude_code_found_outside_path(tmp_path, monkeypatch):
     monkeypatch.setenv("PATH", str(tmp_path / "empty"))
     monkeypatch.setattr(CC.Path, "home", classmethod(lambda cls: tmp_path))
     assert CC.executable() == str(exe)
+
+
+def test_live_channel_streaming_and_emergency_stop(tmp_path, monkeypatch):
+    """البث الحي إلى الشاشة الجانبية، والإيقاف الفوري أثناء الكتابة مع حفظ النص الجزئي."""
+    import threading
+    import time as _t
+    sys.path.insert(0, str(REPO / "runtime"))
+    from rkpos import live, paths
+    from rkpos.adapters.claude_code_adapter import ClaudeCodeAdapter
+    fake = tmp_path / "claude_stream"
+    fake.write_text(f"""#!{sys.executable}
+import json, sys, time
+sys.stdin.read()
+for i in range(200):
+    print(json.dumps({{"type": "stream_event", "event": {{"type": "content_block_delta", "delta": {{"type": "text_delta", "text": "كلمة "}}}}}}), flush=True)
+    time.sleep(0.02)
+print(json.dumps({{"type": "result", "is_error": False, "result": "تم", "usage": {{}}, "modelUsage": {{}}}}), flush=True)
+""", encoding="utf-8")
+    fake.chmod(0o755)
+    monkeypatch.setenv("RKPOS_CLAUDE_BIN", str(fake))
+    monkeypatch.setattr(live, "PROJECTS", tmp_path)
+    (tmp_path / "RKP-T").mkdir()
+    res = {}
+
+    def work():
+        live.begin("RKP-T", "S02", "AG-WRT")
+        try:
+            ClaudeCodeAdapter("m").complete("s", "u")
+        except live.Interrupted:
+            res["stopped"] = True
+        live.end()
+    t = threading.Thread(target=work)
+    t.start()
+    for _ in range(100):
+        if len(live.read("RKP-T")["text"]) > 50:
+            break
+        _t.sleep(0.05)
+    assert live.read("RKP-T")["meta"]["running"] is True
+    assert live.stop_now("RKP-T")
+    t.join(10)
+    r = live.read("RKP-T")
+    assert res.get("stopped") and 0 < len(r["text"].split()) < 200 and r["meta"]["running"] is False
+    assert live.read("RKP-T", r["offset"])["text"] == ""          # القراءة التزايدية بالإزاحة
+
+
+def test_panel_docs_and_word_export(panel):
+    code, r = panel("new_project", {"title": "عمود", "type": "op_ed"})
+    pid = r["data"]["project_id"]
+    f = panel.root / "projects" / pid / "manuscript/book_full.md"
+    f.write_text("# عنوان\n\n[FACT] فقرة أولى.\n\n- بند", encoding="utf-8")
+    items = panel("docs", q=f"?id={pid}")[1]["data"]["items"]
+    assert items[0]["label"] == "العمل مجمّعاً"
+    import urllib.request as U, urllib.parse as P, io
+    st = json.loads((panel.root.parent / "panel.json").read_text()) if (panel.root.parent / "panel.json").exists() else None
+    code, live_r = panel("live", q=f"?id={pid}&offset=0")
+    assert code == 200 and "meta" in live_r["data"]
+    assert panel("stop_now", {"project": pid})[1]["data"]["killed"] is False   # لا كتابة جارية
+    assert panel("autopilot_note", {"project": pid, "note": "اختصر"})[1]["data"]["guidance"].endswith("اختصر")
+    sys.path.insert(0, str(REPO / "runtime"))
+    from rkpos.export import to_docx
+    from docx import Document
+    doc = Document(io.BytesIO(to_docx(f.read_text(encoding="utf-8"), "عمود")))
+    text = "\n".join(p.text for p in doc.paragraphs)
+    assert "[FACT]" not in text and "فقرة أولى." in text and "• بند" in text

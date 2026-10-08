@@ -17,7 +17,7 @@ import subprocess
 
 import yaml
 
-from . import audit, genres as GN, registry as R
+from . import audit, genres as GN, live, registry as R
 from .ids import now_iso
 from .paths import PROJECTS, ROOT
 
@@ -242,7 +242,8 @@ def _context(pid: str, ob: dict, idx: int) -> str:
     return "\n".join(lines)
 
 
-def unit_messages(pid: str, uid: str, part: int = 1, parts: int = 1, so_far: str = "") -> tuple[str, str, str]:
+def unit_messages(pid: str, uid: str, part: int = 1, parts: int = 1, so_far: str = "",
+                  guidance: str = "") -> tuple[str, str, str]:
     from .runner import compose_system_prompt
     ob = load(pid)
     idx, u = _unit(ob, uid)
@@ -261,6 +262,7 @@ def unit_messages(pid: str, uid: str, part: int = 1, parts: int = 1, so_far: str
     fmt = (f"اكتب النص وحده بين السطرين {BEGIN} و{END} بلا تعليق داخله؛ وبعد {END} اكتب ملاحظاتك "
            "(ما يحتاج دليلاً، ما يحتاج قرار المؤلف، اقتراحات الكرّاسة) في قسم NOTES.")
     user = f"{_context(pid, ob, idx)}\n\n" + (f"ما كُتب من هذه الوحدة حتى الآن (آخره):\n{_tail(so_far, 800)}\n\n" if so_far else "") \
+        + (f"توجيه المؤلف (ملزم):\n{guidance}\n\n" if guidance else "") \
         + f"المهمة:\n{task}\n\nالصيغة:\n{fmt}\n"
     return agent, system, user
 
@@ -303,7 +305,7 @@ def _measure(pid: str, ob: dict, text: str) -> dict:
     return out
 
 
-def draft_unit(pid: str, uid: str, engine: str | None = "manual") -> dict:
+def draft_unit(pid: str, uid: str, engine: str | None = "manual", guidance: str = "") -> dict:
     ob = load(pid)
     idx, u = _unit(ob, uid)
     _check_sequence(ob, idx)
@@ -315,14 +317,15 @@ def draft_unit(pid: str, uid: str, engine: str | None = "manual") -> dict:
     run_dir = PROJECTS / pid / "runs" / f"BOOK-{uid}"
     run_dir.mkdir(parents=True, exist_ok=True)
     if engine == "manual":
-        agent, system, user = unit_messages(pid, uid, 1, 1)
+        agent, system, user = unit_messages(pid, uid, 1, 1, guidance=guidance)
         (run_dir / "prompt.md").write_text(f"# SYSTEM\n\n{system}\n\n# USER\n\n{user}", encoding="utf-8")
         return {"unit": uid, "manual": True, "path": str((run_dir / "prompt.md").relative_to(ROOT)),
                 "text": f"# SYSTEM\n\n{system}\n\n# USER\n\n{user}"}
     body, notes, models, usd = "", [], set(), 0.0
     for k in range(1, parts + 1):
-        agent, system, user = unit_messages(pid, uid, k, parts, body)
-        comp, warnings = router.run(agent, system, user, pid, stage=f"BOOK-{uid}", engine=engine)
+        agent, system, user = unit_messages(pid, uid, k, parts, body, guidance=guidance)
+        comp, warnings = router.run(agent, system, user, pid, stage=f"BOOK-{uid}" + (f" ({k}/{parts})" if parts > 1 else ""),
+                                    engine=engine)
         if comp.refused or not comp.text:
             raise RuntimeError(f"{uid}: لم يُرجع المحرّك نصاً ({comp.stop_reason}); {warnings}")
         t, n = extract(comp.text)
@@ -459,7 +462,7 @@ def estimate(pid: str) -> dict:
                            "في Claude Code باشتراك تُخصم من حصة الاشتراك لا من رصيد مباشر"}
 
 
-def draft_all(pid: str, engine: str, progress=None) -> dict:
+def draft_all(pid: str, engine: str, progress=None, guidance: str = "") -> dict:
     ob = load(pid)
     if ob["level"] != "full":
         raise PermissionError("الكتابة الكاملة دفعة واحدة لمستوى «الكامل» وحده")
@@ -470,7 +473,7 @@ def draft_all(pid: str, engine: str, progress=None) -> dict:
     for i, uid in enumerate(todo):
         if progress:
             progress(i, len(todo), uid)
-        done.append(draft_unit(pid, uid, engine))
+        done.append(draft_unit(pid, uid, engine, guidance=guidance))
     if progress:
         progress(len(todo), len(todo), None)
     return {"drafted": done, "assembled": assemble(pid)}
@@ -496,7 +499,7 @@ def assemble(pid: str) -> dict:
            "approved": sum(1 for u in ob["units"] if u["status"] == "APPROVED"), "units": len(ob["units"])}
     if shutil.which("pandoc"):
         docx = out.with_suffix(".docx")
-        r = subprocess.run(["pandoc", str(out), "-o", str(docx), "-V", "dir=rtl", "-M", "lang=ar"], capture_output=True)
+        r = subprocess.run(["pandoc", str(out), "-o", str(docx), "-V", "dir=rtl", "-M", "lang=ar"], capture_output=True, **live.hidden())
         if r.returncode == 0:
             res["docx"] = str(docx.relative_to(ROOT))
     audit.log("AG-PUB", "book_assemble", project=pid, files_changed=[res["path"]])

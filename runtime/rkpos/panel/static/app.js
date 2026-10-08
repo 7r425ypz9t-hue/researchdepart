@@ -315,8 +315,13 @@ async function openProject(pid) {
       : h("p", { class: "muted" }, "لا قرارات."),
     h("h3", {}, "الكلفة"), h("p", {}, "$" + (d.cost.total_usd || 0).toFixed(4) + (m.budget_usd ? " من ميزانية $" + m.budget_usd : "")),
   );
+  // تخطيط بعمودين: المشروع، والشاشة الجانبية للنص
+  const mainEl = main(), kids = [...mainEl.childNodes], wrap = h("div", { class: "proj-main" });
+  wrap.append(...kids);
+  mainEl.replaceChildren(h("div", { class: "proj-layout" }, wrap, h("aside", { id: "side", class: "side" })));
   renderBook(pid);
   renderAutopilot(pid);
+  renderSide(pid);
 }
 async function runStep(pid, step) {
   const e = engine();
@@ -610,6 +615,100 @@ async function settingsView() {
 }
 
 
+
+
+// ---------- الشاشة الجانبية: النص الآن، والنصوص المنجزة، والإيقاف الطارئ ----------
+const SIDE = {};
+let SIDE_TIMER = null;
+function liveLabel(meta) {
+  if (!meta || !meta.label) return "";
+  const m = String(meta.label).match(/^(S[\d.A-Z]+)/);
+  return agentAr(meta.agent) + " — " + meta.label.replace(/^BOOK-/, "الوحدة ").replace(/^VOICE-/, "مواءمة صوت ");
+}
+function readable(md) {   // عرض قرائي آمن: العناوين بارزة، والنص كما هو (بلا innerHTML)
+  return String(md).replace(/\A---\n[\s\S]*?\n---\n/, "").split(/\n{2,}/).map((blk) => {
+    const m = blk.match(/^(#{1,4})\s+(.*)/);
+    if (m) return h("div", { class: "side-h" + m[1].length }, m[2].replace(/\*\*/g, ""));
+    return h("p", {}, blk.replace(/\*\*/g, ""));
+  });
+}
+const cleanLive = (t) => String(t || "").replace(/===BEGIN_TEXT===\s*/g, "").replace(/\s*===END_TEXT===\s*/g, "\n\n— ملاحظات الوكيل —\n");
+async function renderSide(pid) {
+  const box = $("#side");
+  if (!box) return;
+  clearInterval(SIDE_TIMER);
+  const st = SIDE[pid] = SIDE[pid] || { mode: "live", path: null };
+  const [docs, lv] = await Promise.all([G("docs", { id: pid }), G("live", { id: pid, offset: 0 })]);
+  if (st.mode === "doc" && !st.path && docs.items.length) st.path = docs.items[0].path;
+  const running = lv.meta && lv.meta.running;
+  if (running && st.mode === "doc" && st.autoLive !== false && !st.userPicked) st.mode = "live";
+  if (!running && st.mode === "live" && !lv.text && docs.items.length) { st.mode = "doc"; st.path = st.path || docs.items[0].path; }
+  const textBox = h("div", { class: "side-text", id: "side-text" });
+  const head = h("div", { class: "side-head" });
+  const docSel = h("select", { onchange: (e) => { st.mode = "doc"; st.userPicked = true; st.path = e.target.value; renderSide(pid); } },
+    h("option", { value: "" }, "— اختر نصاً منجزاً —"),
+    ...["العمل", "الوحدات", "مخرجات الخطوات"].map((g) => {
+      const items = docs.items.filter((d) => d.group === g);
+      return items.length ? h("optgroup", { label: g }, items.map((d) => h("option", { value: d.path, selected: st.mode === "doc" && d.path === st.path }, d.label))) : null;
+    }));
+  head.append(h("div", { class: "row" },
+    btn((running ? "● " : "") + "الكتابة الآن", () => { st.mode = "live"; st.userPicked = false; renderSide(pid); }, "sm live-btn " + (st.mode === "live" ? "" : "ghost")), docSel));
+  const tools = h("div", { class: "row" });
+  const status = h("div", { class: "small muted", id: "side-status" });
+  box.replaceChildren(h("h3", {}, "النص"), head, status, textBox, tools);
+  if (st.mode === "live") {
+    st.raw = lv.text || "";
+    textBox.textContent = st.raw ? cleanLive(st.raw) : (running ? "" : "لا كتابة جارية الآن. اختاروا نصاً منجزاً من القائمة.");
+    st.offset = lv.offset; st.seq = (lv.meta || {}).seq; st.running = !!running;
+    status.textContent = running ? "يكتب: " + liveLabel(lv.meta) : (lv.meta && lv.meta.label ? "آخر ما كُتب: " + liveLabel(lv.meta) : "");
+    const note = h("textarea", { placeholder: "ملاحظة للخطوات القادمة (تُمرَّر للوكلاء دون إيقاف العمل)", style: "min-height:56px" });
+    tools.append(...[
+      running ? btn("⏹ إيقاف فوري", async () => {
+        await api("stop_now", { project: pid }); toast("أُوقفت الكتابة؛ وجّهوا المسار من بطاقة السؤال");
+        setTimeout(() => openProject(pid), 800);
+      }, "danger") : null,
+      h("div", { style: "width:100%" }, note, btn("أرسل الملاحظة", async () => {
+        if (!note.value.trim()) return;
+        await api("autopilot_note", { project: pid, note: note.value }); note.value = ""; toast("ستُمرَّر الملاحظة إلى الخطوات القادمة");
+      }, "sm ghost"))].filter(Boolean));
+    textBox.scrollTop = textBox.scrollHeight;
+    SIDE_TIMER = setInterval(async () => {
+      if (!$("#side-text") || SIDE[pid].mode !== "live") return clearInterval(SIDE_TIMER);
+      const r = await G("live", { id: pid, offset: st.offset }).catch(() => null);
+      if (!r) return;
+      if (!!(r.meta && r.meta.running) !== st.running) return renderSide(pid);   // بدأت الكتابة أو انتهت: أعد رسم الأدوات
+      const tb = $("#side-text");
+      const atEnd = tb.scrollHeight - tb.scrollTop - tb.clientHeight < 60;
+      if (r.reset || (r.meta && r.meta.seq !== st.seq)) { st.seq = r.meta.seq; const r2 = await G("live", { id: pid, offset: 0 }); st.raw = r2.text; st.offset = r2.offset; tb.textContent = cleanLive(st.raw); }
+      else if (r.text) { st.raw += r.text; st.offset = r.offset; tb.textContent = cleanLive(st.raw); }
+      $("#side-status").textContent = r.meta && r.meta.running ? "يكتب: " + liveLabel(r.meta) : (r.meta && r.meta.label ? "انتهى: " + liveLabel(r.meta) : "");
+      if (atEnd) tb.scrollTop = tb.scrollHeight;
+    }, 1500);
+  } else if (st.path) {
+    SIDE_TIMER = setInterval(async () => {   // في وضع القراءة: تنبيه عند بدء كتابة جديدة دون نقلكم عنها
+      if (!$("#side-text")) return clearInterval(SIDE_TIMER);
+      const r = await G("live", { id: pid, offset: 1e9 }).catch(() => null);
+      const on = !!(r && r.meta && r.meta.running);
+      const b2 = $("#side .live-btn"); if (b2) b2.textContent = (on ? "● " : "") + "الكتابة الآن";
+    }, 3000);
+    const f = await G("file", { path: st.path });
+    textBox.replaceChildren(...readable(f.text || ""));
+    const name = (docs.items.find((d) => d.path === st.path) || {}).label || "";
+    status.textContent = name;
+    tools.append(
+      h("a", { class: "btn sm gold", href: "#", onclick: (e) => { e.preventDefault(); exportDoc(st.path, name, true); } }, "تنزيل Word"),
+      h("a", { class: "btn sm ghost", href: "#", onclick: (e) => { e.preventDefault(); exportDoc(st.path, name, false); } }, "Word بالوسوم"),
+      btn("تنزيل نصي (.md)", () => downloadRaw(st.path), "sm ghost"),
+      btn("نسخ", () => navigator.clipboard.writeText(f.text || "").then(() => toast("نُسخ")), "sm ghost"));
+  }
+}
+async function exportDoc(path, title, clean) {
+  const q = new URLSearchParams({ path, title: title || "", clean: clean ? "1" : "0" });
+  const r = await fetch("/api/export?" + q, { headers: { "X-Rkpos-Token": TOKEN } });
+  if (!r.ok) return toast("تعذّر التصدير", true);
+  const a = h("a", { href: URL.createObjectURL(await r.blob()), download: (title || "نص").replace(/[\\/:*?"<>|]/g, "_") + ".docx" });
+  document.body.append(a); a.click(); a.remove();
+}
 
 // ---------- الطيار الآلي ----------
 const AP_STATUS = { idle: "لم يبدأ", running: "الوكلاء يعملون", waiting: "بانتظار قراركم", paused: "متوقف مؤقتاً", ready: "يُستأنف", done: "اكتملت الخطة", error: "توقف عند خطأ" };

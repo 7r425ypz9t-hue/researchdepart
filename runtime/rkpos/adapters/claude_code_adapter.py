@@ -12,6 +12,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import threading
 from pathlib import Path
 
 from .base import AdapterUnavailable, Completion, ModelAdapter
@@ -78,7 +79,8 @@ def auth_status() -> dict | None:
     if not exe:
         return None
     try:
-        r = subprocess.run([exe, "auth", "status", "--json"], capture_output=True, timeout=20)
+        from .. import live
+        r = subprocess.run([exe, "auth", "status", "--json"], capture_output=True, timeout=20, **live.hidden())
         return json.loads(r.stdout.decode("utf-8", errors="replace") or "{}")
     except (OSError, subprocess.SubprocessError, json.JSONDecodeError):
         return None
@@ -110,28 +112,65 @@ class ClaudeCodeAdapter(ModelAdapter):
     def available(self) -> bool:
         return executable() is not None
 
-    def command(self, system_file: Path) -> list[str]:
-        return [executable(), "-p", "--output-format", "json", "--tools", "", "--no-session-persistence",
+    def command(self, system_file: Path, stream: bool = True) -> list[str]:
+        fmt = ["--output-format", "stream-json", "--verbose", "--include-partial-messages"] if stream else ["--output-format", "json"]
+        return [executable(), "-p", *fmt, "--tools", "", "--no-session-persistence",
                 "--model", self.model, "--system-prompt-file", str(system_file)]
+
+    def _run(self, cmd: list[str], user: str, cwd: str) -> tuple[int, str, str, dict | None]:
+        """يشغّل الأداة في الخلفية (بلا نافذة)، ويبث النص إلى القناة الحيّة أولاً بأول، ويقبل الإيقاف الفوري."""
+        from .. import live
+        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd,
+                                **live.hidden())
+        live.register(proc)
+        err_buf: list[bytes] = []
+        t_err = threading.Thread(target=lambda: err_buf.append(proc.stderr.read()), daemon=True)
+        t_err.start()
+        timer = threading.Timer(TIMEOUT_S, proc.kill)
+        timer.start()
+        result, lines = None, []
+        try:
+            proc.stdin.write(user.encode("utf-8"))
+            proc.stdin.close()
+            for raw in proc.stdout:
+                line = raw.decode("utf-8", errors="replace").strip()
+                if not line:
+                    continue
+                lines.append(line)
+                try:
+                    d = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if d.get("type") == "stream_event":
+                    ev = d.get("event") or {}
+                    delta = ev.get("delta") or {}
+                    if ev.get("type") == "content_block_delta" and delta.get("type") == "text_delta":
+                        live.append(delta.get("text", ""))
+                elif d.get("type") == "result" or "result" in d and "is_error" in d:
+                    result = d
+            proc.wait()
+        finally:
+            timer.cancel()
+            killed = live.unregister()
+        t_err.join(timeout=5)
+        if killed:
+            raise live.Interrupted("أوقف المؤلف الكتابة")
+        return proc.returncode, "\n".join(lines[-5:]), b"".join(err_buf).decode("utf-8", errors="replace"), result
 
     def complete(self, system, user, max_tokens=16000, effort=None) -> Completion:
         if not self.available():
-            raise AdapterUnavailable("Claude Code غير مثبت (npm install -g @anthropic-ai/claude-code)")
+            raise AdapterUnavailable("Claude Code غير مثبت")
         with tempfile.TemporaryDirectory(prefix="rkpos-cc-") as tmp:
             sf = Path(tmp) / "system.md"
             sf.write_text(system, encoding="utf-8")
-            r = subprocess.run(self.command(sf), input=user.encode("utf-8"), capture_output=True, cwd=tmp,
-                               timeout=TIMEOUT_S)
-        out = r.stdout.decode("utf-8", errors="replace").strip()
-        try:
-            d = json.loads(out.splitlines()[-1] if out else "{}")
-        except json.JSONDecodeError:
-            d = {}
-        if r.returncode != 0 and not d:
-            err = r.stderr.decode("utf-8", errors="replace").strip()[-500:]
+            code, out, err, d = self._run(self.command(sf, stream=True), user, tmp)
+            if d is None and ("unknown option" in err.lower() or "include-partial" in err.lower()):
+                code, out, err, d = self._run(self.command(sf, stream=False), user, tmp)   # إصدار قديم لا يبث
+        d = d or {}
+        if code != 0 and not d:
             if "not logged in" in (err + out).lower() or "/login" in (err + out):
                 raise AdapterUnavailable(NOT_LOGGED_IN)
-            raise AdapterUnavailable(f"claude exited {r.returncode}: {err or out[-500:]}")
+            raise AdapterUnavailable(f"claude exited {code}: {(err or out)[-500:]}")
         if d.get("is_error"):
             msg = str(d.get("result"))
             if "not logged in" in msg.lower() or "/login" in msg:

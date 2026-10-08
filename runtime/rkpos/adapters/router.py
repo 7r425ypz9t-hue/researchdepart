@@ -76,8 +76,19 @@ def resolve(agent_id: str, author_model: str | None = None, manual_ok: bool = Tr
 
 def run(agent_id: str, system: str, user: str, project: str | None, stage: str | None = None,
         author_model: str | None = None, engine: str | None = None, **kw) -> tuple[Completion, list[str]]:
+    from .. import live
     ad, warnings = resolve(agent_id, author_model, engine=engine)
-    comp = ad.complete(system, user, **kw)
+    if ad.provider != "manual":
+        live.begin(project, stage or "", agent_id)
+    try:
+        comp = ad.complete(system, user, **kw)
+    except BaseException:
+        live.end(ok=False)
+        raise
+    if ad.provider != "manual":
+        if not live.was_streamed():            # المحوّلات التي لا تبث: يظهر النص كاملاً عند انتهائه
+            live.append(comp.text, streamed=False)
+        live.end()
     if ad.provider != "manual":
         C.record(comp.model, comp.input_tokens, comp.output_tokens, project, agent_id, stage,
                  usd=comp.raw.get("total_cost_usd"))

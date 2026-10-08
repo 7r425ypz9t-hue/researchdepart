@@ -23,6 +23,7 @@ import yaml
 
 from .. import registry as R
 from ..paths import ROOT, PROJECTS
+from ..live import hidden as live_hidden
 
 STATIC = Path(__file__).parent / "static"
 STATE_FILE = Path(os.environ.get("RKPOS_PANEL_STATE", Path.home() / ".rkpos" / "panel.json"))
@@ -282,7 +283,47 @@ def job_view(q) -> dict:
     return j
 
 
-GET = {"labels": labels_view, "autopilot": autopilot_view, "genres": genres_view, "book": book_view, "book_unit": book_unit, "job": job_view, "overview": overview, "agents": agents, "agent": agent, "workflows": workflows, "project": project,
+def live_view(q) -> dict:
+    from .. import live
+    pid = _proj(q.get("id")).name
+    return live.read(pid, int(q.get("offset") or 0))
+
+
+def docs_view(q) -> dict:
+    """نصوص المشروع للشاشة الجانبية: الكتاب المجمّع، والوحدات، ومخرجات كل خطوة — بأسماء عربية."""
+    from .. import autopilot as AP
+    pid = _proj(q.get("id")).name
+    root = PROJECTS / pid
+    out = []
+    full = root / "manuscript/book_full.md"
+    if full.exists():
+        out.append({"path": str(full.relative_to(ROOT)), "label": "العمل مجمّعاً", "group": "العمل"})
+    try:
+        from .. import book as B
+        for u in B.load(pid)["units"]:
+            for f, tag in ((root / "manuscript/approved" / f"{u['id']}.md", "معتمدة"), (root / "manuscript/drafts" / f"{u['id']}.md", "مسودة"),
+                           (root / "manuscript/drafts" / f"{u['id']}.card.md", "بطاقة")):
+                if f.exists():
+                    out.append({"path": str(f.relative_to(ROOT)), "label": f"{u['id']} {u['title']} ({tag})", "group": "الوحدات"})
+                    break
+    except FileNotFoundError:
+        pass
+    for st in ST_plan(pid)["steps"]:
+        f = root / "runs" / st["id"] / "output.md"
+        if f.exists():
+            out.append({"path": str(f.relative_to(ROOT)), "label": f"{st['id']} — {AP.task_ar(st['task'])}", "group": "مخرجات الخطوات"})
+    for f in sorted((root / "manuscript/approved").glob("*.md")) if (root / "manuscript/approved").exists() else []:
+        if not f.stem.startswith("U"):
+            out.append({"path": str(f.relative_to(ROOT)), "label": f"المعتمد: {f.name}", "group": "العمل"})
+    return {"items": out}
+
+
+def ST_plan(pid):
+    from .. import state as ST
+    return ST.plan(pid)
+
+
+GET = {"live": live_view, "docs": docs_view, "labels": labels_view, "autopilot": autopilot_view, "genres": genres_view, "book": book_view, "book_unit": book_unit, "job": job_view, "overview": overview, "agents": agents, "agent": agent, "workflows": workflows, "project": project,
        "file": read_file, "candidates": candidates, "memory": memory, "audit": audit_log, "cost": cost_report,
        "governance": governance, "engines": lambda q: engines(bool(q.get("fresh"))), "ping": lambda q: {"ok": True, "root": str(ROOT)}}
 
@@ -435,7 +476,7 @@ def a_dashboard(_d):
 
 
 def a_security_scan(_d):
-    r = subprocess.run([sys.executable, str(ROOT / "scripts/security_scan.py")], cwd=ROOT, capture_output=True, text=True)
+    r = subprocess.run([sys.executable, str(ROOT / "scripts/security_scan.py")], cwd=ROOT, capture_output=True, text=True, **live_hidden())
     return {"ok": r.returncode == 0, "output": (r.stdout + r.stderr).strip()}
 
 
@@ -628,6 +669,21 @@ def a_autopilot_answer(d):
     return {"status": ap["status"]}
 
 
+def a_stop_now(d):
+    """إيقاف طارئ: يقطع كتابة الوكيل فوراً، ويوقف الطيار بسؤال لتوجيه المسار."""
+    from .. import autopilot as AP, live
+    _need(d, "project")
+    pid = _proj(d["project"]).name
+    AP.request_stop(pid)
+    return {"killed": live.stop_now(pid)}
+
+
+def a_autopilot_note(d):
+    from .. import autopilot as AP
+    _need(d, "project", "note")
+    return {"guidance": AP.add_note(_proj(d["project"]).name, d["note"]).get("guidance", {}).get("*")}
+
+
 def a_autopilot_stop(d):
     from .. import autopilot as AP
     _need(d, "project")
@@ -642,7 +698,7 @@ def a_claude_add_path(_d):
         raise ApiError(str(e)) from e
 
 
-POST = {"autopilot_start": a_autopilot_start, "autopilot_answer": a_autopilot_answer, "autopilot_stop": a_autopilot_stop,
+POST = {"stop_now": a_stop_now, "autopilot_note": a_autopilot_note, "autopilot_start": a_autopilot_start, "autopilot_answer": a_autopilot_answer, "autopilot_stop": a_autopilot_stop,
         "claude_add_path": a_claude_add_path, "claude_login": a_claude_login, "book_skeleton": b_skeleton, "book_set_units": b_set_units, "book_propose": b_propose,
         "book_import_outline": b_import_outline, "book_approve_outline": b_approve_outline, "book_draft": b_draft,
         "book_record": b_record, "book_revise": b_revise, "book_align": b_align, "book_adopt_aligned": b_adopt_aligned,
@@ -651,7 +707,7 @@ POST = {"autopilot_start": a_autopilot_start, "autopilot_answer": a_autopilot_an
         "adhoc": a_adhoc, "check_text": a_check_text, "verify_doi": a_verify_doi, "select": a_select,
         "validate": a_validate, "generate": a_generate, "eval": a_eval, "dashboard": a_dashboard,
         "security_scan": a_security_scan, "promote": a_promote, "amend": a_amend, "open_folder": a_open_folder}
-READ_ONLY_POST = {"check_text", "verify_doi", "select", "validate", "security_scan", "open_folder"}
+READ_ONLY_POST = {"stop_now", "autopilot_note", "check_text", "verify_doi", "select", "validate", "security_scan", "open_folder"}
 
 
 # ------------------------------------------------------------------ HTTP
@@ -701,6 +757,15 @@ def make_handler(token: str, port_ref: dict):
                 return self._send(200, f.read_bytes(), MIME.get(f.suffix, "application/octet-stream"))
             if not self._auth():
                 return
+            if u.path == "/api/export":
+                q = {k: v[0] for k, v in parse_qs(u.query).items()}
+                f = (ROOT / q.get("path", "")).resolve()
+                if not any(f.is_relative_to((ROOT / r).resolve()) for r in READABLE) or not f.is_file():
+                    return self._json(400, {"ok": False, "error": "مسار غير مسموح"})
+                from ..export import to_docx
+                return self._send(200, to_docx(f.read_text(encoding="utf-8"), q.get("title") or None,
+                                               clean=q.get("clean", "1") == "1"),
+                                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
             if u.path == "/api/raw":
                 q = {k: v[0] for k, v in parse_qs(u.query).items()}
                 f = (ROOT / q.get("path", "")).resolve()
