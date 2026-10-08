@@ -106,6 +106,7 @@ def main(argv=None) -> int:
     au.add_argument("project"); au.add_argument("--engine", default="claude_code", choices=["auto", "claude_code", "api"])
     au.add_argument("--answer", help="معرّف الخيار للإجابة عن السؤال القائم"); au.add_argument("--note", default="")
     au.add_argument("--status", action="store_true")
+    au.add_argument("--mode", choices=["direct", "guided"], help="مباشر (الافتراضي): مسودة كاملة ثم مراجعتي؛ موجَّه: أعتمد كل مرحلة")
     ac = sub.add_parser("activate", help="تفعيل وكيل مباشرة بتكليف من المؤلف")
     ac.add_argument("agent"); ac.add_argument("task"); ac.add_argument("--register", choices=["essay", "narrative", "academic"])
     ac.add_argument("--project"); ac.add_argument("--context", default="")
@@ -168,7 +169,10 @@ def main(argv=None) -> int:
         rep = {"claims": claims.audit(text), "citations": citations.audit(text, srcs), "terminology": terms.check(text)}
         from . import stylometry
         reg = stylometry.register_for(a.project)
-        ref = stylometry.load_reference(reg)
+        from .genres import VOICE_REGISTERS, discipline_report
+        ref = stylometry.load_reference(reg) if reg in VOICE_REGISTERS else None
+        if reg and reg not in VOICE_REGISTERS:
+            rep["discipline"] = discipline_report(text)
         if ref:  # تنبيه أسلوبي لا يحجب البوابة (القرار للمحرر والمؤلف)
             prof = stylometry.profile(text)
             rep["style_deviation"] = stylometry.distance(prof, ref)
@@ -214,7 +218,7 @@ def main(argv=None) -> int:
         if a.answer:
             q = AP.load(a.project).get("question") or {}
             AP.answer(a.project, q.get("id", ""), a.answer, a.note)
-        ap = AP.run(a.project, a.engine)
+        ap = AP.run(a.project, a.engine, mode=a.mode)
         q = ap.get("question")
         if q:
             _p({"status": ap["status"], "question": q["title"], "prompt": q["prompt"], "body": q.get("body"), "file": q.get("file"),

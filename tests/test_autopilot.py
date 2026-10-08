@@ -9,8 +9,8 @@ from test_book import FAKE, bk, _new  # noqa: F401 — المحرّك التجر
 REPO_ROOT = __import__("pathlib").Path(__file__).resolve().parents[1]
 
 
-def _ap(bk, pid, *extra):
-    return yaml.safe_load(bk("autopilot", pid, "--engine", "claude_code", *extra).stdout)
+def _ap(bk, pid, *extra, mode="guided"):
+    return yaml.safe_load(bk("autopilot", pid, "--engine", "claude_code", "--mode", mode, *extra).stdout)
 
 
 def test_every_workflow_task_has_arabic_label():
@@ -68,3 +68,37 @@ def test_project_types_get_their_own_workflow_not_a_subworkflow():
               "journal_article": "WF-JOURNAL-ARTICLE", "re_edition": "WF-REEDITION", "novel": "WF-NOVEL"}
     for t, w in expect.items():
         assert WF.workflow_for(t) == w and w not in sub
+
+
+
+def test_direct_mode_academic_article_one_question_and_discipline(bk):
+    """الوضع المباشر: مقال أكاديمي يُكتب كاملاً بلا توقف، وسؤال واحد للاعتماد النهائي؛ بلا بصمة شخصية، بانضباط أكاديمي."""
+    pid, _ = _new(bk, "مقال أكاديمي", "--type", "journal_article", "--pages", "8")
+    r = _ap(bk, pid, mode="direct")
+    assert r["question"] == "المسودة كاملة: «مقال أكاديمي»"
+    assert set(r["choices"]) == {"approve", "polish", "redraft", "review"}
+    root = bk.root / "projects" / pid
+    plan = yaml.safe_load((root / "plan.yaml").read_text(encoding="utf-8"))
+    skipped = [s["task"] for s in plan["steps"] if s["status"] == "SKIPPED"]
+    assert "discover_sources" in skipped and "verify_sources" in skipped and "blind_review" in skipped
+    # البرومبت الأكاديمي: انضباط بلا عقد أسلوب شخصي
+    s02 = (root / "runs/S02/prompt.md").read_text(encoding="utf-8")
+    assert "ACADEMIC DISCIPLINE" in s02 and "AUTHOR STYLE CONTRACT" not in s02
+    r = _ap(bk, pid, "--answer", "approve", mode="direct")
+    assert r["status"] == "done"
+    assert list((root / "manuscript/approved").glob("*.docx"))           # ملف Word للنص المعتمد
+    dec = yaml.safe_load((root / "decisions.yaml").read_text(encoding="utf-8"))["decisions"]
+    assert any("تفويض الاعتمادات المرحلية" in d["decision"] for d in dec)
+    assert any("الاعتماد النهائي للنص" in d["decision"] and d["approved_by"] == "HUMAN-AUTHOR" for d in dec)
+
+
+def test_author_voice_only_for_op_ed_and_creative(bk):
+    import sys
+    sys.path.insert(0, str(REPO_ROOT / "runtime"))
+    from rkpos import genres as GN
+    assert GN.author_voice("op_ed") and GN.author_voice("creative")
+    assert not GN.author_voice("research") and not GN.author_voice("intellectual")
+    assert GN.genres()["intellectual"]["register"] == "academic"
+    rep = GN.discipline_report("كنا صغاراً نلعب في الحي! أليس كذلك؟ على سبيل المثال لا شك أن الأمر واضح.")
+    assert {"narrative", "exclamation", "emphatic"} <= set(rep["flags"])
+    assert GN.discipline_report("تتناول الدراسة أثر السياسات الثقافية في الهوية المحلية وفق منهج تحليلي.")["ok"]

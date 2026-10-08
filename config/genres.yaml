@@ -1,6 +1,8 @@
 # الأجناس الكتابية — لكل جنس صفاته الفكرية والأسلوبية وضوابطه ووكيله وسير عمله.
 # هذا الملف يحمل قواعد الصنعة العامة لكل جنس؛ أما ملامح بصمة المؤلف الخاصة فتأتي من MEM-AUTHOR (AUTHOR_ONLY)
 # عبر «عقد الأسلوب» بحسب السجلّ (register)، ولا تُكتب هنا.
+# author_voice: بقرار المؤلف (2026-10-08) تُطبَّق بصمته الشخصية في مقال الرأي والكتابة الإبداعية وحدهما؛
+# أما البحث العلمي والكتابة الفكرية فتحكمهما قواعد «الانضباط الأكاديمي» (discipline) لا البصمة.
 version: 0.1.0
 genres:
 
@@ -9,6 +11,7 @@ genres:
     name_en: Creative Fiction
     project_types: [novel, novella, short_story]
     register: narrative                 # مرجع البصمة: style_reference_narrative
+    author_voice: true
     lead_agent: AG-NOV
     outline_agent: AG-NOV
     voice_agent: AG-ARE
@@ -38,6 +41,7 @@ genres:
     name_en: Academic Research
     project_types: [academic_book, journal_article, systematic_review, literature_review, policy_study, foresight_study, critical_edition, strategic_report]
     register: academic
+    author_voice: false
     lead_agent: AG-WRT
     outline_agent: AG-BKA
     voice_agent: AG-ARE
@@ -50,8 +54,10 @@ genres:
       - "التمييز الصريح بين الواقعة والتفسير والفرضية"
     stylistic:
       - "مصطلح ثابت معرَّف عند أول ورود"
-      - "فقرة واحدة لفكرة واحدة، وجملة واضحة البناء"
+      - "فقرة واحدة لفكرة واحدة، وجملة خبرية واضحة البناء"
       - "إحالة دقيقة لكل ادعاء جوهري"
+      - "لا إنشاء ولا حكايات ولا أمثلة إلا ما كان دليلاً موثقاً يخدم الحجة"
+      - "لا أسئلة بلاغية ولا تعجب ولا مبالغة ولا سرد ذاتي"
     evidence: "كل ادعاء موسوم [FACT/EBI/INTERP/HYP/AUTHOR] ومسند بمعرّف مصدر متحقق؛ [NEEDS-EVIDENCE] بدل التخمين"
     claim_tags: inline
     prohibited:
@@ -65,7 +71,8 @@ genres:
     name_ar: الكتابة الفكرية والمقالية الطويلة
     name_en: Intellectual Essay
     project_types: [intellectual_book, essay_collection]
-    register: essay
+    register: academic
+    author_voice: false
     lead_agent: AG-WRT
     outline_agent: AG-BKA
     voice_agent: AG-ARE
@@ -75,16 +82,18 @@ genres:
     intellectual:
       - "أطروحة يتبناها المؤلف ويدافع عنها بالحجة والتأمل والمثال"
       - "الحفر في المفهوم وتاريخه والمسكوت عنه فيه"
-      - "الذات الكاتبة حاضرة: المؤلف يرى ويقترح لا يكتفي بالعرض"
+      - "موقف المؤلف واضح بصيغة علمية (يرى البحث، يُرجَّح) لا بالسرد الذاتي"
     stylistic:
-      - "نفَس مقالي متصل يحمل الفكرة من فقرة إلى أخرى"
-      - "المثال المحلي والمثل والذاكرة شواهد على الفكرة"
+      - "تتابع منطقي محكم: مقدمة فمسألة فحجة فاعتراض فترجيح"
+      - "لغة مفهومية منضبطة؛ لا إنشاء ولا حكايات ولا أمثلة إلا الشاهد الموثق اللازم"
+      - "لا أسئلة بلاغية ولا تعجب ولا مبالغة"
       - "الإحالة في الحواشي بقدر الحاجة، لا تُثقل المتن"
     evidence: "الوقائع موسومة ومسندة؛ الرأي موسوم [AUTHOR] أو [INTERP]؛ الشاهد التراثي يُوثّق"
     claim_tags: inline
     prohibited:
       - "صياغة موقف للمؤلف لم يعتمده"
       - "الحشو التفسيري («بمعنى آخر»، «وخلاصة القول») بديلاً عن الحجة"
+      - "الحكاية الشخصية والذكريات والأمثلة التوضيحية غير اللازمة"
     skills_claude: [council-orchestration-ar, source-integrity-ar, academic-integrity-sunni-sources-ar]
     levels: [scaffold, staged, full]
 
@@ -93,6 +102,7 @@ genres:
     name_en: Op-Ed Column
     project_types: [op_ed]
     register: essay
+    author_voice: true
     lead_agent: AG-WRT
     outline_agent: AG-WRT
     voice_agent: AG-ARE
@@ -116,6 +126,22 @@ genres:
       - "رقم أو اقتباس غير موثّق"
     skills_claude: [op-ed-column-ar, source-integrity-ar]
     levels: [full]
+
+# الانضباط الأكاديمي: يُحقن في برومبت الوكلاء للأجناس التي لا تُطبَّق فيها البصمة، ويُقاس به النص
+discipline:
+  rules:
+    - "اكتب بلغة علمية محايدة دقيقة: جمل خبرية، ومصطلحات معرّفة، وفقرة لكل فكرة."
+    - "لا إنشاء ولا زخرفة لفظية ولا تمهيد عاطفي، ولا تكرار للفكرة بعبارات مختلفة."
+    - "لا حكايات ولا ذكريات ولا سرد ذاتي، ولا أمثلة توضيحية إلا ما كان دليلاً موثقاً لازماً للحجة."
+    - "لا أسئلة بلاغية ولا تعجب ولا مبالغة ولا عبارات قطع («لا شك»، «مما لا ريب فيه»)."
+    - "كل حكم مسند أو موسوم؛ وما لا دليل عليه يُعلَّم [NEEDS-EVIDENCE] ولا يُملأ بالإنشاء."
+  checks:    # مؤشرات القياس لكل ألف كلمة، والحد الذي يُعلَّم بعده النص
+    narrative: {max: 0, patterns: ["كنا صغار", "ذات يوم", "في طفولتي", "أذكر أن", "أتذكر", "يُحكى أن", "حكاية"]}
+    examples: {max: 3, patterns: ["على سبيل المثال", "مثلاً", "مثال ذلك", "كمثال", "خذ مثلاً"]}
+    first_person: {max: 2, patterns: ["أنا ", "كنتُ", "عشتُ", "رأيتُ", "أرى أن", "أظن"]}
+    emphatic: {max: 1, patterns: ["لا شك", "مما لا ريب", "بلا ريب", "حقاً", "قطعاً"]}
+    exclamation: {max: 0, chars: ["!"]}
+    rhetorical_q: {max: 2, chars: ["؟"]}
 
 # الأنواع العابرة للأجناس: يُختار جنسها عند الإنشاء (الافتراضي بين قوسين)
 cross_genre:

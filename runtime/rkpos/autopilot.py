@@ -30,6 +30,14 @@ def task_ar(task: str) -> str:
     return labels()["tasks"].get(task, task)
 
 
+def mode_of(ap: dict) -> str:
+    return ap.get("mode") or cfg().get("default_mode", "direct")
+
+
+def _direct(ap: dict) -> bool:
+    return mode_of(ap) == "direct"
+
+
 # ------------------------------------------------------------------ الحالة
 def _path(pid):
     return PROJECTS / pid / "autopilot.yaml"
@@ -57,7 +65,8 @@ def _log(pid: str, ap: dict, msg: str) -> None:
 def _ask(pid: str, ap: dict, kind: str, step: dict | None = None, unit: dict | None = None,
          body: str = "", file: str | None = None) -> str:
     spec = cfg()["questions"][kind]
-    fmt = {"task": task_ar(step["task"]) if step else "", "unit": f"{unit['id']} {unit['title']}" if unit else ""}
+    fmt = {"task": task_ar(step["task"]) if step else "", "unit": f"{unit['id']} {unit['title']}" if unit else "",
+           "title": GN.manifest(pid)["title"]}
     ap["question"] = {"id": secrets.token_hex(4), "kind": kind, "title": spec["title"].format(**fmt),
                       "prompt": spec["prompt"], "body": body, "file": file,
                       "step": step["id"] if step else None, "unit": unit["id"] if unit else None,
@@ -145,8 +154,13 @@ def _outline(pid, ap, step, engine, completes_step: bool) -> str | None:
         B.propose_outline(pid, engine, guidance=guidance_for(ap, step))
         ob = B.load(pid)
     if not ob["outline_approved"]:
-        body = "\n".join(f"{u['id']} — {u['title']} ({u['target_words'] or '—'} كلمة): {u['brief']}" for u in ob["units"])
-        return _ask(pid, ap, "outline_approval", step, body=body)
+        if _direct(ap):
+            B.approve_outline(pid, "HUMAN-AUTHOR")      # تفويض الوضع المباشر الذي اختاره المؤلف
+            _log(pid, ap, f"اعتُمد المخطط تفويضاً ({len(ob['units'])} وحدة)")
+            ob = B.load(pid)
+        else:
+            body = "\n".join(f"{u['id']} — {u['title']} ({u['target_words'] or '—'} كلمة): {u['brief']}" for u in ob["units"])
+            return _ask(pid, ap, "outline_approval", step, body=body)
     if completes_step:
         runner.complete(pid, step["id"], "HUMAN-AUTHOR", "اعتماد المخطط (معتمد في محرّك البناء)")
     return None
@@ -158,6 +172,8 @@ def _drafting(pid, ap, step, engine) -> str | None:
         return r
     ob = B.load(pid)
     level = ob["level"]
+    if _direct(ap) and level != "scaffold":
+        return _drafting_direct(pid, ap, step, engine, ob)
     pending = [u for u in ob["units"] if u["status"] != "APPROVED"]
     if not pending:
         B.assemble(pid)
@@ -189,6 +205,47 @@ def _drafting(pid, ap, step, engine) -> str | None:
     return _ask(pid, ap, "book_review", step, body=body, file=f"projects/{pid}/manuscript/book_full.md")
 
 
+def _progress(pid, ap, verb):
+    return lambda i, n, uid: uid and _log(pid, ap, f"{verb} [{i + 1}/{n}] {uid}")
+
+
+def _drafting_direct(pid, ap, step, engine, ob) -> str | None:
+    """الوضع المباشر: تُكتب الوحدات كلها تباعاً، ثم يُضبط المعلَّم منها آلياً، ثم يُجمَّع العمل وتمضي الخطة."""
+    if any(u["status"] in ("PLANNED", "CARDED") for u in ob["units"]):
+        _log(pid, ap, f"تُكتب الوحدات كلها ({len(ob['units'])}) دون توقف")
+        B.draft_all(pid, engine, _progress(pid, ap, "كتابة"), guidance=guidance_for(ap, step), direct=True)
+    ap = load(pid)
+    if not ap.get("polished"):
+        done = B.polish(pid, engine, only_flagged=True, progress=_progress(pid, ap, "ضبط"))
+        ap = load(pid)
+        ap["polished"] = True
+        save(pid, ap)
+        if done:
+            _log(pid, ap, f"ضُبطت آلياً {len(done)} وحدة: {'، '.join(done)}")
+    B.assemble(pid)
+    runner.complete(pid, step["id"], _auto_actor(step))
+    _log(pid, load(pid), "اكتملت المسودة وجُمّع العمل")
+    return None
+
+
+def _final_review(pid, ap, step) -> str:
+    ob = B.load(pid)
+    rep = B.voice_report(pid)
+    note = ("" if not rep["flagged"] else f"؛ وحدات ما زالت تحتاج ضبطاً: {'، '.join(rep['flagged'])}")
+    body = f"{rep['total_words']} كلمة (≈ {round(rep['total_words'] / ob['words_per_page'])} صفحة) في {len(ob['units'])} وحدة{note}"
+    return _ask(pid, ap, "final_review", step, body=body, file=f"projects/{pid}/manuscript/book_full.md")
+
+
+def _skip(pid, ap, step, why: str) -> None:
+    plan = ST.plan(pid)
+    for s in plan["steps"]:
+        if s["id"] == step["id"]:
+            s["status"], s["note"] = "SKIPPED", why
+    ST.save_plan(pid, plan)
+    ST.refresh(pid)
+    audit.log("AG-ORC", f"autopilot_skip:{step['id']}", project=pid, decision=why, decision_level="L1")
+
+
 def _voice_line(u):
     v = (u.get("voice") or {}).get("pole") or {}
     return f"{u.get('words', 0)} كلمة من {u.get('target_words') or '—'}" + (f"؛ القرب من الصياغة المُعانة {v['assisted_share']}" if v else "")
@@ -197,11 +254,27 @@ def _voice_line(u):
 def _step(pid, ap, step, engine) -> str | None:
     c = cfg()
     task = step["task"]
+    if _direct(ap):
+        d = c["modes"]["direct"]
+        if task in d["skip_tasks"]:
+            _skip(pid, ap, step, "تُخطيت في الوضع المباشر")
+            _log(pid, ap, f"{step['id']} — {task_ar(task)}: تُخطيت (الوضع المباشر)")
+            return None
+        if task in d["final_tasks"]:
+            if not ap.get("final_approved"):
+                if not (PROJECTS / pid / "manuscript/book_full.md").exists():
+                    B.assemble(pid)
+                return _final_review(pid, ap, step)
+            runner.complete(pid, step["id"], "HUMAN-AUTHOR", f"{task_ar(task)}: ضمن الاعتماد النهائي للمؤلف")
+            return None
     if task in c["outline_tasks"]:
         return _outline(pid, ap, step, engine, completes_step=True)
     if task in c["draft_tasks"]:
         return _drafting(pid, ap, step, engine)
     out = _out(pid, step["id"])
+    if _is_author_step(step) and _direct(ap):
+        runner.complete(pid, step["id"], "HUMAN-AUTHOR", f"{task_ar(task)}: اعتماد مرحلي مفوَّض (الوضع المباشر)")
+        return None
     if _is_author_step(step):
         last = [s for s in ST.plan(pid)["steps"] if s["status"] == "DONE" and _out(pid, s["id"])]
         full = PROJECTS / pid / "manuscript/book_full.md"
@@ -212,19 +285,32 @@ def _step(pid, ap, step, engine) -> str | None:
         if not _run_agent_step(pid, ap, step, engine):
             raise RuntimeError("لم يُنتج المحرّك مخرجاً (تحققوا من تسجيل الدخول إلى Claude أو من المفتاح)")
     if step.get("human_approval") or step.get("decision_level") == "L4":
+        if _direct(ap):
+            runner.complete(pid, step["id"], "HUMAN-AUTHOR", f"{task_ar(task)}: اعتماد مرحلي مفوَّض (الوضع المباشر)")
+            _log(pid, ap, f"{step['id']} — {task_ar(task)}: اعتُمدت تفويضاً")
+            return None
         return _ask(pid, ap, "step_approval", step, file=f"projects/{pid}/runs/{step['id']}/output.md")
     runner.complete(pid, step["id"], _auto_actor(step))
     return None
 
 
-def run(pid: str, engine: str, max_steps: int = 400) -> dict:
+def run(pid: str, engine: str, max_steps: int = 400, mode: str | None = None) -> dict:
     if engine in (None, "manual"):
         raise ValueError("الطيار الآلي يحتاج محرّكاً آلياً (Claude Code أو API)")
     ap = load(pid)
+    if mode:
+        if mode not in cfg()["modes"]:
+            raise ValueError(f"طريقة عمل غير معروفة: {mode}")
+        ap["mode"] = mode
     if ap.get("question"):
+        save(pid, ap)
         return ap
     ap.update(status="running", engine=engine, stop_requested=False)
-    _log(pid, ap, "بدأ الطيار الآلي")
+    if _direct(ap) and not ap.get("delegation_recorded"):
+        B._decision(pid, "تفويض الاعتمادات المرحلية للطيار الآلي (الوضع المباشر)؛ الاعتماد النهائي للنص يبقى للمؤلف")
+        ap["delegation_recorded"] = True
+    _log(pid, ap, f"بدأ الطيار الآلي — {cfg()['modes'][mode_of(ap)]['name_ar']}")
+    retried = set()
     for _ in range(max_steps):
         if load(pid).get("stop_requested"):
             ap = load(pid)
@@ -248,8 +334,12 @@ def run(pid: str, engine: str, max_steps: int = 400) -> dict:
             ap = load(pid)
             _ask(pid, ap, "interrupted", step)
             break
-        except Exception as e:  # noqa: BLE001 — يُعرض سؤالاً للمؤلف؛ لا يُبتلع
+        except Exception as e:  # noqa: BLE001 — يُعاد مرة آلياً، ثم يُعرض سؤالاً للمؤلف؛ لا يُبتلع
             ap = load(pid)
+            if step["id"] not in retried and "غير مسجّل الدخول" not in str(e):
+                retried.add(step["id"])
+                _log(pid, ap, f"{step['id']}: خطأ عابر، تُعاد المحاولة آلياً ({type(e).__name__})")
+                continue
             _ask(pid, ap, "error", step, body=f"{type(e).__name__}: {e}")
             break
         ap = load(pid)
@@ -311,6 +401,27 @@ def answer(pid: str, qid: str, choice_id: str, note: str = "") -> dict:
         ap["budget_override"] = True
     elif act == "skip_step":
         runner.complete(pid, step["id"], "HUMAN-AUTHOR", f"تخطّي «{task_ar(step['task'])}» بقرار المؤلف" + (f" — {note}" if note else ""))
+    elif act == "approve_final":
+        for u in B.load(pid)["units"]:
+            if u["status"] != "APPROVED" and u.get("words"):
+                B.approve_unit(pid, u["id"], "HUMAN-AUTHOR")
+        res = B.assemble(pid)
+        from .export import to_docx
+        m = GN.manifest(pid)
+        out = PROJECTS / pid / "manuscript/approved" / f"{m.get('slug') or pid}.docx"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_bytes(to_docx((PROJECTS / pid / "manuscript/book_full.md").read_text(encoding="utf-8"), m["title"]))
+        ap["final_approved"] = True
+        runner.complete(pid, step["id"], "HUMAN-AUTHOR", f"الاعتماد النهائي للنص ({res['words']} كلمة): {decision}")
+    elif act == "polish_all":
+        B.polish(pid, engine, only_flagged=False)
+        B.assemble(pid)
+    elif act == "redraft_all":
+        g = ap.setdefault("guidance", {})
+        g["*"] = ((g.get("*") or "") + "\n- " + note.strip()).strip()
+        B.draft_all(pid, engine, guidance=g["*"], direct=True, redo=True)
+        B.polish(pid, engine, only_flagged=True)
+        B.assemble(pid)
     elif act in ("pause", "retry"):
         pass
     ap["question"] = None

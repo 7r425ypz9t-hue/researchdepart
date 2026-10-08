@@ -252,7 +252,9 @@ async function newProjectForm(preGenre, preType) {
     h("h3", {}, "٤. الحجم"), sizeBox,
     h("h3", {}, "٥. التشغيل"),
     h("label", { class: "confirm" }, h("input", { type: "checkbox", id: "np-auto", checked: true }),
-      " شغّل الوكلاء آلياً فور الإنشاء، ولا تتوقف إلا لقراري بخيارات سريعة"),
+      " شغّل الوكلاء آلياً فور الإنشاء"),
+    h("div", { class: "form" }, field("طريقة العمل", sel("np-mode", [["direct", "مباشر — مسودة كاملة ثم مراجعتي (موصى به)"],
+      ["guided", "موجَّه — أعتمد كل مرحلة"]], "direct"))),
     h("details", {}, h("summary", {}, "خيارات متقدمة"),
       h("div", { class: "form" },
         field("نموذج التشغيل", sel("np-model", [["A", "A — خفيف"], ["B", "B — قياسي"], ["C", "C — موسّع"]], "A")),
@@ -265,7 +267,7 @@ async function newProjectForm(preGenre, preType) {
     h("div", { class: "row" }, btn("أنشئ المشروع", async () => {
       const r = await api("new_project", { title: val("np-title"), type: val("np-type"), genre, level, pages: val("np-pages"), wpp: val("np-wpp"),
         model: val("np-model"), domain: val("np-domain"), risk: val("np-risk"), evidence: val("np-evidence"), target: val("np-target"),
-        deadline: val("np-deadline"), has_data: val("np-data"), autopilot: val("np-auto"), engine: engine() });
+        deadline: val("np-deadline"), has_data: val("np-data"), autopilot: val("np-auto"), mode: val("np-mode"), engine: engine() });
       if (val("np-auto") && engine() === "manual") toast("أُنشئ المشروع؛ التشغيل الآلي يحتاج محرّك Claude Code (أعلى الصفحة)", true);
       else toast("أُنشئ " + r.project_id + (r.autopilot ? " — بدأ الوكلاء العمل" : ""));
       openProject(r.project_id);
@@ -739,12 +741,16 @@ async function renderAutopilot(pid) {
     h("h3", {}, "التشغيل الآلي"),
     h("div", { class: "row" }, pill(AP_STATUS[st] || st, st === "waiting" ? "gold" : st === "done" ? "ok" : st === "error" ? "bad" : ""),
       ap.engine ? pill("المحرّك: " + (ENGINE_LABEL[ap.engine] || ap.engine)) : null,
+      pill(ap.modes[ap.mode] || ap.mode, "gold"),
       ap.running ? h("span", { class: "spin", style: "width:18px;height:18px;border-width:3px" }) : null,
+      !ap.running && !ap.question && st !== "done" ? sel("ap-mode", Object.entries(ap.modes), ap.mode) : null,
       !ap.running && !ap.question && st !== "done" ? btn(st === "idle" ? "شغّل المشروع آلياً" : "استأنف التشغيل الآلي", async () => {
-        await api("autopilot_start", { project: pid, engine: engine() }); renderAutopilot(pid);
+        await api("autopilot_start", { project: pid, engine: engine(), mode: val("ap-mode") }); renderAutopilot(pid);
       }, "gold") : null,
       ap.running ? btn("أوقف بعد الخطوة الجارية", async () => { await api("autopilot_stop", { project: pid }); toast("سيتوقف بعد الخطوة الجارية"); }, "ghost") : null),
-    st === "idle" ? h("p", { class: "small muted" }, "يمضي الوكلاء في الخطة تباعاً بالمحرّك المختار، ولا يتوقفون إلا لقرار يملكه المؤلف، فيعرضونه عليكم بخيارات جاهزة.") : null,
+    st === "idle" ? h("p", { class: "small muted" }, ap.mode === "direct"
+      ? "الوضع المباشر: يكتب الوكلاء العمل كاملاً ويضبطونه دون توقف، ثم يعرضونه عليكم مرة واحدة للاعتماد."
+      : "الوضع الموجَّه: يتوقف الوكلاء عند كل قرار مرحلي ويعرضونه عليكم بخيارات جاهزة.") : null,
     ap.question ? questionCard(pid, ap.question, false) : null,
     log.length ? h("details", { open: ap.running }, h("summary", {}, "ما يجري الآن"),
       h("ul", { class: "small" }, log.map((l) => h("li", {}, nextAr(l.msg) + " ", h("span", { class: "muted" }, (l.t || "").slice(11, 16)))))) : null);
@@ -756,7 +762,10 @@ async function renderAutopilot(pid) {
 const AP_WATCH = {};
 
 // ---------- بناء العمل (الأجناس ومستويات الإنتاج) ----------
+const DISC_AR = { narrative: "سرد", examples: "أمثلة", first_person: "ضمير المتكلم", emphatic: "توكيد", exclamation: "تعجب", rhetorical_q: "أسئلة بلاغية" };
 const voicePill = (u) => {
+  const d = u.voice && u.voice.discipline;
+  if (d) return d.ok ? pill("منضبط أكاديمياً", "ok") : pill("يحتاج ضبطاً: " + d.flags.map((f) => DISC_AR[f] || f).join("، "), "warn");
   const sh = u.voice && u.voice.pole ? u.voice.pole.assisted_share : null;
   if (sh == null) return u.voice && u.voice.deviation_mean != null ? pill("انحراف " + u.voice.deviation_mean) : "";
   return pill((sh <= 0.35 ? "صوت المؤلف " : sh <= 0.5 ? "قريب " : "مُعان ") + sh, sh <= 0.35 ? "ok" : sh <= 0.5 ? "gold" : "bad");
@@ -892,11 +901,12 @@ async function unitEditor(pid, uid, manualPrompt) {
     "حرّروا النص بحرية: كل حفظ يُقاس، ومسودة الوكيل الأصلية محفوظة للمقارنة."), ta,
     h("div", { class: "row" },
       btn("احفظ تعديلي", async () => { await api("book_revise", { project: pid, unit: uid, text: ta.value }); toast("حُفظ وقيس"); await renderBook(pid); unitEditor(pid, uid); }),
-      btn("مواءمة الصوت (اقتراح)", async () => {
-        const r = await busy("يواءم المحرر الصوت…", () => api("book_align", { project: pid, unit: uid, engine: engine() }));
+      btn(b.outline.genre === "research" || b.outline.genre === "intellectual" ? "ضبط أكاديمي (اقتراح)" : "مواءمة الصوت (اقتراح)", async () => {
+        const r = await busy("يضبط المحرر الصياغة…", () => api("book_align", { project: pid, unit: uid, engine: engine() }));
         if (r.manual) return out.replaceChildren(h("div", { class: "row" }, btn("انسخ وافتح Claude", () => copyAndOpen(r.text), "gold")));
         const sh = (v) => v && v.pole ? v.pole.assisted_share : "—";
-        out.replaceChildren(h("div", { class: "card" }, h("h4", {}, "نسخة المواءمة"), h("p", {}, "القطب قبل: " + sh(r.before) + " ← بعد: " + sh(r.after)),
+        const ds = (v) => v && v.discipline ? (v.discipline.ok ? "منضبط" : v.discipline.flags.map((f) => DISC_AR[f] || f).join("، ")) : sh(v);
+        out.replaceChildren(h("div", { class: "card" }, h("h4", {}, "النسخة المضبوطة"), h("p", {}, "قبل: " + ds(r.before) + " ← بعد: " + ds(r.after)),
           pre(r.text), h("div", { class: "row" }, btn("اعتمدها نسخة عمل", async () => { await api("book_adopt_aligned", { project: pid, unit: uid }); await renderBook(pid); unitEditor(pid, uid); }, "gold"))));
       }, "ghost"),
       btn("فحص النص", () => checkTextView(ta.value, pid), "ghost"),

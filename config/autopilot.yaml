@@ -2,8 +2,39 @@
 # يمضي الوكلاء آلياً في كل خطوة لا تحتاج قرار المؤلف؛ ويتوقف الطيار عند السؤال، ويعرض خيارات جاهزة.
 # النقر على خيار هو قرار المؤلف نفسه (L4) ويُسجَّل باسمه في decisions.yaml مع نص الخيار والملاحظة.
 # action: اسم الإجراء في runtime/rkpos/autopilot.py — لا تغيّره؛ label وhint قابلان للتحرير.
-version: 0.1.0
+version: 0.2.0
+# طريقة العمل: «مباشر» (الافتراضي) يكتب الوكلاء المسودة كاملة دون توقف، ويعرضونها عليكم مرة واحدة للاعتماد؛
+# «موجَّه» يتوقف عند كل قرار مرحلي (الإشكالية، المخطط، كل وحدة…).
+default_mode: direct
+modes:
+  direct:
+    name_ar: "مباشر — مسودة كاملة ثم مراجعتي"
+    summary: "تُعتمد المراحل الوسيطة تفويضاً، وتُتخطى الخطوات التي لا تغيّر النص أو تحتاج أدوات غير متاحة؛ يُضبط النص آلياً، ثم سؤال واحد للاعتماد النهائي."
+    # خطوات تُتخطى: بحث وتحقق يحتاجان أدوات غير متاحة للوكيل، ومراجعات تُنتج تقارير لا تدخل النص، وإجراءات الإغلاق
+    skip_tasks: [discover_sources, discover_sources_incl_official_docs, horizon_scanning_sources, execute_registered_search,
+                 verify_sources, verify_and_deduplicate, register_witnesses, re_verify_all_references_and_retractions,
+                 update_literature_since_publication, idea_assessment_council, challenge_arguments, challenge_recommendations,
+                 challenge_scenarios_plausibility, whole_book_challenge, cross_chapter_consistency, blind_review,
+                 external_human_peer_review, revise_per_reviews, revise_per_external_review, structural_edit,
+                 language_and_terminology, language_and_voice_alignment, edit_and_language, editorial_readiness,
+                 convene_council_final, selection_bias_challenge, produce_figures, infographics,
+                 tag_and_backup_all_versions, archive_project_with_checksums, extract_knowledge, archive_gate,
+                 request_kb_promotion_approval, promote_approved_items_and_reindex, evaluate_temporary_agents, archive_and_index]
+    # أول خطوة اعتماد نهائي يُطرح عندها السؤال الوحيد؛ وما بعدها يُغلق ضمن اعتمادكم
+    final_tasks: [request_author_approval, request_final_approval, format_to_journal_guidelines, prepare_final_files,
+                  prepare_new_edition_files, tag_release_v1_0]
+  guided:
+    name_ar: "موجَّه — أعتمد كل مرحلة"
+    summary: "يتوقف عند كل قرار من مستوى L4 وعند اعتماد المخطط وكل وحدة."
 questions:
+  final_review:
+    title: "المسودة كاملة: «{title}»"
+    prompt: "كتب الوكلاء العمل كاملاً وضبطوه؛ اقرؤوه في الشاشة الجانبية أو نزّلوه، ثم قرروا."
+    choices:
+      - {id: approve, label: "اعتمد النص النهائي", action: approve_final, style: gold}
+      - {id: polish, label: "اضبطه كله مرة أخرى ثم اعرضه", action: polish_all}
+      - {id: redraft, label: "أعد كتابة المسودة بتوجيهي", action: redraft_all, needs_note: true}
+      - {id: review, label: "سأراجع وأعدّل بنفسي", action: pause}
   step_approval:
     title: "اعتماد «{task}»"
     prompt: "أنجز الوكيل هذه الخطوة وتحتاج قراركم قبل المتابعة."
@@ -24,15 +55,15 @@ questions:
     prompt: "كُتبت الوحدة وقيس صوتها؛ في المستوى التدرّجي لا تُكتب التالية قبل اعتمادها."
     choices:
       - {id: approve, label: "اعتمدها كما هي", action: approve_unit, style: gold}
-      - {id: align_approve, label: "واءم صوتها ثم اعتمدها", action: align_then_approve}
+      - {id: align_approve, label: "اضبط صياغتها ثم اعتمدها", action: align_then_approve}
       - {id: redraft, label: "أعد كتابتها بتوجيهي", action: redraft_unit, needs_note: true}
       - {id: review, label: "سأراجعها بنفسي", action: pause}
   book_review:
     title: "المسودة الكاملة جاهزة للمراجعة"
-    prompt: "كُتبت الوحدات كلها وجُمّع العمل؛ الوحدات الأقرب إلى الصياغة المُعانة معلَّمة في تقرير الصوت."
+    prompt: "كُتبت الوحدات كلها وجُمّع العمل؛ الوحدات التي تحتاج ضبطاً معلَّمة في تقرير القياس."
     choices:
       - {id: review, label: "سأراجع الوحدات بنفسي", action: pause, style: gold}
-      - {id: align_flagged, label: "واءم صوت الوحدات المعلَّمة آلياً ثم اسألني", action: align_flagged}
+      - {id: align_flagged, label: "اضبط الوحدات المعلَّمة آلياً ثم اسألني", action: align_flagged}
       - {id: approve_all, label: "اعتمد الوحدات كلها كما هي", action: approve_all_units}
   scaffold_write:
     title: "الدور لقلمكم: الوحدة «{unit}»"

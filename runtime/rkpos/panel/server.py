@@ -231,10 +231,11 @@ def autopilot_view(q) -> dict:
     pid = _proj(q.get("id")).name
     ap = AP.load(pid)
     j = _running(pid)
-    return {**ap, "running": bool(j and j.get("kind") == "autopilot"), "job": j}
+    return {**ap, "mode": AP.mode_of(ap), "modes": {k: v["name_ar"] for k, v in AP.cfg()["modes"].items()},
+            "running": bool(j and j.get("kind") == "autopilot"), "job": j}
 
 
-def _start_autopilot(pid: str, engine: str) -> dict:
+def _start_autopilot(pid: str, engine: str, mode: str | None = None) -> dict:
     from .. import autopilot as AP
     if _running(pid):
         raise ApiError("يعمل لهذا المشروع تشغيل آخر الآن")
@@ -244,7 +245,7 @@ def _start_autopilot(pid: str, engine: str) -> dict:
 
     def work():
         try:
-            AP.run(pid, engine)
+            AP.run(pid, engine, mode=mode)
             job["state"] = "done"
         except Exception as e:  # noqa: BLE001
             job.update(state="error", error=f"{type(e).__name__}: {e}")
@@ -343,7 +344,7 @@ def a_new_project(d):
                       words_per_page=int(d["wpp"]) if d.get("wpp") else None)
     out = {"project_id": m["project_id"], "workflow": m["workflow"], "agents": m["agents"], "autopilot": None}
     if d.get("autopilot") and (d.get("engine") or "manual") != "manual":
-        out["autopilot"] = _start_autopilot(m["project_id"], d["engine"])
+        out["autopilot"] = _start_autopilot(m["project_id"], d["engine"], d.get("mode") or None)
     return out
 
 
@@ -421,7 +422,10 @@ def a_check_text(d):
         srcs = sources.load(_proj(pid) / "research/sources.jsonl") + srcs
     rep = {"claims": claims.audit(text), "citations": citations.audit(text, srcs), "terminology": terms.check(text)}
     reg = d.get("register") or (S.register_for(pid) if pid else None)
-    ref = S.load_reference(reg)
+    from ..genres import VOICE_REGISTERS, discipline_report
+    ref = S.load_reference(reg) if reg in VOICE_REGISTERS else None
+    if reg and reg not in VOICE_REGISTERS:
+        rep["discipline"] = discipline_report(text)
     prof = S.profile(text)
     prof.pop("top_bigrams", None)
     rep["style_profile"] = prof
@@ -654,7 +658,7 @@ def a_autopilot_start(d):
     eng = d.get("engine") or "manual"
     if eng == "manual":
         raise ApiError("التشغيل الآلي يحتاج محرّكاً آلياً: اختاروا Claude Code أعلى الصفحة")
-    return _start_autopilot(pid, eng)
+    return _start_autopilot(pid, eng, d.get("mode") or None)
 
 
 def a_autopilot_answer(d):

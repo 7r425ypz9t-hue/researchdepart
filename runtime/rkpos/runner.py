@@ -26,7 +26,9 @@ AUTHOR_ONLY_END = "<!-- AUTHOR_ONLY:END -->"
 def style_contract(agent_id: str, register: str | None) -> str:
     """عقد الأسلوب: عناصر البصمة **المعتمدة** لسجلّ المشروع من MEM-AUTHOR.
     لا يُحقن إلا للوكلاء الذين يملكون قراءة MEM-AUTHOR (Least Privilege)، ولا تدخل فيه المرشّحات."""
-    if not register or "MEM-AUTHOR" not in R.agents()[agent_id]["memory"]["read"]:
+    from .genres import VOICE_REGISTERS
+    # بصمة المؤلف لمقال الرأي والسرد وحدهما (قرار المؤلف 2026-10-08)؛ البحث والفكر يحكمهما الانضباط الأكاديمي
+    if register not in VOICE_REGISTERS or "MEM-AUTHOR" not in R.agents()[agent_id]["memory"]["read"]:
         return ""
     from . import knowledge
     try:

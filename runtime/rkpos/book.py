@@ -151,6 +151,18 @@ def approve_outline(pid: str, actor: str) -> dict:
     return ob
 
 
+def polish(pid: str, engine: str, only_flagged: bool = True, progress=None) -> list[str]:
+    """ضبط آلي للوحدات (أكاديمي للبحث والفكر، وصوت المؤلف للرأي والسرد) يُعتمد نسخة عمل للوكيل لا للمؤلف."""
+    rep = voice_report(pid)
+    ids = [r["id"] for r in rep["units"] if r["words"] and r["status"] != "APPROVED" and (r["flag"] or not only_flagged)]
+    for i, uid in enumerate(ids):
+        if progress:
+            progress(i, len(ids), uid)
+        r = align_voice(pid, uid, engine)
+        record_unit(pid, uid, r["text"], source="aligned")
+    return ids
+
+
 def approve_trivial_outline(pid: str) -> dict:
     """مخطط الوحدة الواحدة (عمود الرأي): لا قرار فيه يملكه المؤلف، فيُثبَّت آلياً (L1) ويُسجَّل."""
     ob = load(pid)
@@ -276,10 +288,12 @@ def extract(text: str) -> tuple[str, str]:
 
 
 # ------------------------------------------------------------------ التشغيل
-def _check_sequence(ob: dict, idx: int) -> None:
+def _check_sequence(ob: dict, idx: int, relax: bool = False) -> None:
     if not ob["outline_approved"]:
         raise PermissionError("المخطط لم يُعتمد بعد (L4)")
     seq = GN.levels()["levels"][ob["level"]]["sequence"]
+    if relax and seq == "strict":      # الوضع المباشر: الترتيب للاتساق، دون انتظار اعتماد كل وحدة
+        seq = "drafted"
     if idx == 0 or seq == "free":
         return
     prev = ob["units"][idx - 1]
@@ -290,10 +304,15 @@ def _check_sequence(ob: dict, idx: int) -> None:
 
 
 def _measure(pid: str, ob: dict, text: str) -> dict:
+    """جنس بصمة (رأي/سرد): القرب من صوت المؤلف. جنس علمي/فكري: مؤشرات الانضباط الأكاديمي."""
     from . import stylometry as S
+    if words(text) < 60:
+        return {}
     reg = GN.genres()[ob["genre"]]["register"]
+    if not GN.author_voice(ob["genre"]):
+        return {"register": reg, "discipline": GN.discipline_report(text)}
     ref, assisted = S.load_reference(reg), S.load_assisted_pole()
-    if not ref or words(text) < 60:
+    if not ref:
         return {}
     prof = S.profile(text)
     out = {"register": reg}
@@ -305,10 +324,10 @@ def _measure(pid: str, ob: dict, text: str) -> dict:
     return out
 
 
-def draft_unit(pid: str, uid: str, engine: str | None = "manual", guidance: str = "") -> dict:
+def draft_unit(pid: str, uid: str, engine: str | None = "manual", guidance: str = "", relax: bool = False) -> dict:
     ob = load(pid)
     idx, u = _unit(ob, uid)
-    _check_sequence(ob, idx)
+    _check_sequence(ob, idx, relax)
     if u["status"] == "APPROVED":
         raise ValueError(f"{uid} معتمدة؛ لا تُعاد كتابتها")
     from .adapters import router
@@ -351,7 +370,7 @@ def record_unit(pid: str, uid: str, text: str, source: str = "ai", notes: str = 
         (d / f"{uid}.md").write_text(text, encoding="utf-8")
         if source == "ai":
             (d / f"{uid}.ai.md").write_text(text, encoding="utf-8")
-        u["status"] = "DRAFTED" if source == "ai" else "REVISED"
+        u["status"] = "REVISED" if source == "author" else "DRAFTED"   # aligned: ضبط آلي يبقى مسودة وكيل
         u["words"] = words(text)
         u["voice"] = _measure(pid, ob, text)
         u["author_change"] = change_ratio(pid, uid)
@@ -359,7 +378,7 @@ def record_unit(pid: str, uid: str, text: str, source: str = "ai", notes: str = 
         (d / f"{uid}.notes.md").write_text(notes, encoding="utf-8")
     u["source"] = source
     save(pid, ob)
-    audit.log(_agent(ob, "lead_agent") if source == "ai" else "HUMAN-AUTHOR", f"book_{'card' if card else 'draft'}:{uid}",
+    audit.log(_agent(ob, "lead_agent") if source != "author" else "HUMAN-AUTHOR", f"book_{'card' if card else 'draft'}:{uid}",
               project=pid, files_changed=[f"projects/{pid}/manuscript/drafts/{uid}{'.card' if card else ''}.md"],
               model=", ".join(models or []) or None, cost_usd=round(usd, 6) if usd else None)
     return {"unit": uid, "status": u["status"], "words": u.get("words", words(text)), "voice": u.get("voice"),
@@ -393,8 +412,14 @@ def _hints(voice: dict) -> str:
     return "، ".join(h)
 
 
+DISCIPLINE_TASK = ("أعد ضبط النص التالي ضبطاً أكاديمياً: احذف الإنشاء والحكايات والذكريات والأمثلة غير اللازمة "
+                   "والأسئلة البلاغية والتعجب وعبارات القطع، واجعل الجمل خبرية دقيقة والمصطلحات ثابتة، مع الحفاظ التام "
+                   "على المضمون والحجج والوسوم والإحالات؛ لا تضف معلومة. "
+                   f"اكتب النص المضبوط وحده بين {BEGIN} و{END}، ثم اذكر بعد {END} أهم ما حذفته أو عدّلته.")
+
+
 def align_voice(pid: str, uid: str, engine: str | None = None) -> dict:
-    """مواءمة الصوت: اقتراح لا يحلّ محل النص؛ يقيس قبل وبعد، والمؤلف يختار."""
+    """مواءمة الصوت (الرأي والسرد) أو الضبط الأكاديمي (البحث والفكر): اقتراح يُقاس قبله وبعده، والمؤلف يختار."""
     from .adapters import router
     from .runner import compose_system_prompt
     ob = load(pid)
@@ -405,7 +430,8 @@ def align_voice(pid: str, uid: str, engine: str | None = None) -> dict:
     agent = _agent(ob, "voice_agent")
     reg = GN.genres()[ob["genre"]]["register"]
     system = compose_system_prompt(agent, reg, ob["genre"])
-    user = VOICE_TASK.format(hints=_hints(u.get("voice") or {})) + f"\n\nالنص:\n{text}"
+    task = VOICE_TASK.format(hints=_hints(u.get("voice") or {})) if GN.author_voice(ob["genre"]) else DISCIPLINE_TASK
+    user = task + f"\n\nالنص:\n{text}"
     if engine == "manual":
         return {"unit": uid, "manual": True, "text": f"# SYSTEM\n\n{system}\n\n# USER\n\n{user}"}
     comp, warnings = router.run(agent, system, user, pid, stage=f"VOICE-{uid}", engine=engine)
@@ -462,18 +488,19 @@ def estimate(pid: str) -> dict:
                            "في Claude Code باشتراك تُخصم من حصة الاشتراك لا من رصيد مباشر"}
 
 
-def draft_all(pid: str, engine: str, progress=None, guidance: str = "") -> dict:
+def draft_all(pid: str, engine: str, progress=None, guidance: str = "", direct: bool = False, redo: bool = False) -> dict:
+    """direct: الوضع المباشر يكتب الوحدات كلها تباعاً في المستويين التدرّجي والكامل؛ redo: يعيد كتابة غير المعتمد."""
     ob = load(pid)
-    if ob["level"] != "full":
+    if ob["level"] != "full" and not (direct and ob["level"] == "staged"):
         raise PermissionError("الكتابة الكاملة دفعة واحدة لمستوى «الكامل» وحده")
     if engine == "manual":
         raise ValueError("الكتابة الكاملة تحتاج محرّكاً آلياً (Claude Code أو API)")
     done = []
-    todo = [u["id"] for u in ob["units"] if u["status"] in ("PLANNED", "CARDED")]
+    todo = [u["id"] for u in ob["units"] if u["status"] in (("PLANNED", "CARDED", "DRAFTED", "REVISED") if redo else ("PLANNED", "CARDED"))]
     for i, uid in enumerate(todo):
         if progress:
             progress(i, len(todo), uid)
-        done.append(draft_unit(pid, uid, engine, guidance=guidance))
+        done.append(draft_unit(pid, uid, engine, guidance=guidance, relax=direct))
     if progress:
         progress(len(todo), len(todo), None)
     return {"drafted": done, "assembled": assemble(pid)}
@@ -512,13 +539,16 @@ def voice_report(pid: str) -> dict:
     for u in ob["units"]:
         v = u.get("voice") or {}
         share = (v.get("pole") or {}).get("assisted_share")
+        disc = v.get("discipline") or {}
         rows.append({"id": u["id"], "title": u["title"], "status": u["status"], "words": u.get("words", 0),
                      "target_words": u["target_words"], "assisted_share": share, "deviation_mean": v.get("deviation_mean"),
-                     "author_change": change_ratio(pid, u["id"]),
-                     "flag": bool(share is not None and share > 0.5)})
+                     "discipline_flags": disc.get("flags", []), "author_change": change_ratio(pid, u["id"]),
+                     "flag": bool(share is not None and share > 0.5) or bool(disc.get("flags"))})
     written = [r for r in rows if r["words"]]
     ch = [r["author_change"] for r in written if r["author_change"] is not None]
     return {"units": rows, "total_words": sum(r["words"] for r in rows), "target_words": ob.get("target_words"),
             "author_change_mean": round(sum(ch) / len(ch), 3) if ch else None,
             "flagged": [r["id"] for r in rows if r["flag"]],
-            "note": "assisted_share: 0 = صوت المؤلف، 1 = الصياغة المُعانة؛ author_change: نصيب تعديل المؤلف من مسودة الوكيل"}
+            "note": ("assisted_share: 0 = صوت المؤلف، 1 = الصياغة المُعانة" if GN.author_voice(ob["genre"]) else
+                     "discipline_flags: ما تجاوز حدّ الانضباط الأكاديمي (سرد، أمثلة، ضمير المتكلم، توكيد، تعجب، أسئلة بلاغية)")
+                    + "؛ author_change: نصيب تعديل المؤلف من مسودة الوكيل"}

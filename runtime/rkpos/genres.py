@@ -7,6 +7,9 @@ from . import registry as R
 from .paths import CONFIG, PROJECTS
 
 
+VOICE_REGISTERS = {"essay", "narrative"}   # سجلّات تُطبَّق فيها بصمة المؤلف (مقال الرأي والسرد)
+
+
 def genres() -> dict:
     return R.load_yaml(CONFIG / "genres.yaml")["genres"]
 
@@ -57,4 +60,29 @@ def profile_block(genre: str | None) -> str:
              "محظورات الجنس:", *[f"- {x}" for x in g["prohibited"]]]
     if g.get("max_words"):
         lines.append(f"سقف الطول: {g['max_words']} كلمة.")
+    if not g.get("author_voice", True):
+        lines += ["ACADEMIC DISCIPLINE — لا تُطبَّق هنا البصمة الشخصية للمؤلف؛ الحاكم هو الانضباط العلمي:",
+                  *[f"- {x}" for x in discipline()["rules"]]]
     return "\n".join(lines) + "\n"
+
+
+def discipline() -> dict:
+    return R.load_yaml(CONFIG / "genres.yaml")["discipline"]
+
+
+def author_voice(genre: str | None) -> bool:
+    return bool(genre) and bool(genres()[genre].get("author_voice", True))
+
+
+def discipline_report(text: str) -> dict:
+    """قياس الانضباط الأكاديمي: مؤشرات الإنشاء والسرد والأمثلة والتوكيد لكل ألف كلمة، مع ما تجاوز حدّه."""
+    import re
+    words = max(len(re.findall(r"[\u0621-\u064A]+", text)), 1)
+    out, flags = {}, []
+    for name, c in discipline()["checks"].items():
+        n = sum(text.count(p) for p in c.get("patterns", [])) + sum(text.count(ch) for ch in c.get("chars", []))
+        per_k = round(1000 * n / words, 2)
+        out[name] = per_k
+        if per_k > c["max"]:
+            flags.append(name)
+    return {"per_1k": out, "flags": flags, "ok": not flags}
