@@ -102,4 +102,5 @@ rkpos eval AG-WRT --live                      # يتبع RKPOS_ENGINE
 | «Claude Code: غير مثبت» مع أنه مثبت | أعيدوا `rkpos install-icon` بعد تثبيته، أو ضعوا مساره في `RKPOS_CLAUDE_BIN` داخل `.env` |
 | «انتهت صلاحية الجلسة» | أُعيد تشغيل الخادم؛ افتحوا اللوحة من الأيقونة من جديد |
 | «الذاكرة الخاصة: غير موجودة» | فكّوا `midad-private-backup.tar.gz` في جذر المستودع |
+| «Claude Code غير مسجّل الدخول» (Not logged in) | الإعدادات ← «تسجيل الدخول إلى Claude» ← سجّلوا الدخول في المتصفح ← «تحقق من الحالة»؛ أو في PowerShell: `claude auth login` |
 | خطأ `claude exited …` | افتحوا الطرفية واكتبوا `claude` لتسجيل الدخول، ثم أعيدوا المحاولة |

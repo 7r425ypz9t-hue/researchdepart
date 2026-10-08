@@ -68,10 +68,26 @@ def _proj(pid: str) -> Path:
 
 
 # ------------------------------------------------------------------ قراءة
-def engines() -> dict:
+_AUTH_CACHE: dict = {}
+
+
+def claude_logged_in(fresh: bool = False) -> bool | None:
+    """هل Claude Code مسجّل الدخول؟ (تُخزَّن الإجابة 60 ثانية؛ None = تعذّر السؤال)."""
+    import time
+    from ..adapters.claude_code_adapter import auth_status
+    if not fresh and _AUTH_CACHE and time.time() - _AUTH_CACHE["t"] < 60:
+        return _AUTH_CACHE["v"]
+    st = auth_status()
+    v = None if st is None else bool(st.get("loggedIn"))
+    _AUTH_CACHE.update(t=time.time(), v=v)
+    return v
+
+
+def engines(fresh: bool = False) -> dict:
     from ..adapters.claude_code_adapter import executable
     keys = {k: bool(os.environ.get(k)) for k in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GOOGLE_API_KEY", "LOCAL_LLM_BASE_URL")}
     return {"claude_code": executable() is not None, "claude_code_path": executable(), "api_keys": keys,
+            "claude_logged_in": claude_logged_in(fresh) if executable() else None,
             "default": os.environ.get("RKPOS_ENGINE", "auto"),
             "private_memory": (ROOT / "memory/author/private/items.jsonl").exists()}
 
@@ -233,7 +249,7 @@ def job_view(q) -> dict:
 
 GET = {"genres": genres_view, "book": book_view, "book_unit": book_unit, "job": job_view, "overview": overview, "agents": agents, "agent": agent, "workflows": workflows, "project": project,
        "file": read_file, "candidates": candidates, "memory": memory, "audit": audit_log, "cost": cost_report,
-       "governance": governance, "engines": lambda q: engines(), "ping": lambda q: {"ok": True, "root": str(ROOT)}}
+       "governance": governance, "engines": lambda q: engines(bool(q.get("fresh"))), "ping": lambda q: {"ok": True, "root": str(ROOT)}}
 
 
 # ------------------------------------------------------------------ أفعال
@@ -543,7 +559,17 @@ def b_draft_all(d):
     return job
 
 
-POST = {"book_skeleton": b_skeleton, "book_set_units": b_set_units, "book_propose": b_propose,
+def a_claude_login(_d):
+    from ..adapters.claude_code_adapter import open_login_window, AdapterUnavailable
+    try:
+        open_login_window()
+    except AdapterUnavailable as e:
+        raise ApiError(str(e)) from e
+    _AUTH_CACHE.clear()
+    return {"opened": True}
+
+
+POST = {"claude_login": a_claude_login, "book_skeleton": b_skeleton, "book_set_units": b_set_units, "book_propose": b_propose,
         "book_import_outline": b_import_outline, "book_approve_outline": b_approve_outline, "book_draft": b_draft,
         "book_record": b_record, "book_revise": b_revise, "book_align": b_align, "book_adopt_aligned": b_adopt_aligned,
         "book_approve_unit": b_approve_unit, "book_assemble": b_assemble, "book_draft_all": b_draft_all,

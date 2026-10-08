@@ -187,3 +187,23 @@ def test_panel_book_production(panel):
     assert panel("book_approve_unit", {"project": pid, "unit": "U01", "text": "نص المؤلف"})[0] == 400
     code, r = panel("book_approve_unit", {"project": pid, "unit": "U01", "text": "نص المؤلف", "confirm_author": True})
     assert code == 200 and r["data"]["author_change"] > 0.5
+
+
+def test_claude_code_not_logged_in_is_explained(tmp_path, monkeypatch):
+    sys.path.insert(0, str(REPO / "runtime"))
+    from rkpos.adapters import claude_code_adapter as CC
+    fake = tmp_path / "claude_logged_out"
+    fake.write_text(f"""#!{sys.executable}
+import json, sys
+if sys.argv[1:3] == ["auth", "status"]:
+    print(json.dumps({{"loggedIn": False}})); sys.exit(1)
+sys.stdin.read()
+print(json.dumps({{"type": "result", "is_error": True, "result": "Not logged in · Please run /login"}}))
+sys.exit(1)
+""", encoding="utf-8")
+    fake.chmod(0o755)
+    monkeypatch.setenv("RKPOS_CLAUDE_BIN", str(fake))
+    assert CC.auth_status() == {"loggedIn": False}
+    with pytest.raises(CC.AdapterUnavailable) as e:
+        CC.ClaudeCodeAdapter("claude-sonnet-5-5").complete("s", "u")
+    assert "claude auth login" in str(e.value) and "الإعدادات" in str(e.value)

@@ -23,6 +23,42 @@ def executable() -> str | None:
     return os.environ.get("RKPOS_CLAUDE_BIN") or shutil.which("claude")
 
 
+NOT_LOGGED_IN = ("Claude Code غير مسجّل الدخول بحسابكم. من اللوحة: الإعدادات ← «تسجيل الدخول إلى Claude»؛ "
+                 "أو في PowerShell: claude auth login — ثم أعيدوا المحاولة.")
+
+
+def auth_status() -> dict | None:
+    """حالة تسجيل الدخول كما تبلغ بها الأداة (`claude auth status --json`)؛ None إن تعذّر السؤال."""
+    exe = executable()
+    if not exe:
+        return None
+    try:
+        r = subprocess.run([exe, "auth", "status", "--json"], capture_output=True, timeout=20)
+        return json.loads(r.stdout.decode("utf-8", errors="replace") or "{}")
+    except (OSError, subprocess.SubprocessError, json.JSONDecodeError):
+        return None
+
+
+def open_login_window() -> str:
+    """يفتح نافذة طرفية مرئية تشغّل `claude auth login` (يفتح المتصفح لتسجيل الدخول بالاشتراك)."""
+    import sys
+    exe = executable()
+    if not exe:
+        raise AdapterUnavailable("Claude Code غير مثبت")
+    if sys.platform.startswith("win"):
+        subprocess.Popen([exe, "auth", "login"], creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0x10))
+    elif sys.platform == "darwin":
+        q = exe.replace("\\", "\\\\").replace('"', '\\"')
+        subprocess.Popen(["osascript", "-e", f'tell application "Terminal" to do script "\\"{q}\\" auth login"',
+                          "-e", 'tell application "Terminal" to activate'])
+    else:
+        term = shutil.which("x-terminal-emulator") or shutil.which("gnome-terminal") or shutil.which("xterm")
+        if not term:
+            raise AdapterUnavailable("لا طرفية رسومية؛ نفّذوا: claude auth login")
+        subprocess.Popen([term, "-e", exe, "auth", "login"])
+    return exe
+
+
 class ClaudeCodeAdapter(ModelAdapter):
     provider = "claude_code"
 
@@ -48,9 +84,14 @@ class ClaudeCodeAdapter(ModelAdapter):
             d = {}
         if r.returncode != 0 and not d:
             err = r.stderr.decode("utf-8", errors="replace").strip()[-500:]
+            if "not logged in" in (err + out).lower() or "/login" in (err + out):
+                raise AdapterUnavailable(NOT_LOGGED_IN)
             raise AdapterUnavailable(f"claude exited {r.returncode}: {err or out[-500:]}")
         if d.get("is_error"):
-            raise AdapterUnavailable(f"claude error: {str(d.get('result'))[:500]}")
+            msg = str(d.get("result"))
+            if "not logged in" in msg.lower() or "/login" in msg:
+                raise AdapterUnavailable(NOT_LOGGED_IN)
+            raise AdapterUnavailable(f"claude error: {msg[:500]}")
         u = d.get("usage") or {}
         tin = sum(int(u.get(k) or 0) for k in ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens"))
         served = next(iter(d.get("modelUsage") or {}), self.model)

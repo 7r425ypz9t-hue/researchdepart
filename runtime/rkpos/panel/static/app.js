@@ -100,8 +100,8 @@ function download(name, text) {
 
 // ---------- المحرّك ----------
 let ENG = null;
-async function refreshEngines() {
-  ENG = await G("engines");
+async function refreshEngines(fresh) {
+  ENG = await G("engines", fresh ? { fresh: 1 } : {});
   const e = $("#engine");
   e.value = store.get("rkpos-engine", ENG.claude_code ? "claude_code" : "manual");
   paintEngine();
@@ -110,8 +110,15 @@ function paintEngine() {
   const e = engine(), p = $("#engine-state");
   const keys = ENG ? Object.values(ENG.api_keys).some(Boolean) : false;
   const ready = e === "manual" || (e === "claude_code" && ENG.claude_code) || (e === "api" && keys) || e === "auto";
-  p.textContent = ready ? "جاهز" : "غير مهيأ — سيُستعمل اليدوي";
-  p.className = "pill " + (ready ? "ok" : "warn");
+  const needLogin = (e === "claude_code" || e === "auto") && ENG && ENG.claude_code && ENG.claude_logged_in === false && !keys;
+  p.textContent = needLogin ? "سجّلوا الدخول إلى Claude ←" : ready ? "جاهز" : "غير مهيأ — سيُستعمل اليدوي";
+  p.className = "pill " + (needLogin ? "bad" : ready ? "ok" : "warn");
+  p.style.cursor = needLogin ? "pointer" : "";
+  p.onclick = needLogin ? () => go("settings") : null;
+}
+async function claudeLogin() {
+  await api("claude_login", {});
+  toast("فُتحت نافذة تسجيل الدخول: اتبعوا ما فيها في المتصفح، ثم اضغطوا «تحقق من الحالة»");
 }
 $("#engine").addEventListener("change", () => { store.set("rkpos-engine", engine()); paintEngine(); });
 
@@ -161,7 +168,9 @@ async function home() {
       h("div", { class: "card" }, h("div", { class: "kpi" }, o.projects.length), "مشروعاً"),
       h("div", { class: "card click", onclick: () => go("governance") }, h("div", { class: "kpi" }, o.candidates), "مرشّحاً للذاكرة بانتظار الاعتماد"),
       h("div", { class: "card" }, h("h4", {}, "المحرّكات"),
-        h("div", {}, pill("Claude Code: " + (e.claude_code ? "مثبت" : "غير مثبت"), e.claude_code ? "ok" : "warn")),
+        h("div", {}, pill("Claude Code: " + (!e.claude_code ? "غير مثبت" : e.claude_logged_in === false ? "غير مسجّل الدخول" : "جاهز"),
+          e.claude_code && e.claude_logged_in !== false ? "ok" : "warn"),
+          e.claude_code && e.claude_logged_in === false ? btn("سجّلوا الدخول", claudeLogin, "sm gold") : null),
         h("div", {}, pill("مفتاح Anthropic: " + (e.api_keys.ANTHROPIC_API_KEY ? "موجود" : "غير موجود"), e.api_keys.ANTHROPIC_API_KEY ? "ok" : "")),
         h("div", {}, pill("الذاكرة الخاصة: " + (e.private_memory ? "مستعادة" : "غير موجودة"), e.private_memory ? "ok" : "bad")))),
     h("h2", {}, "إجراءات سريعة"),
@@ -543,14 +552,20 @@ async function logView(pid) {
 
 // ---------- الإعدادات ----------
 async function settingsView() {
-  await refreshEngines();
+  await refreshEngines(true);
   const e = ENG, o = await G("ping");
   set(h("h2", {}, "المحرّكات والاتصال بـ Claude"),
     h("table", {},
       h("tr", {}, h("th", {}, "يدوي"), h("td", {}, pill("متاح دائماً", "ok")), h("td", {}, "تُعدّ اللوحة حزمة البرومبت كاملة؛ زر «انسخ وافتح Claude» ينسخها ويفتح claude.ai، ثم تلصقون الرد في اللوحة.")),
-      h("tr", {}, h("th", {}, "Claude Code"), h("td", {}, pill(e.claude_code ? "مثبت" : "غير مثبت", e.claude_code ? "ok" : "warn")),
-        h("td", {}, e.claude_code ? "المسار: " + e.claude_code_path + " — يعمل بحسابكم المسجّل في الأداة، بلا مفتاح في المستودع، ودون أدوات ملفات أو أوامر."
-          : "ثبّتوه بـ npm install -g @anthropic-ai/claude-code ثم سجّلوا الدخول بالأمر claude مرة واحدة.")),
+      h("tr", {}, h("th", {}, "Claude Code"),
+        h("td", {}, pill(!e.claude_code ? "غير مثبت" : e.claude_logged_in === true ? "مسجّل الدخول" : e.claude_logged_in === false ? "غير مسجّل الدخول" : "مثبت",
+          e.claude_code && e.claude_logged_in !== false ? "ok" : "warn")),
+        h("td", {}, e.claude_code ? h("div", {}, "المسار: " + e.claude_code_path + " — يعمل بحسابكم في Claude، بلا مفتاح في المستودع، ودون أدوات ملفات أو أوامر.",
+          h("div", { class: "row" },
+            e.claude_logged_in !== true ? btn("تسجيل الدخول إلى Claude", claudeLogin, "gold") : null,
+            btn("تحقق من الحالة", async () => { await refreshEngines(true); settingsView(); }, "ghost")),
+          e.claude_logged_in !== true ? h("p", { class: "small muted" }, "تنفتح نافذة سوداء ثم المتصفح: سجّلوا الدخول بحسابكم في claude.ai ووافقوا. إن طُلب رمز فانسخوه من المتصفح إلى النافذة. ثم أغلقوها واضغطوا «تحقق من الحالة».") : null)
+          : "ثبّتوه من PowerShell بالأمر: irm https://claude.ai/install.ps1 | iex ثم أعيدوا تشغيل اللوحة.")),
       h("tr", {}, h("th", {}, "API"), h("td", {}, Object.entries(e.api_keys).map(([k, v]) => h("div", {}, pill(k + ": " + (v ? "موجود" : "—"), v ? "ok" : "")))),
         h("td", {}, "تُضبط المفاتيح في ملف ‎.env‎ أو متغيرات البيئة؛ لا تعرضها اللوحة ولا تخزنها."))),
     h("h2", {}, "الحالة"),
