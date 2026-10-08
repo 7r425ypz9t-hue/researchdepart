@@ -14,7 +14,8 @@ from docx.shared import Pt, RGBColor
 
 BLUE, GOLD = RGBColor(0x1F, 0x4E, 0x79), RGBColor(0xB8, 0x86, 0x0B)
 FONT = "Noto Naskh Arabic"
-TAGS = re.compile(r"\[(?:FACT|EBI|INTERP|HYP|AUTHOR|NEEDS-EVIDENCE)\]\s?")
+TAGS = re.compile(r"\[(?:FACT|EBI|INTERP|HYP|AUTHOR)\]\s?")
+NEEDS = re.compile(r"\[NEEDS-EVIDENCE(?::[^\]]*)?\]")   # يبقى ظاهراً للمؤلف بعلامة عربية: موضع يحتاج توثيقاً
 
 
 def _rtl(par, align="both"):
@@ -58,6 +59,8 @@ def _inline(par, text, size):
 def to_docx(markdown: str, title: str | None = None, clean: bool = True) -> bytes:
     if clean:
         markdown = TAGS.sub("", markdown)
+        markdown = NEEDS.sub(" ⟨يحتاج توثيقاً⟩", markdown)
+        markdown = re.sub(r"(?: ⟨يحتاج توثيقاً⟩)+", " ⟨يحتاج توثيقاً⟩", markdown)
         markdown = re.sub(r"\A---\n.*?\n---\n", "", markdown, flags=re.S)
         markdown = re.sub(r"\[@SRC-\d+[^\]]*\]", "", markdown)
     doc = Document()
