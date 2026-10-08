@@ -206,4 +206,17 @@ sys.exit(1)
     assert CC.auth_status() == {"loggedIn": False}
     with pytest.raises(CC.AdapterUnavailable) as e:
         CC.ClaudeCodeAdapter("claude-sonnet-5-5").complete("s", "u")
-    assert "claude auth login" in str(e.value) and "الإعدادات" in str(e.value)
+    assert "أمر الدخول" in str(e.value) and "الإعدادات" in str(e.value)
+    assert CC.login_command().endswith("auth login") and str(fake) in CC.login_command()
+
+
+def test_claude_code_found_outside_path(tmp_path, monkeypatch):
+    sys.path.insert(0, str(REPO / "runtime"))
+    from rkpos.adapters import claude_code_adapter as CC
+    exe = tmp_path / ".local/bin/claude"
+    exe.parent.mkdir(parents=True)
+    exe.write_text("#!/bin/sh\n", encoding="utf-8")
+    monkeypatch.delenv("RKPOS_CLAUDE_BIN", raising=False)
+    monkeypatch.setenv("PATH", str(tmp_path / "empty"))
+    monkeypatch.setattr(CC.Path, "home", classmethod(lambda cls: tmp_path))
+    assert CC.executable() == str(exe)

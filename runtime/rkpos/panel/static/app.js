@@ -564,7 +564,15 @@ async function settingsView() {
           h("div", { class: "row" },
             e.claude_logged_in !== true ? btn("تسجيل الدخول إلى Claude", claudeLogin, "gold") : null,
             btn("تحقق من الحالة", async () => { await refreshEngines(true); settingsView(); }, "ghost")),
-          e.claude_logged_in !== true ? h("p", { class: "small muted" }, "تنفتح نافذة سوداء ثم المتصفح: سجّلوا الدخول بحسابكم في claude.ai ووافقوا. إن طُلب رمز فانسخوه من المتصفح إلى النافذة. ثم أغلقوها واضغطوا «تحقق من الحالة».") : null)
+          e.claude_logged_in !== true ? h("p", { class: "small muted" }, "تنفتح نافذة سوداء ثم المتصفح: سجّلوا الدخول بحسابكم في claude.ai ووافقوا. إن طُلب رمز فانسخوه من المتصفح إلى النافذة. ثم أغلقوها واضغطوا «تحقق من الحالة».") : null,
+          e.claude_login_command ? h("div", {}, h("span", { class: "small muted" }, "أو الصقوا هذا الأمر في PowerShell:"),
+            h("pre", { class: "out code" }, e.claude_login_command),
+            btn("نسخ الأمر", () => navigator.clipboard.writeText(e.claude_login_command).then(() => toast("نُسخ")), "sm ghost")) : null,
+          !e.claude_in_path && e.platform.startsWith("win") ? h("div", { class: "note" },
+            "الأمر claude لا يعمل في PowerShell لأن مجلده ليس في مسار النظام. ",
+            btn("أضف Claude Code إلى مسار النظام", async () => {
+              const r = await api("claude_add_path", {}); toast("أُضيف " + r.added + " — افتحوا نافذة PowerShell جديدة");
+            }, "sm gold")) : null)
           : "ثبّتوه من PowerShell بالأمر: irm https://claude.ai/install.ps1 | iex ثم أعيدوا تشغيل اللوحة.")),
       h("tr", {}, h("th", {}, "API"), h("td", {}, Object.entries(e.api_keys).map(([k, v]) => h("div", {}, pill(k + ": " + (v ? "موجود" : "—"), v ? "ok" : "")))),
         h("td", {}, "تُضبط المفاتيح في ملف ‎.env‎ أو متغيرات البيئة؛ لا تعرضها اللوحة ولا تخزنها."))),

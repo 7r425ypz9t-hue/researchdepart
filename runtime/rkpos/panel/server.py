@@ -84,10 +84,12 @@ def claude_logged_in(fresh: bool = False) -> bool | None:
 
 
 def engines(fresh: bool = False) -> dict:
-    from ..adapters.claude_code_adapter import executable
+    from ..adapters.claude_code_adapter import executable, login_command
     keys = {k: bool(os.environ.get(k)) for k in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GOOGLE_API_KEY", "LOCAL_LLM_BASE_URL")}
     return {"claude_code": executable() is not None, "claude_code_path": executable(), "api_keys": keys,
             "claude_logged_in": claude_logged_in(fresh) if executable() else None,
+            "claude_login_command": login_command(), "claude_in_path": bool(shutil.which("claude")),
+            "platform": sys.platform,
             "default": os.environ.get("RKPOS_ENGINE", "auto"),
             "private_memory": (ROOT / "memory/author/private/items.jsonl").exists()}
 
@@ -569,7 +571,15 @@ def a_claude_login(_d):
     return {"opened": True}
 
 
-POST = {"claude_login": a_claude_login, "book_skeleton": b_skeleton, "book_set_units": b_set_units, "book_propose": b_propose,
+def a_claude_add_path(_d):
+    from ..adapters.claude_code_adapter import add_to_user_path, AdapterUnavailable
+    try:
+        return {"added": add_to_user_path()}
+    except AdapterUnavailable as e:
+        raise ApiError(str(e)) from e
+
+
+POST = {"claude_add_path": a_claude_add_path, "claude_login": a_claude_login, "book_skeleton": b_skeleton, "book_set_units": b_set_units, "book_propose": b_propose,
         "book_import_outline": b_import_outline, "book_approve_outline": b_approve_outline, "book_draft": b_draft,
         "book_record": b_record, "book_revise": b_revise, "book_align": b_align, "book_adopt_aligned": b_adopt_aligned,
         "book_approve_unit": b_approve_unit, "book_assemble": b_assemble, "book_draft_all": b_draft_all,

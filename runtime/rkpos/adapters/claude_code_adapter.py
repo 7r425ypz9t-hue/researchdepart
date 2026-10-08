@@ -19,12 +19,57 @@ from .base import AdapterUnavailable, Completion, ModelAdapter
 TIMEOUT_S = int(os.environ.get("RKPOS_CLAUDE_TIMEOUT", "1800"))
 
 
+def _known_locations() -> list[Path]:
+    """مواضع التثبيت المعروفة حين لا تكون الأداة في PATH (يضعها المثبّت الرسمي ولا يضيفها أحياناً)."""
+    home = Path.home()
+    appdata = Path(os.environ.get("APPDATA", home / "AppData/Roaming"))
+    return [home / ".local/bin/claude.exe", home / ".local/bin/claude", appdata / "npm/claude.cmd",
+            home / ".claude/local/claude", home / ".claude/local/claude.exe", Path("/opt/homebrew/bin/claude"),
+            Path("/usr/local/bin/claude")]
+
+
 def executable() -> str | None:
-    return os.environ.get("RKPOS_CLAUDE_BIN") or shutil.which("claude")
+    found = os.environ.get("RKPOS_CLAUDE_BIN") or shutil.which("claude")
+    if found:
+        return found
+    return next((str(p) for p in _known_locations() if p.is_file()), None)
+
+
+def login_command() -> str | None:
+    """أمر تسجيل الدخول بالمسار الكامل، صالح للصق في PowerShell أو الطرفية."""
+    exe = executable()
+    if not exe:
+        return None
+    import sys
+    return f'& "{exe}" auth login' if sys.platform.startswith("win") else f'"{exe}" auth login'
 
 
 NOT_LOGGED_IN = ("Claude Code غير مسجّل الدخول بحسابكم. من اللوحة: الإعدادات ← «تسجيل الدخول إلى Claude»؛ "
-                 "أو في PowerShell: claude auth login — ثم أعيدوا المحاولة.")
+                 "أو انسخوا أمر الدخول بمساره الكامل من الإعدادات إلى PowerShell — ثم أعيدوا المحاولة.")
+
+
+def add_to_user_path() -> str:
+    """ويندوز: يضيف مجلد Claude Code إلى PATH الخاص بالمستخدم (لا يحتاج صلاحيات المسؤول)،
+    فيعمل الأمر claude في كل نافذة PowerShell جديدة."""
+    import sys
+    if not sys.platform.startswith("win"):
+        raise AdapterUnavailable("هذا الإجراء لويندوز وحده")
+    exe = executable()
+    if not exe:
+        raise AdapterUnavailable("Claude Code غير مثبت")
+    import ctypes
+    import winreg  # type: ignore[import-not-found]
+    folder = str(Path(exe).parent)
+    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment", 0, winreg.KEY_READ | winreg.KEY_WRITE) as k:
+        try:
+            cur, kind = winreg.QueryValueEx(k, "Path")
+        except FileNotFoundError:
+            cur, kind = "", winreg.REG_EXPAND_SZ
+        parts = [x for x in cur.split(";") if x]
+        if folder.lower() not in (x.lower().rstrip("\\") for x in parts):
+            winreg.SetValueEx(k, "Path", 0, kind, ";".join(parts + [folder]))
+    ctypes.windll.user32.SendMessageTimeoutW(0xFFFF, 0x1A, 0, "Environment", 0x2, 5000, None)  # WM_SETTINGCHANGE
+    return folder
 
 
 def auth_status() -> dict | None:
