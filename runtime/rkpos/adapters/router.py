@@ -74,12 +74,23 @@ def resolve(agent_id: str, author_model: str | None = None, manual_ok: bool = Tr
     raise AdapterUnavailable(f"no adapter available for {agent_id}")
 
 
+TEXT_ONLY = """EXECUTION MODE — TEXT ONLY (يعلو على أي وصف للأدوات أدناه)
+أنت تعمل الآن في وضع النص وحده: لا أدوات، ولا ملفات، ولا أوامر، ولا إنترنت. قائمة الأدوات في هذا البرومبت وصفٌ
+للمنظومة الكاملة لا لهذا التشغيل. كل ما تحتاجه من مواد مرفق في الرسالة. لا تكتب استدعاءات أدوات ولا أوامر
+ولا وسوم <invoke> أو <function_calls>، ولا تقل «سأقرأ الملف». اكتب المخرج النهائي المطلوب مباشرة وكاملاً بالعربية؛
+وما يحتاج أداة أو مصدراً غير مرفق تذكره في قسم الملاحظات أو تعلّمه [NEEDS-EVIDENCE].
+
+"""
+
+
 def run(agent_id: str, system: str, user: str, project: str | None, stage: str | None = None,
         author_model: str | None = None, engine: str | None = None, **kw) -> tuple[Completion, list[str]]:
     from .. import live
     ad, warnings = resolve(agent_id, author_model, engine=engine)
     if ad.provider != "manual":
         live.begin(project, stage or "", agent_id)
+    if ad.provider != "manual":
+        system = TEXT_ONLY + system
     try:
         comp = ad.complete(system, user, **kw)
     except BaseException:

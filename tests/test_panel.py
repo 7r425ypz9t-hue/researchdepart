@@ -313,3 +313,26 @@ def test_outdated_background_panel_is_replaced(sandbox, tmp_path):
         for p in (old, new):
             if p.poll() is None:
                 p.terminate()
+
+
+def test_fake_tool_calls_are_stopped(tmp_path, monkeypatch):
+    """وكيل يكتب استدعاءات أدوات وهمية في وضع النص يُوقف فوراً ولا يدور في حلقة."""
+    sys.path.insert(0, str(REPO / "runtime"))
+    from rkpos.adapters.claude_code_adapter import ClaudeCodeAdapter
+    from rkpos.adapters.base import AdapterUnavailable
+    from rkpos.adapters import router
+    fake = tmp_path / "claude_tools"
+    fake.write_text(f"""#!{sys.executable}
+import json, sys, time
+sys.stdin.read()
+for t in ["سأقرأ الملفات أولاً.", "<invo", 'ke name="Bash">', "ls"] * 500:
+    print(json.dumps({{"type": "stream_event", "event": {{"type": "content_block_delta", "delta": {{"type": "text_delta", "text": t}}}}}}), flush=True)
+    time.sleep(0.005)
+""", encoding="utf-8")
+    fake.chmod(0o755)
+    monkeypatch.setenv("RKPOS_CLAUDE_BIN", str(fake))
+    t0 = time.time()
+    with pytest.raises(AdapterUnavailable, match="أدوات غير متاحة"):
+        ClaudeCodeAdapter("m").complete("s", "u")
+    assert time.time() - t0 < 5
+    assert "TEXT ONLY" in router.TEXT_ONLY and "لا تكتب استدعاءات أدوات" in router.TEXT_ONLY

@@ -13,7 +13,9 @@ modes:
     # خطوات تُتخطى: بحث وتحقق يحتاجان أدوات غير متاحة للوكيل، ومراجعات تُنتج تقارير لا تدخل النص، وإجراءات الإغلاق
     skip_tasks: [discover_sources, discover_sources_incl_official_docs, horizon_scanning_sources, execute_registered_search,
                  verify_sources, verify_and_deduplicate, register_witnesses, re_verify_all_references_and_retractions,
-                 update_literature_since_publication, idea_assessment_council, challenge_arguments, challenge_recommendations,
+                 update_literature_since_publication, synthesize_literature, thematic_synthesis, evidence_synthesis,
+                 structured_literature_review, map_intellectual_traditions, what_changed_since_report,
+                 screen_title_abstract_dual, screen_full_text_and_extract, idea_assessment_council, challenge_arguments, challenge_recommendations,
                  challenge_scenarios_plausibility, whole_book_challenge, cross_chapter_consistency, blind_review,
                  external_human_peer_review, revise_per_reviews, revise_per_external_review, structural_edit,
                  language_and_terminology, language_and_voice_alignment, edit_and_language, editorial_readiness,

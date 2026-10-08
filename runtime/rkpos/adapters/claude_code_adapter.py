@@ -18,6 +18,7 @@ from pathlib import Path
 from .base import AdapterUnavailable, Completion, ModelAdapter
 
 TIMEOUT_S = int(os.environ.get("RKPOS_CLAUDE_TIMEOUT", "1800"))
+TOOL_MARK = '<invoke name="'      # علامة استدعاء أداة يكتبه النموذج نصاً حين يظن أن لديه أدوات
 
 
 def _known_locations() -> list[Path]:
@@ -128,7 +129,7 @@ class ClaudeCodeAdapter(ModelAdapter):
         t_err.start()
         timer = threading.Timer(TIMEOUT_S, proc.kill)
         timer.start()
-        result, lines = None, []
+        result, lines, streamed, hallucinated = None, [], [], [False]
         try:
             proc.stdin.write(user.encode("utf-8"))
             proc.stdin.close()
@@ -145,7 +146,13 @@ class ClaudeCodeAdapter(ModelAdapter):
                     ev = d.get("event") or {}
                     delta = ev.get("delta") or {}
                     if ev.get("type") == "content_block_delta" and delta.get("type") == "text_delta":
-                        live.append(delta.get("text", ""))
+                        t = delta.get("text", "")
+                        live.append(t)
+                        streamed.append(t)
+                        if TOOL_MARK in "".join(streamed[-60:]):   # يكتب استدعاء أداة وهمياً: أوقفه فوراً
+                            proc.kill()
+                            hallucinated[0] = True
+                            break
                 elif d.get("type") == "result" or "result" in d and "is_error" in d:
                     result = d
             proc.wait()
@@ -153,6 +160,8 @@ class ClaudeCodeAdapter(ModelAdapter):
             timer.cancel()
             killed = live.unregister()
         t_err.join(timeout=5)
+        if hallucinated[0]:
+            raise AdapterUnavailable("حاول الوكيل استدعاء أدوات غير متاحة في وضع النص؛ أُوقف وتُعاد المحاولة")
         if killed:
             raise live.Interrupted("أوقف المؤلف الكتابة")
         return proc.returncode, "\n".join(lines[-5:]), b"".join(err_buf).decode("utf-8", errors="replace"), result
