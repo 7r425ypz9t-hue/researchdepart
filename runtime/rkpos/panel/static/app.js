@@ -934,13 +934,21 @@ async function renderBook(pid) {
   if (!ob.units.length) return outlineStart(pid, ob, body);
   if (!ob.outline_approved) return outlineEditor(pid, ob, body);
   // جدول الوحدات
-  body.append(h("table", {}, h("tr", {}, ["الوحدة", "العنوان", "الموازنة", "المكتوب", "الحالة", "الصوت", "تعديل المؤلف", ""].map((x) => h("th", {}, x))),
-    ob.units.map((u) => h("tr", {}, h("td", {}, u.id), h("td", {}, u.title, u.brief ? h("div", { class: "small muted" }, u.brief) : null),
-      h("td", {}, u.target_words || "—"), h("td", {}, u.words || 0), h("td", {}, pill(UNIT_STATUS_AR[u.status] || u.status, UNIT_STATUS_CLS[u.status])),
-      h("td", {}, voicePill(u)), h("td", {}, u.author_change != null ? Math.round(u.author_change * 100) + "%" : "—"),
-      h("td", {}, h("div", { class: "row" },
-        u.status !== "APPROVED" ? btn(ob.level === "scaffold" && u.status === "PLANNED" ? "بطاقة" : (u.status === "PLANNED" ? "اكتب" : "أعد الكتابة"), () => draftUnit(pid, u.id), "sm") : null,
-        btn("افتح", () => unitEditor(pid, u.id), "sm ghost")))))));
+  // جدول الوحدات: العنوان عمود عريض، والطول شريط تقدّم واحد، والأعمدة القصيرة لا تنكسر
+  body.append(h("div", { class: "table-wrap" }, h("table", { class: "units" },
+    h("tr", {}, ["الوحدة", "المكتوب / الهدف", "الحالة والصوت", "تعديل المؤلف", "الإجراءات"].map((x, i) => h("th", { class: i ? "nw" : "" }, x))),
+    ob.units.map((u) => {
+      const pct = u.target_words ? Math.min(100, Math.round(100 * (u.words || 0) / u.target_words)) : 0;
+      return h("tr", {},
+        h("td", { class: "c-title" }, h("span", { class: "uid" }, u.id), h("b", {}, u.title), u.brief ? h("div", { class: "small muted" }, u.brief) : null),
+        h("td", { class: "nw c-len" }, h("div", { class: "small" }, (u.words || 0).toLocaleString("ar") + " / " + (u.target_words ? u.target_words.toLocaleString("ar") : "—")),
+          h("div", { class: "mini-meter" }, h("div", { style: "width:" + pct + "%" }))),
+        h("td", { class: "nw" }, h("div", { class: "stack" }, pill(UNIT_STATUS_AR[u.status] || u.status, UNIT_STATUS_CLS[u.status]), voicePill(u))),
+        h("td", { class: "nw" }, u.author_change != null ? Math.round(u.author_change * 100) + "%" : "—"),
+        h("td", { class: "nw" }, h("div", { class: "row acts" },
+          u.status !== "APPROVED" ? btn(ob.level === "scaffold" && u.status === "PLANNED" ? "بطاقة" : (u.status === "PLANNED" ? "اكتب" : "أعد الكتابة"), () => draftUnit(pid, u.id), "sm") : null,
+          btn("افتح", () => unitEditor(pid, u.id), "sm ghost"))));
+    }))));
   const actions = h("div", { class: "row" },
     btn("جمّع الكتاب", async () => {
       const r = await busy("يُجمَّع الكتاب…", () => api("book_assemble", { project: pid }));
@@ -997,19 +1005,19 @@ function outlineStart(pid, ob, body) {
 }
 function outlineEditor(pid, ob, body) {
   const rows = ob.units.map((u) => ({ ...u }));
-  const tbl = h("table");
-  const paint = () => tbl.replaceChildren(h("tr", {}, ["#", "العنوان", "الموجز", "الكلمات", ""].map((x) => h("th", {}, x))),
-    rows.map((u, i) => h("tr", {}, h("td", {}, i + 1),
-      h("td", {}, h("input", { value: u.title, oninput: (e) => (u.title = e.target.value) })),
-      h("td", {}, h("textarea", { style: "min-height:50px", oninput: (e) => (u.brief = e.target.value) }, u.brief || "")),
-      h("td", {}, h("input", { type: "number", value: u.target_words || "", style: "width:90px", oninput: (e) => (u.target_words = +e.target.value || null) })),
-      h("td", {}, h("div", { class: "row" },
+  const tbl = h("table", { class: "units outline" });
+  const paint = () => tbl.replaceChildren(h("tr", {}, ["#", "العنوان والموجز", "الكلمات", ""].map((x, i) => h("th", { class: i === 1 ? "" : "nw" }, x))),
+    ...rows.map((u, i) => h("tr", {}, h("td", { class: "nw" }, h("span", { class: "uid" }, i + 1)),
+      h("td", { class: "c-title" }, h("input", { value: u.title, style: "width:100%;font-weight:700", oninput: (e) => (u.title = e.target.value) }),
+        h("textarea", { style: "min-height:44px;width:100%;margin-top:4px", placeholder: "الموجز", oninput: (e) => (u.brief = e.target.value) }, u.brief || "")),
+      h("td", { class: "nw" }, h("input", { type: "number", value: u.target_words || "", placeholder: "آلياً", style: "width:84px", oninput: (e) => (u.target_words = +e.target.value || null) })),
+      h("td", { class: "nw" }, h("div", { class: "row acts" },
         i > 0 ? btn("↑", () => { [rows[i - 1], rows[i]] = [rows[i], rows[i - 1]]; paint(); }, "sm ghost") : null,
         btn("✕", () => { rows.splice(i, 1); paint(); }, "sm ghost"),
         btn("+", () => { rows.splice(i + 1, 0, { title: "وحدة جديدة", brief: "", kind: u.kind }); paint(); }, "sm ghost"))))));
   paint();
   body.append(h("h4", {}, "حرّروا المخطط ثم اعتمدوه"),
-    h("p", { class: "small muted" }, "اتركوا خانة الكلمات فارغة لتوزَّع آلياً على الطول الكلي؛ المقدمة والخاتمة نصف وزن المحور."), tbl,
+    h("p", { class: "small muted" }, "اتركوا خانة الكلمات فارغة لتوزَّع آلياً على الطول الكلي؛ المقدمة والخاتمة نصف وزن المحور."), h("div", { class: "table-wrap" }, tbl),
     h("div", { class: "row" },
       btn("احفظ المخطط", async () => { await api("book_set_units", { project: pid, units: rows }); toast("حُفظ"); renderBook(pid); }, "ghost"),
       authorBox("ol-confirm"),

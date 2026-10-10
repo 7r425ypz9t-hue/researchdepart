@@ -51,7 +51,7 @@ progress{accent-color:var(--gold);height:14px}
 .card.question{border:2px solid var(--gold);background:#fffaf0}
 .card.question h4{font-size:1.1rem}
 
-.proj-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,44%);gap:18px;align-items:start}
+.proj-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,36%);gap:18px;align-items:start}
 .side{position:sticky;top:56px;background:#fff;border:1px solid var(--line);border-top:4px solid var(--gold);border-radius:10px;padding:12px 14px;max-height:calc(100vh - 70px);display:flex;flex-direction:column}
 .side h3{margin-top:0}
 .side-head select{max-width:100%;flex:1}
@@ -123,3 +123,14 @@ ol.footnotes{font-size:.92em;line-height:1.8;padding-inline-start:1.6em;margin:.
 .step-chip.mini{font-size:.72rem;padding:1px 7px}
 .legend{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
 ol.upcoming{margin:0;padding-inline-start:1.4em;line-height:2}
+/* جدول وحدات البناء: عمود العنوان عريض، والأعمدة القصيرة على سطر واحد */
+.table-wrap{overflow-x:auto;margin:8px 0}
+table.units td{vertical-align:middle}
+table.units .nw{white-space:nowrap;width:1%}
+table.units .c-title{min-width:200px;line-height:1.7}
+.stack{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+table.units th,table.units td{padding:7px 6px}
+table.units .uid{display:inline-block;min-width:2.6em;margin-inline-end:6px;padding:0 6px;border-radius:6px;background:var(--light);color:var(--blue);font-weight:700;font-size:.8rem;text-align:center}
+table.units .row.acts{flex-wrap:nowrap}
+.mini-meter{height:6px;width:90px;background:#E8EDF2;border-radius:3px;overflow:hidden;margin-top:4px}
+.mini-meter>div{height:100%;background:linear-gradient(90deg,var(--blue),var(--gold))}
