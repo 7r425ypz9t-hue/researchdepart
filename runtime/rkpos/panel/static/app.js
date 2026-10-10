@@ -320,6 +320,7 @@ async function openProject(pid) {
       steps.some((x) => x.status !== "DONE") ? btn("شغّل الخطوة التالية بالمحرّك المختار", () => runStep(pid, null), "gold") : pill("اكتملت الخطة", "ok"),
       btn("افتح مجلد المشروع", () => api("open_folder", { path: "projects/" + pid }), "ghost"),
       btn("تحديث", () => openProject(pid), "ghost")),
+    h("div", { id: "signal-box" }),
     h("div", { id: "ap-box" }),
     h("div", { id: "book-box" }),
     runBox,
@@ -355,6 +356,7 @@ async function openProject(pid) {
   mainEl.replaceChildren(h("div", { class: "proj-layout", style: themeStyle(d.division.theme) }, wrap, h("aside", { id: "side", class: "side" })));
   renderBook(pid);
   renderAutopilot(pid);
+  renderSignals(pid);
   renderSide(pid);
 }
 async function runStep(pid, step) {
@@ -836,6 +838,71 @@ async function renderAutopilot(pid) {
   else if (AP_WATCH[pid]) { AP_WATCH[pid] = false; openProject(pid); }
 }
 const AP_WATCH = {};
+
+// ---------- لوحة الإشارات: سير العملية، والوكيل العامل ونسبة إنجازه، والوكلاء المتوقعون ----------
+const SIG_AR = { done: "منجزة", running: "قيد العمل", waiting: "بانتظار قراركم", error: "توقفت عند خطأ", skipped: "متخطاة", pending: "قادمة" };
+const UNIT_SIG = { APPROVED: "done", DRAFTED: "running", REVISED: "running", CARDED: "running", PLANNED: "pending" };
+let SIG_TIMER = null;
+const initials = (id) => {   // حرفان من الكلمتين الدالتين (دون «وكيل» و«ال» و«و»)
+  const words = String(agentAr(id) || id || "؟").split(/\s+/).filter((w) => w && !/^(وكيل|الوكيل|—|-)$/.test(w))
+    .map((w) => w.replace(/^(وال|بال|ال|و)(?=..)/, ""));
+  return (words.length > 1 ? words[0][0] + words[1][0] : (words[0] || "؟").slice(0, 2));
+};
+function meter(pct, cls) {
+  return h("div", { class: "meter " + (cls || "") }, h("div", { class: "meter-fill", style: "width:" + Math.max(0, Math.min(100, pct || 0)) + "%" }),
+    h("span", { class: "meter-txt" }, (pct == null ? "—" : pct + "%")));
+}
+async function renderSignals(pid) {
+  const box = $("#signal-box");
+  if (!box) return;
+  clearTimeout(SIG_TIMER);
+  const p = await G("progress", { id: pid }).catch(() => null);
+  if (!p || !$("#signal-box")) return;
+  const w = p.working, ap = p.autopilot;
+  const state = ap.question ? "waiting" : ap.status === "error" ? "error" : (w.running || ap.status === "running") ? "running" : ap.status === "done" ? "done" : "idle";
+  const lamp = (c, on, title) => h("span", { class: "lamp " + c + (on ? " on" : ""), title });
+  const STATE_AR = { running: "الوكلاء يعملون", waiting: "بانتظار قراركم", error: "توقف عند خطأ", done: "اكتمل العمل", idle: "متوقف — جاهز للتشغيل" };
+  const busyNow = state === "running";
+  const card = h("div", { class: "card signals" },
+    h("div", { class: "sig-head" },
+      h("div", { class: "traffic", title: STATE_AR[state] },
+        lamp("red", state === "error"), lamp("amber", state === "waiting" || state === "idle"), lamp("green", state === "running" || state === "done")),
+      h("div", {}, h("h3", { style: "margin:0" }, "لوحة الإشارات"), h("div", { class: "small muted" }, STATE_AR[state])),
+      h("div", { class: "sig-buttons" },
+        !busyNow && !ap.question && state !== "done" ? btn("▶ تشغيل", async () => {
+          await api("autopilot_start", { project: pid, engine: engine(), mode: val("ap-mode") || undefined }); renderAutopilot(pid); renderSignals(pid);
+        }, "sig-btn go") : null,
+        busyNow ? btn("⏸ أوقف بعد الخطوة", async () => { await api("autopilot_stop", { project: pid }); toast("سيتوقف بعد الخطوة الجارية"); }, "sig-btn pause") : null,
+        w.running ? btn("⏹ إيقاف فوري", async () => { await api("stop_now", { project: pid }); toast("أُوقفت الكتابة"); setTimeout(() => openProject(pid), 800); }, "sig-btn stop") : null,
+        ap.question ? btn("✋ قراركم مطلوب", () => $("#ap-box").scrollIntoView({ behavior: "smooth" }), "sig-btn ask") : null,
+        btn("📄 اقرأ العمل", async () => { const d = await G("docs", { id: pid }); d.items.length ? showFile(d.items[0].path, pid) : toast("لا نص منجزاً بعد", true); }, "sig-btn read"),
+        btn("↻ تحديث", () => renderSignals(pid), "sig-btn info"))),
+    h("div", { class: "sig-grid" },
+      h("div", { class: "sig-panel" }, h("div", { class: "sig-title" }, "إنجاز الخطة"),
+        meter(p.pct, "plan"), h("div", { class: "small muted" }, "منجز " + p.done + " من " + p.total + " خطوة" + (p.current ? " — الحالية: " + p.current.step + " " + p.current.task : ""))),
+      h("div", { class: "sig-panel worker " + (w.running ? "live" : "") },
+        h("div", { class: "sig-title" }, w.running ? "الوكيل العامل الآن" : (ap.question ? "بانتظار المؤلف" : "الوكيل التالي")),
+        h("div", { class: "agent-row" },
+          h("span", { class: "avatar" + (w.running ? " pulse" : "") }, ap.question && !w.running ? "✋" : initials(w.agent)),
+          h("div", {}, h("b", {}, ap.question && !w.running ? "د. المؤلف (قرار L4)" : agentAr(w.agent) || "—"),
+            h("div", { class: "small muted" }, w.running ? liveLabel({ label: w.label, agent: w.agent }) : (p.current ? p.current.task : "")))),
+        w.running ? meter(w.pct, "agent") : null,
+        w.running ? h("div", { class: "small muted" }, w.words.toLocaleString("ar") + " كلمة من " + (w.target || 0).toLocaleString("ar") +
+          (w.estimated ? " (تقديري)" : "")) : null)),
+    h("div", { class: "sig-title" }, "سير العملية"),
+    h("div", { class: "pipeline" }, p.steps.map((s) => h("span", { class: "step-chip " + s.signal + (s.skip_expected ? " will-skip" : ""),
+      title: s.id + " — " + s.task + " — " + agentAr(s.agent) + " — " + (SIG_AR[s.signal] || s.signal) + (s.skip_expected ? " (ستُتخطى في الوضع المباشر)" : "") },
+      h("i", { class: "dot" }), s.id))),
+    h("div", { class: "legend small" }, Object.entries(SIG_AR).map(([k, v]) => h("span", { class: "step-chip " + k + " mini" }, h("i", { class: "dot" }), v))),
+    p.units && p.units.length > 1 ? [h("div", { class: "sig-title" }, "وحدات العمل"),
+      h("div", { class: "pipeline" }, p.units.map((u) => h("span", { class: "step-chip " + (w.running && w.label.includes(u.id) ? "running" : UNIT_SIG[u.status] || "pending"), title: u.title }, h("i", { class: "dot" }), u.id)))] : null,
+    h("div", { class: "sig-title" }, "الوكلاء المتوقعون"),
+    p.upcoming.length ? h("ol", { class: "upcoming" }, p.upcoming.slice(0, 8).map((u) => h("li", {},
+      h("span", { class: "avatar sm" }, initials(u.agent)), h("b", {}, agentAr(u.agent)), " — ", u.task, " ", h("span", { class: "muted small" }, u.step))))
+      : h("p", { class: "small muted" }, "لا خطوات قادمة."));
+  box.replaceChildren(card);
+  if (busyNow || w.running) SIG_TIMER = setTimeout(() => renderSignals(pid), 2000);
+}
 
 // ---------- بناء العمل (الأجناس ومستويات الإنتاج) ----------
 const DISC_AR = { narrative: "سرد", examples: "أمثلة", first_person: "ضمير المتكلم", emphatic: "توكيد", exclamation: "تعجب", rhetorical_q: "أسئلة بلاغية" };

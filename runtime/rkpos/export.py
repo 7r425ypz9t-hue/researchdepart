@@ -111,13 +111,17 @@ def _red() -> RGBColor:
 
 FOOTNOTES_NS = ('xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" '
                 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"')
-SEPARATORS = ('<w:footnote w:type="separator" w:id="-1"><w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/>'
-              '</w:pPr><w:r><w:separator/></w:r></w:p></w:footnote>'
-              '<w:footnote w:type="continuationSeparator" w:id="0"><w:p><w:pPr><w:spacing w:after="0" w:line="240" '
-              'w:lineRule="auto"/></w:pPr><w:r><w:continuationSeparator/></w:r></w:p></w:footnote>')
+def _separators(indent_twips: int) -> str:
+    """الخط الفاصل بين المتن والحاشية: خط مفرد يبدأ من اليمين ويمتد إلى نصف عرض النص.
+    الفقرة هنا من اليسار إلى اليمين عمداً، فتكون المسافة البادئة اليسرى يساراً بلا التباس، ويقع الخط في النصف الأيمن."""
+    p = ('<w:p><w:pPr><w:pBdr><w:top w:val="single" w:sz="8" w:space="1" w:color="000000"/></w:pBdr>'
+         f'<w:spacing w:before="120" w:after="0" w:line="240" w:lineRule="auto"/><w:ind w:left="{indent_twips}"/></w:pPr>'
+         '<w:r><w:rPr><w:sz w:val="4"/><w:szCs w:val="4"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r></w:p>')
+    return (f'<w:footnote w:type="separator" w:id="-1">{p}</w:footnote>'
+            f'<w:footnote w:type="continuationSeparator" w:id="0">{p}</w:footnote>')
 
 
-def _footnotes_xml(notes: list[str]) -> bytes:
+def _footnotes_xml(notes: list[str], text_width_twips: int = 8640) -> bytes:
     """جزء الحواشي: كل حاشية فقرة من اليمين بخط أصغر، والأقواس فيها بالأحمر كذلك."""
     from lxml import etree
     tmp = Document()
@@ -133,10 +137,15 @@ def _footnotes_xml(notes: list[str]) -> bytes:
         xml = re.sub(r'\sxmlns:\w+="[^"]*"', "", xml)
         items.append(f'<w:footnote w:id="{n}">{xml}</w:footnote>')
     return (f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:footnotes {FOOTNOTES_NS}>'
-            f'{SEPARATORS}{"".join(items)}</w:footnotes>').encode("utf-8")
+            f'{_separators(_sep_indent(text_width_twips))}{"".join(items)}</w:footnotes>').encode("utf-8")
 
 
-def _attach_footnotes(data: bytes, notes: list[str]) -> bytes:
+def _sep_indent(text_width_twips: int) -> int:
+    share = float((sanitize.cfg().get("typography") or {}).get("footnote_separator", 0.5))
+    return int(text_width_twips * (1 - max(0.05, min(share, 1.0))))
+
+
+def _attach_footnotes(data: bytes, notes: list[str], text_width_twips: int = 8640) -> bytes:
     """يضيف جزء الحواشي إلى الحزمة مع علاقته ونوع محتواه وإعداد الفواصل."""
     import zipfile
     src = zipfile.ZipFile(io.BytesIO(data))
@@ -154,7 +163,7 @@ def _attach_footnotes(data: bytes, notes: list[str]) -> bytes:
                 body = body.replace(b"<w:compat>", b'<w:footnotePr><w:footnote w:id="-1"/><w:footnote w:id="0"/>'
                                     b"</w:footnotePr><w:compat>", 1)
             out.writestr(item, body)
-        out.writestr("word/footnotes.xml", _footnotes_xml(notes))
+        out.writestr("word/footnotes.xml", _footnotes_xml(notes, text_width_twips))
     return buf.getvalue()
 
 
@@ -213,4 +222,5 @@ def to_docx(markdown: str, title: str | None = None, clean: bool = True, theme: 
     buf = io.BytesIO()
     doc.save(buf)
     data = sanitize.scrub_package(buf.getvalue())
-    return _attach_footnotes(data, notes) if notes else data
+    width = int((sec.page_width - sec.left_margin - sec.right_margin) / 635)     # EMU ← twips
+    return _attach_footnotes(data, notes, width) if notes else data

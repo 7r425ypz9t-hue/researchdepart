@@ -160,3 +160,33 @@ def test_reader_view_shows_superscripts_and_notes(panel):
     code, r = panel("file", q="?" + urllib.parse.urlencode({"path": f"projects/{pid}/manuscript/book_full.md", "view": "reading"}))
     assert "¹" in r["data"]["text"] and "@SRC" not in r["data"]["text"]
     assert r["data"]["notes"][0].startswith("Bourdieu, Pierre")
+
+
+def test_footnote_separator_spans_half_the_text_width():
+    import re
+    from docx import Document
+    from rkpos.export import to_docx
+    data = to_docx(CITED, "عنوان", sources=SOURCES)
+    fn = zipfile.ZipFile(io.BytesIO(data)).read("word/footnotes.xml").decode()
+    sec = Document(io.BytesIO(data)).sections[0]
+    width = int((sec.page_width - sec.left_margin - sec.right_margin) / 635)
+    for kind in ("separator", "continuationSeparator"):
+        block = re.search(rf'w:type="{kind}".*?</w:footnote>', fn).group(0)
+        assert '<w:top w:val="single"' in block and "<w:bidi/>" not in block
+        assert int(re.search(r'w:ind w:left="(\d+)"', block).group(1)) == width // 2 or abs(
+            int(re.search(r'w:ind w:left="(\d+)"', block).group(1)) - width / 2) <= 1
+
+
+def test_progress_signals_working_agent_and_upcoming(panel):
+    code, r = panel("new_project", {"title": "عمود الإشارات", "type": "op_ed"})
+    pid = r["data"]["project_id"]
+    live = panel.root / "projects" / pid / "live"
+    live.mkdir(exist_ok=True)
+    (live / "current.json").write_text(json.dumps({"seq": 1, "label": "S01", "agent": "AG-ORC", "running": True}), encoding="utf-8")
+    (live / "current.md").write_text("كلمة " * 300, encoding="utf-8")
+    code, r = panel("progress", q=f"?id={pid}")
+    p = r["data"]
+    assert code == 200 and p["total"] == len(p["steps"]) and p["pct"] == round(100 * p["done"] / p["total"])
+    assert p["steps"][0]["signal"] == "running"
+    assert p["working"]["agent"] == "AG-ORC" and p["working"]["pct"] == 50 and p["working"]["estimated"]
+    assert p["upcoming"] and all(u["step"] != p["steps"][0]["id"] for u in p["upcoming"])

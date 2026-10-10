@@ -282,6 +282,78 @@ def autopilot_view(q) -> dict:
             "running": bool(j and j.get("kind") == "autopilot"), "job": j}
 
 
+SIGNAL = {"DONE": "done", "SKIPPED": "skipped", "IN_PROGRESS": "running", "PENDING": "pending", "CONDITIONAL": "pending",
+          "REJECTED": "error", "BLOCKED": "error", "WAITING": "waiting"}
+EXPECTED_WORDS = 600       # تقدير طول مخرج الخطوة العامة حين لا يكون لها هدف معلن (يُعرض «تقديرياً»)
+
+
+def progress_view(q) -> dict:
+    """لوحة الإشارات: سير الخطوات، والوكيل العامل ونسبة إنجازه، والوكلاء المتوقعون."""
+    import re as _re
+    from .. import autopilot as AP, live
+    pid = _proj(q.get("id")).name
+    steps = ST_plan(pid)["steps"]
+    ap = AP.load(pid)
+    lv = live.read(pid, 0)
+    meta, words = lv["meta"] or {}, len(_re.findall(r"\S+", lv["text"] or ""))
+    running = bool(meta.get("running"))
+    job = _running(pid)
+    skip = set(AP.cfg()["modes"]["direct"]["skip_tasks"]) if AP.mode_of(ap) == "direct" else set()
+    open_steps = [s for s in steps if s["status"] not in ("DONE", "SKIPPED")]
+    cur = open_steps[0] if open_steps else None
+    label = str(meta.get("label") or "")
+    if running and _re.fullmatch(r"S[\d.A-Z]+", label):
+        cur = next((s for s in steps if s["id"] == label), cur)
+    question = ap.get("question")
+    rows = []
+    for s in steps:
+        sig = SIGNAL.get(s["status"], "pending")
+        if cur and s["id"] == cur["id"]:
+            sig = "waiting" if question else ("error" if ap.get("status") == "error" else ("running" if (running or job) else sig))
+        rows.append({"id": s["id"], "agent": s.get("assigned_agent") or s["agent"], "task": AP.task_ar(s["task"]), "signal": sig,
+                     "skip_expected": s["task"] in skip and s["status"] not in ("DONE", "SKIPPED")})
+    done = sum(1 for s in steps if s["status"] in ("DONE", "SKIPPED"))
+    # نسبة إنجاز الوكيل العامل: كلمات مكتوبة إلى الهدف (هدف الوحدة إن كانت كتابة وحدة، وإلا تقدير معلن)
+    agent_pct, target, estimated = None, None, False
+    if running:
+        m = _re.match(r"(?:BOOK|VOICE)-(U\d+)(?: \((\d+)/(\d+)\))?", label)
+        if m:
+            try:
+                from .. import book as B
+                u = next(x for x in B.load(pid)["units"] if x["id"] == m.group(1))
+                target = int(u.get("target_words") or u.get("words") or EXPECTED_WORDS)
+                if m.group(2):
+                    k, n = int(m.group(2)), int(m.group(3))
+                    target = max(1, target // n)
+            except (FileNotFoundError, StopIteration):
+                target = EXPECTED_WORDS
+        else:
+            target, estimated = EXPECTED_WORDS, True
+        agent_pct = min(99, round(100 * words / max(target, 1)))
+    upcoming, seen = [], set()
+    for s in open_steps[(1 if cur and open_steps and cur["id"] == open_steps[0]["id"] else 0):]:
+        if s["task"] in skip:
+            continue
+        a = s.get("assigned_agent") or s["agent"]
+        upcoming.append({"step": s["id"], "agent": a, "task": AP.task_ar(s["task"]), "first": a not in seen})
+        seen.add(a)
+    units = None
+    try:
+        from .. import book as B
+        ob = B.load(pid)
+        units = [{"id": u["id"], "title": u["title"], "status": u["status"]} for u in ob["units"]]
+    except FileNotFoundError:
+        pass
+    return {"steps": rows, "total": len(steps), "done": done, "pct": round(100 * done / max(len(steps), 1)),
+            "current": ({"step": cur["id"], "task": AP.task_ar(cur["task"])} if cur else None),
+            "working": {"running": running, "agent": (meta.get("agent") if running else None) or (cur and (cur.get("assigned_agent") or cur["agent"])),
+                        "label": label, "words": words, "target": target, "pct": agent_pct, "estimated": estimated,
+                        "started": meta.get("started")},
+            "autopilot": {"status": "running" if (job and job.get("kind") == "autopilot") else ap.get("status", "idle"),
+                          "question": bool(question)},
+            "upcoming": upcoming, "units": units}
+
+
 def _start_autopilot(pid: str, engine: str, mode: str | None = None) -> dict:
     from .. import autopilot as AP
     if _running(pid):
@@ -419,7 +491,7 @@ def a_download_ticket(d):
     return {"ticket": t, "name": name, "size": len(body)}
 
 
-GET = {"institution": institution_view, "live": live_view, "docs": docs_view, "labels": labels_view, "autopilot": autopilot_view, "genres": genres_view, "book": book_view, "book_unit": book_unit, "job": job_view, "overview": overview, "agents": agents, "agent": agent, "workflows": workflows, "project": project,
+GET = {"progress": progress_view, "institution": institution_view, "live": live_view, "docs": docs_view, "labels": labels_view, "autopilot": autopilot_view, "genres": genres_view, "book": book_view, "book_unit": book_unit, "job": job_view, "overview": overview, "agents": agents, "agent": agent, "workflows": workflows, "project": project,
        "file": read_file, "candidates": candidates, "memory": memory, "audit": audit_log, "cost": cost_report,
        "governance": governance, "engines": lambda q: engines(bool(q.get("fresh"))), "ping": lambda q: {"ok": True, "root": str(ROOT), "version": code_version(), "pid": os.getpid()}}
 
