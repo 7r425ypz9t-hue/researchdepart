@@ -22,7 +22,7 @@ responsibilities:
   - إزالة وسوم الادعاءات من نسخة الإخراج فقط بعد QG4
 inputs: [approved/ (فصول معتمدة), references.bib/CSL JSON, publishing_profile.yaml, figures/]
 outputs: [publishing/<PID>/book.pdf, book.epub, metadata.yaml, index.md, cover_brief.md, build_log.txt]
-skills: [SKL-PDF, SKL-EPUB, SKL-INDEX, SKL-APA, SKL-BIBCLEAN, SKL-META]
+skills: [SKL-PDF, SKL-EPUB, SKL-INDEX, SKL-APA, SKL-BIBCLEAN, SKL-META, SKL-CLEANOUT]
 tools: [TL-PANDOC, TL-CSL, TL-EPUBCHECK, TL-FS, TL-MSG, TL-AUDIT, TL-GITHUB, TL-ZOTERO]
 connectors: [Zotero, GitHub]
 memory:

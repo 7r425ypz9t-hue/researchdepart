@@ -13,11 +13,10 @@ import difflib
 import math
 import re
 import shutil
-import subprocess
 
 import yaml
 
-from . import audit, genres as GN, live, registry as R
+from . import audit, genres as GN, registry as R
 from .ids import now_iso
 from .paths import PROJECTS, ROOT
 
@@ -306,16 +305,18 @@ def _check_sequence(ob: dict, idx: int, relax: bool = False) -> None:
 def _measure(pid: str, ob: dict, text: str) -> dict:
     """جنس بصمة (رأي/سرد): القرب من صوت المؤلف. جنس علمي/فكري: مؤشرات الانضباط الأكاديمي."""
     from . import stylometry as S
+    from . import sanitize as SZ
     if words(text) < 60:
         return {}
     reg = GN.genres()[ob["genre"]]["register"]
+    human = SZ.humanlang_report(text)
     if not GN.author_voice(ob["genre"]):
-        return {"register": reg, "discipline": GN.discipline_report(text)}
+        return {"register": reg, "discipline": GN.discipline_report(text), "human": human}
     ref, assisted = S.load_reference(reg), S.load_assisted_pole()
     if not ref:
-        return {}
+        return {"register": reg, "human": human}
     prof = S.profile(text)
-    out = {"register": reg}
+    out = {"register": reg, "human": human}
     if assisted and reg in S.POLE_REGISTERS:
         out["pole"] = S.pole(prof, ref, assisted)
     else:
@@ -361,6 +362,8 @@ def record_unit(pid: str, uid: str, text: str, source: str = "ai", notes: str = 
     idx, u = _unit(ob, uid)
     if not text.strip():
         raise ValueError("نص فارغ")
+    from . import sanitize as SZ
+    text = SZ.source(text)              # لا محارف خفية في الأصل المحفوظ
     d = _drafts(pid)
     card = ob["level"] == "scaffold" and source == "ai"
     if card:
@@ -402,8 +405,11 @@ def change_ratio(pid: str, uid: str) -> float | None:
     return round(1 - difflib.SequenceMatcher(None, a, b, autojunk=False).ratio(), 3)
 
 
+HUMAN_TASK = ("واضبط اللغة البشرية: اكتب كل ملاحظة داخل النص بالعربية بين قوسين (مع إبقاء أسماء الوسوم المعيارية "
+              "مثل [FACT] و[NEEDS-EVIDENCE] كما هي وكتابة ما بعدها بالعربية)، وترجم إلى العربية كل ملاحظة إنجليزية، "
+              "واستبدل الشَّرطة الطويلة (—) بأدوات الوصل العربية، واحذف اللوازم الجاهزة{hits}. ")
 VOICE_TASK = ("أعد صياغة النص التالي ليقترب من صوت المؤلف كما في عقد الأسلوب المعتمد، مع الحفاظ التام على المضمون "
-              "والحجج والوقائع والوسوم والإحالات؛ لا تضف معلومة ولا تحذف فكرة. عالج تحديداً: {hints}. "
+              "والحجج والوقائع والوسوم والإحالات؛ لا تضف معلومة ولا تحذف فكرة. عالج تحديداً: {hints}. {human}"
               f"اكتب النص المعدّل وحده بين {BEGIN} و{END}، ثم اذكر بعد {END} أهم ما غيّرته.")
 
 
@@ -414,7 +420,7 @@ def _hints(voice: dict) -> str:
 
 DISCIPLINE_TASK = ("أعد ضبط النص التالي ضبطاً أكاديمياً: احذف الإنشاء والحكايات والذكريات والأمثلة غير اللازمة "
                    "والأسئلة البلاغية والتعجب وعبارات القطع، واجعل الجمل خبرية دقيقة والمصطلحات ثابتة، مع الحفاظ التام "
-                   "على المضمون والحجج والوسوم والإحالات؛ لا تضف معلومة. "
+                   "على المضمون والحجج والوسوم والإحالات؛ لا تضف معلومة. {human}"
                    f"اكتب النص المضبوط وحده بين {BEGIN} و{END}، ثم اذكر بعد {END} أهم ما حذفته أو عدّلته.")
 
 
@@ -430,7 +436,11 @@ def align_voice(pid: str, uid: str, engine: str | None = None) -> dict:
     agent = _agent(ob, "voice_agent")
     reg = GN.genres()[ob["genre"]]["register"]
     system = compose_system_prompt(agent, reg, ob["genre"])
-    task = VOICE_TASK.format(hints=_hints(u.get("voice") or {})) if GN.author_voice(ob["genre"]) else DISCIPLINE_TASK
+    hits = ((u.get("voice") or {}).get("human") or {}).get("hits") or {}
+    found = [x for k in ("stock_phrases", "latin_notes") for x in hits.get(k, [])]
+    human = HUMAN_TASK.format(hits=("، ومنها في هذا النص: " + "، ".join(f"«{x}»" for x in found[:10])) if found else "")
+    task = (VOICE_TASK.format(hints=_hints(u.get("voice") or {}), human=human) if GN.author_voice(ob["genre"])
+            else DISCIPLINE_TASK.format(human=human))
     user = task + f"\n\nالنص:\n{text}"
     if engine == "manual":
         return {"unit": uid, "manual": True, "text": f"# SYSTEM\n\n{system}\n\n# USER\n\n{user}"}
@@ -507,7 +517,7 @@ def draft_all(pid: str, engine: str, progress=None, guidance: str = "", direct: 
 
 
 def assemble(pid: str) -> dict:
-    """تجميع الكتاب بالترتيب: النص المعتمد إن وُجد، وإلا آخر مسودة؛ مع تصدير Word إن توفر pandoc."""
+    """تجميع الكتاب بالترتيب: النص المعتمد إن وُجد، وإلا آخر مسودة؛ مع ملف Word منقّى بهوية الإدارة."""
     ob = load(pid)
     m = GN.manifest(pid)
     parts, missing = [f"# {m['title']}\n\n{m['author']}\n"], []
@@ -524,11 +534,14 @@ def assemble(pid: str) -> dict:
     res = {"path": str(out.relative_to(ROOT)), "words": words(text), "pages": round(words(text) / ob["words_per_page"]),
            "target_pages": ob.get("target_pages"), "missing": missing,
            "approved": sum(1 for u in ob["units"] if u["status"] == "APPROVED"), "units": len(ob["units"])}
-    if shutil.which("pandoc"):
+    try:   # ملف Word منقّى بهوية الإدارة، دون حاجة إلى برامج خارجية
+        from . import institution as INS
+        from .export import to_docx
         docx = out.with_suffix(".docx")
-        r = subprocess.run(["pandoc", str(out), "-o", str(docx), "-V", "dir=rtl", "-M", "lang=ar"], capture_output=True, **live.hidden())
-        if r.returncode == 0:
-            res["docx"] = str(docx.relative_to(ROOT))
+        docx.write_bytes(to_docx(text, m["title"], theme=INS.theme(INS.division_of_project(m)), author=m.get("author", "")))
+        res["docx"] = str(docx.relative_to(ROOT))
+    except ImportError:
+        pass
     audit.log("AG-PUB", "book_assemble", project=pid, files_changed=[res["path"]])
     return res
 
@@ -540,10 +553,11 @@ def voice_report(pid: str) -> dict:
         v = u.get("voice") or {}
         share = (v.get("pole") or {}).get("assisted_share")
         disc = v.get("discipline") or {}
+        human = v.get("human") or {}
         rows.append({"id": u["id"], "title": u["title"], "status": u["status"], "words": u.get("words", 0),
                      "target_words": u["target_words"], "assisted_share": share, "deviation_mean": v.get("deviation_mean"),
-                     "discipline_flags": disc.get("flags", []), "author_change": change_ratio(pid, u["id"]),
-                     "flag": bool(share is not None and share > 0.5) or bool(disc.get("flags"))})
+                     "discipline_flags": disc.get("flags", []), "human_flags": human.get("flags", []), "author_change": change_ratio(pid, u["id"]),
+                     "flag": bool(share is not None and share > 0.5) or bool(disc.get("flags")) or bool(human.get("flags"))})
     written = [r for r in rows if r["words"]]
     ch = [r["author_change"] for r in written if r["author_change"] is not None]
     return {"units": rows, "total_words": sum(r["words"] for r in rows), "target_words": ob.get("target_words"),
@@ -551,4 +565,5 @@ def voice_report(pid: str) -> dict:
             "flagged": [r["id"] for r in rows if r["flag"]],
             "note": ("assisted_share: 0 = صوت المؤلف، 1 = الصياغة المُعانة" if GN.author_voice(ob["genre"]) else
                      "discipline_flags: ما تجاوز حدّ الانضباط الأكاديمي (سرد، أمثلة، ضمير المتكلم، توكيد، تعجب، أسئلة بلاغية)")
+                    + "؛ human_flags: لوازم الصياغة الآلية أو الشَّرطة الطويلة أو ملاحظات إنجليزية"
                     + "؛ author_change: نصيب تعديل المؤلف من مسودة الوكيل"}

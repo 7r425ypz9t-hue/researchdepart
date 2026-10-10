@@ -26,6 +26,8 @@
 - `SKL-AREDIT` التحرير العربي الأكاديمي
 - `SKL-TERMS` إدارة المصطلحات
 - `SKL-STYLE` البصمة الأسلوبية للمؤلف
+- `SKL-HUMANLANG` اللغة البشرية المحكمة
+- `SKL-CLEANOUT` تنقية المخرج وإزالة العلامات المائية
 
 ## الأدوات
 - `TL-FS` Repository File System — built_in

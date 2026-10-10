@@ -22,7 +22,7 @@ responsibilities:
   - تنفيذ المراجعات المطلوبة من المحرر والمحكمين
 inputs: [chapter_brief, outline.yaml, evidence_cards, MEM-AUTHOR, ملاحظات المراجعة]
 outputs: [drafts/chNN_vX.md (موسوم ومسند), revision_response.md]
-skills: [SKL-STYLE, SKL-ARGMAP, SKL-CLAIMTAG, SKL-APA, SKL-TERMS]
+skills: [SKL-STYLE, SKL-ARGMAP, SKL-CLAIMTAG, SKL-APA, SKL-TERMS, SKL-HUMANLANG]
 tools: [TL-FS, TL-MSG, TL-AUDIT, TL-LLM, TL-GDOCS, TL-VDB]
 connectors: [Google Docs, Vector DB]
 memory:

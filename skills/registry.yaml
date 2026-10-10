@@ -474,6 +474,27 @@ skills:
     realization: ["prompt"]
     status: available_now
 
+  - id: SKL-CLEANOUT
+    name_ar: "تنقية المخرج وإزالة العلامات المائية"
+    name_en: "Output Cleansing & Watermark Removal"
+    purpose: "نص عربي خالص في كل عرض وتصدير: الملاحظات والوسوم الإنجليزية بترجمتها العربية بين قوسين، ولا علامات مائية ظاهرة (علامات التشغيل والمعرّفات الداخلية) ولا مخفية (محارف غير مرئية، ومسافات شاذة، وبصمة مكتبة Word في خصائص الملف، وصورة المعاينة، ومعرّفات جلسات التحرير)."
+    procedure: ["حذف المحارف غير المرئية وتوحيد المسافات", "حذف علامات التشغيل والمعرّفات الداخلية",
+                "ترجمة الوسوم والملاحظات إلى العربية بين قوسين وحذف الإنجليزي الحر مع تقرير به",
+                "محو خصائص ملف Word الموروثة وتثبيت اسم المؤلف", "تقرير التنقية"]
+    outputs: ["نسخة القراءة", "نسخة المراجعة بالوسوم العربية", "ملف Word منقّى", "تقرير التنقية"]
+    realization: ["code:runtime/rkpos/sanitize.py", "code:runtime/rkpos/export.py", "config:config/output_quality.yaml"]
+    status: available_now
+
+  - id: SKL-HUMANLANG
+    name_ar: "اللغة البشرية المحكمة"
+    name_en: "Governed Human Language"
+    purpose: "مخرج بعربية بشرية محكمة في كل الأجناس: لا لوازم الصياغة الآلية ولا الشَّرطة الطويلة لوصل الجمل ولا ملاحظات إنجليزية؛ يُقاس كل نص ويُضبط آلياً ما تجاوز الحد، والمؤلف يقرّر."
+    procedure: ["قواعد اللغة البشرية في برومبت كل وكيل", "قياس اللوازم والشَّرطات والملاحظات الإنجليزية لكل ألف كلمة",
+                "تعليم الوحدات المتجاوزة", "ضبط آلي يحافظ على المضمون والوسوم", "عرض النتيجة على المؤلف"]
+    outputs: ["human_flags في تقرير الصوت", "نص مضبوط"]
+    realization: ["code:runtime/rkpos/sanitize.py", "code:runtime/rkpos/book.py", "config:config/output_quality.yaml"]
+    status: available_now
+
 existing_claude_skills:
   - {name: council-orchestration-ar, binds_to: [AG-ORC, AG-COUNCIL], note: "الأصوات الستة تقابل: Intake=AG-RQA، الإطار=AG-THR/AG-LRV، المنهج=AG-BKA/AG-MTH، المنفذ=AG-WRT، QA=AG-EVA/AG-INT، المحكّم=AG-RED/AG-PRV"}
   - {name: source-integrity-ar, binds_to: [AG-SRC, AG-EVA, AG-INT, AG-SUP-EVD, AG-SUP-INT]}

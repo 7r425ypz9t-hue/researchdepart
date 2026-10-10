@@ -55,6 +55,7 @@ SKILLS (procedures you must follow when the task matches)
 - SKL-CLAIMTAG — وسم الادعاءات: وسم كل ادعاء بـ FACT/EBI/INTERP/HYP/AUTHOR وربطه بالدليل.
 - SKL-APA — التنسيق وفق APA 7: تنسيق الإحالات والقائمة وفق APA 7 افتراضياً، أو Chicago/Harvard/MLA عبر CSL.
 - SKL-TERMS — إدارة المصطلحات: صيانة المسرد الثنائي وفرض الاتساق.
+- SKL-HUMANLANG — اللغة البشرية المحكمة: مخرج بعربية بشرية محكمة في كل الأجناس: لا لوازم الصياغة الآلية ولا الشَّرطة الطويلة لوصل الجمل ولا ملاحظات إنجليزية؛ يُقاس كل نص ويُضبط آلياً ما تجاوز الحد، والمؤلف يقرّر.
 
 MEMORY POLICY (Least Privilege)
 READ only:

@@ -233,6 +233,12 @@ def _final_review(pid, ap, step) -> str:
     rep = B.voice_report(pid)
     note = ("" if not rep["flagged"] else f"؛ وحدات ما زالت تحتاج ضبطاً: {'، '.join(rep['flagged'])}")
     body = f"{rep['total_words']} كلمة (≈ {round(rep['total_words'] / ob['words_per_page'])} صفحة) في {len(ob['units'])} وحدة{note}"
+    from . import sanitize as SZ
+    full = PROJECTS / pid / "manuscript/book_full.md"
+    if full.exists():
+        _, cr = SZ.clean(full.read_text(encoding="utf-8"))
+        if cr["english_removed"]:
+            body += f"؛ ملاحظات إنجليزية لم تُترجم وحُذفت من نسخة القراءة: {len(cr['english_removed'])} (يعالجها «اضبطه كله»)"
     return _ask(pid, ap, "final_review", step, body=body, file=f"projects/{pid}/manuscript/book_full.md")
 
 
@@ -408,9 +414,12 @@ def answer(pid: str, qid: str, choice_id: str, note: str = "") -> dict:
         res = B.assemble(pid)
         from .export import to_docx
         m = GN.manifest(pid)
+        from . import institution as INS, sanitize as SZ
         out = PROJECTS / pid / "manuscript/approved" / f"{m.get('slug') or pid}.docx"
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_bytes(to_docx((PROJECTS / pid / "manuscript/book_full.md").read_text(encoding="utf-8"), m["title"]))
+        full = (PROJECTS / pid / "manuscript/book_full.md").read_text(encoding="utf-8")
+        out.write_bytes(to_docx(full, m["title"], theme=INS.theme(INS.division_of_project(m)), author=m.get("author", "")))
+        out.with_suffix(".md").write_text(SZ.clean(full)[0], encoding="utf-8")   # النص المعتمد منقّى للقراءة
         ap["final_approved"] = True
         runner.complete(pid, step["id"], "HUMAN-AUTHOR", f"الاعتماد النهائي للنص ({res['words']} كلمة): {decision}")
     elif act == "polish_all":

@@ -30,6 +30,7 @@
 - `SKL-APA` التنسيق وفق APA 7
 - `SKL-BIBCLEAN` تنظيف الببليوغرافيا
 - `SKL-META` استخلاص البيانات الوصفية
+- `SKL-CLEANOUT` تنقية المخرج وإزالة العلامات المائية
 
 ## الأدوات
 - `TL-PANDOC` Publishing Engine (Pandoc + XeLaTeX/LuaLaTeX) — needs_install

@@ -23,7 +23,7 @@ responsibilities:
   - تنفيذ مراجعات المؤلف والمحرر اللغوي
 inputs: [story_bible.md, outline.yaml, الفصول المعتمدة, MEM-AUTHOR, ملاحظات المؤلف]
 outputs: [drafts/Unn.md, story_bible.md (مقترح), continuity_report.md]
-skills: [SKL-STYLE, SKL-NARRATIVE, SKL-CONTINUITY, SKL-SUFI, SKL-TERMS]
+skills: [SKL-STYLE, SKL-NARRATIVE, SKL-CONTINUITY, SKL-SUFI, SKL-TERMS, SKL-HUMANLANG]
 tools: [TL-FS, TL-MSG, TL-AUDIT, TL-LLM]
 connectors: []
 memory:

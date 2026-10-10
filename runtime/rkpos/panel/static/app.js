@@ -93,12 +93,17 @@ const nextAr = (txt) => !txt || txt === "—" ? "—" : String(txt)
   .replace(/(AG-[A-Z]+(?:-[A-Z]+)?|HUMAN-AUTHOR|AG-COUNCIL)/g, (m) => agentAr(m))
   .replace(/\b([a-z][a-z0-9_]+(?:-[A-Z]+)?)\b/g, (m) => taskAr(m)).replace("→", "←");
 async function genresData() { GEN = GEN || await G("genres"); return GEN; }
-async function downloadRaw(path) {
-  const r = await fetch("/api/raw?path=" + encodeURIComponent(path), { headers: { "X-Rkpos-Token": TOKEN } });
-  if (!r.ok) return toast("تعذّر التنزيل", true);
-  const a = h("a", { href: URL.createObjectURL(await r.blob()), download: path.split("/").pop() });
-  document.body.append(a); a.click(); a.remove();
+// التنزيل: يُعدّ الخادم الملف أولاً (فتظهر أي مشكلة رسالةً واضحة)، ثم ينزّله المتصفح تنزيلاً أصيلاً باسمه وامتداده
+async function fileDownload(params) {
+  let r;
+  try { r = await api("download_ticket", params, true); }
+  catch (e) { return toast("تعذّر التنزيل: " + e.message, true); }
+  let fr = $("#dl-frame");
+  if (!fr) { fr = h("iframe", { id: "dl-frame", style: "display:none" }); document.body.append(fr); }
+  fr.src = "/api/dl?ticket=" + encodeURIComponent(r.ticket);
+  toast("يُنزَّل «" + r.name + "» إلى مجلد التنزيلات");
 }
+const downloadRaw = (path) => fileDownload({ kind: "raw", path });
 const authorBox = (id) => h("label", { class: "confirm" }, h("input", { type: "checkbox", id }), " أقرّ بصفتي المؤلف (قرار L4)");
 
 async function copyAndOpen(text) {
@@ -387,8 +392,14 @@ async function completeForm(pid, step, approvedText) {
   $("#run-box").replaceChildren(box); $("#run-box").scrollIntoView({ behavior: "smooth" });
 }
 async function showFile(path, pid, runId) {
-  const f = await G("file", { path });
   const box = $("#run-box") || main();
+  if (!runId && /^projects\/[^/]+\/(manuscript|marketing)\/.+\.md$/.test(path)) {   // نص العمل: في القارئ لا في الصندوق الخام
+    const label = path.endsWith("book_full.md") ? "العمل كاملاً" : path.split("/").pop().replace(/\.md$/, "");
+    box.replaceChildren(await readerCard(path, label, pid));
+    box.scrollIntoView({ behavior: "smooth" });
+    return;
+  }
+  const f = await G("file", { path });
   if (f.binary) { box.replaceChildren(h("div", { class: "card" }, path + " — ملف ثنائي (" + f.size + " بايت)", btn("افتح المجلد", () => api("open_folder", { path }), "sm ghost"))); return; }
   const name = path.split("/").pop();
   const kind = name === "prompt.md" ? "prompt.md" : name === "author_task.md" ? "author_task.md" : "output.md";
@@ -657,7 +668,7 @@ function liveLabel(meta) {
   return agentAr(meta.agent) + " — " + meta.label.replace(/^BOOK-/, "الوحدة ").replace(/^VOICE-/, "مواءمة صوت ");
 }
 function readable(md) {   // عرض قرائي آمن: العناوين بارزة، والنص كما هو (بلا innerHTML)
-  return String(md).replace(/\A---\n[\s\S]*?\n---\n/, "").split(/\n{2,}/).map((blk) => {
+  return String(md).replace(/^---\n[\s\S]*?\n---\n/, "").split(/\n{2,}/).map((blk) => {
     const m = blk.match(/^(#{1,4})\s+(.*)/);
     if (m) return h("div", { class: "side-h" + m[1].length }, m[2].replace(/\*\*/g, ""));
     return h("p", {}, blk.replace(/\*\*/g, ""));
@@ -673,17 +684,17 @@ async function renderSide(pid) {
   if (st.mode === "doc" && !st.path && docs.items.length) st.path = docs.items[0].path;
   const running = lv.meta && lv.meta.running;
   if (running && st.mode === "doc" && st.autoLive !== false && !st.userPicked) st.mode = "live";
-  if (!running && st.mode === "live" && !lv.text && docs.items.length) { st.mode = "doc"; st.path = st.path || docs.items[0].path; }
+  if (!running && st.mode === "live" && !st.userLive && docs.items.length) { st.mode = "doc"; st.path = st.path || docs.items[0].path; }
   const textBox = h("div", { class: "side-text", id: "side-text" });
   const head = h("div", { class: "side-head" });
-  const docSel = h("select", { onchange: (e) => { st.mode = "doc"; st.userPicked = true; st.path = e.target.value; renderSide(pid); } },
+  const docSel = h("select", { onchange: (e) => { st.mode = "doc"; st.userPicked = true; st.userLive = false; st.path = e.target.value; renderSide(pid); } },
     h("option", { value: "" }, "— اختر نصاً منجزاً —"),
-    ...["العمل", "الوحدات", "مخرجات الخطوات"].map((g) => {
+    ...["العمل", "الوحدات", "مخرجات الخطوات", "التسويق والتصميم"].map((g) => {
       const items = docs.items.filter((d) => d.group === g);
       return items.length ? h("optgroup", { label: g }, items.map((d) => h("option", { value: d.path, selected: st.mode === "doc" && d.path === st.path }, d.label))) : null;
     }));
   head.append(h("div", { class: "row" },
-    btn((running ? "● " : "") + "الكتابة الآن", () => { st.mode = "live"; st.userPicked = false; renderSide(pid); }, "sm live-btn " + (st.mode === "live" ? "" : "ghost")), docSel));
+    btn((running ? "● " : "") + "الكتابة الآن", () => { st.mode = "live"; st.userPicked = false; st.userLive = true; renderSide(pid); }, "sm live-btn " + (st.mode === "live" ? "" : "ghost")), docSel));
   const tools = h("div", { class: "row" });
   const status = h("div", { class: "small muted", id: "side-status" });
   box.replaceChildren(h("h3", {}, "النص"), head, status, textBox, tools);
@@ -722,23 +733,44 @@ async function renderSide(pid) {
       const on = !!(r && r.meta && r.meta.running);
       const b2 = $("#side .live-btn"); if (b2) b2.textContent = (on ? "● " : "") + "الكتابة الآن";
     }, 3000);
-    const f = await G("file", { path: st.path });
+    const f = await G("file", { path: st.path, view: "reading" });
     textBox.replaceChildren(...readable(f.text || ""));
     const name = (docs.items.find((d) => d.path === st.path) || {}).label || "";
     status.textContent = name;
     tools.append(
-      h("a", { class: "btn sm gold", href: "#", onclick: (e) => { e.preventDefault(); exportDoc(st.path, name, true); } }, "تنزيل Word"),
-      h("a", { class: "btn sm ghost", href: "#", onclick: (e) => { e.preventDefault(); exportDoc(st.path, name, false); } }, "Word بالوسوم"),
+      btn("تنزيل Word", () => exportDoc(st.path, name, true), "sm gold"),
+      btn("Word بالوسوم العربية", () => exportDoc(st.path, name, false), "sm ghost"),
+      btn("اقرأه كاملاً", () => showFile(st.path, pid), "sm ghost"),
       btn("تنزيل نصي (.md)", () => downloadRaw(st.path), "sm ghost"),
-      btn("نسخ", () => navigator.clipboard.writeText(f.text || "").then(() => toast("نُسخ")), "sm ghost"));
+      btn("نسخ", () => navigator.clipboard.writeText(f.text || "").then(() => toast("نُسخ")), "sm ghost"),
+      ...(docs.word || []).map((w) => btn("Word المعتمد", () => downloadRaw(w), "sm gold")));
   }
 }
-async function exportDoc(path, title, clean) {
-  const q = new URLSearchParams({ path, title: title || "", clean: clean ? "1" : "0" });
-  const r = await fetch("/api/export?" + q, { headers: { "X-Rkpos-Token": TOKEN } });
-  if (!r.ok) return toast("تعذّر التصدير", true);
-  const a = h("a", { href: URL.createObjectURL(await r.blob()), download: (title || "نص").replace(/[\\/:*?"<>|]/g, "_") + ".docx" });
-  document.body.append(a); a.click(); a.remove();
+const exportDoc = (path, title, clean) => fileDownload({ kind: "word", path, title: title || "", clean: clean ? "1" : "0" });
+// قارئ العمل: عرض كامل منقّى (عربية بلا وسوم إنجليزية ولا علامات)، مع التنزيل
+async function readerCard(path, title, pid) {
+  const st = { view: "reading" };
+  const body = h("div", { class: "reader-text" });
+  const info = h("div", { class: "small muted" });
+  const load = async () => {
+    const f = await G("file", { path, view: st.view });
+    body.replaceChildren(...readable(f.text || ""));
+    const s = f.sanitized || {};
+    info.textContent = [s.hidden_chars ? "أزيل " + s.hidden_chars + " محرفاً خفياً" : "",
+      s.translated ? "تُرجم " + s.translated + " وسماً إلى العربية" : "",
+      (s.english_removed || []).length ? "حُذفت " + s.english_removed.length + " ملاحظة إنجليزية لا ترجمة لها (تعالج بـ«اضبطه كله»)" : ""].filter(Boolean).join(" · ");
+  };
+  const viewSel = h("select", { onchange: (e) => { st.view = e.target.value; load(); } },
+    h("option", { value: "reading" }, "نسخة القراءة"), h("option", { value: "tagged" }, "نسخة المراجعة (بالوسوم العربية)"));
+  await load();
+  return h("div", { class: "card reader" },
+    h("div", { class: "row", style: "justify-content:space-between" }, h("h3", {}, title || "العمل"), viewSel),
+    info,
+    h("div", { class: "row" },
+      btn("تنزيل Word", () => exportDoc(path, title, st.view === "reading"), "gold"),
+      btn("تنزيل نصي (.md)", () => downloadRaw(path), "ghost"),
+      btn("نسخ", async () => { const f = await G("file", { path, view: st.view }); await navigator.clipboard.writeText(f.text || ""); toast("نُسخ"); }, "ghost")),
+    body);
 }
 
 // ---------- الطيار الآلي ----------
@@ -832,8 +864,9 @@ async function renderBook(pid) {
       toast(r.words.toLocaleString("ar") + " كلمة ≈ " + r.pages + " صفحة" + (r.missing.length ? " — ناقص: " + r.missing.join("، ") : ""));
       renderBook(pid);
     }, "ghost"),
-    b.book ? btn("تنزيل الكتاب (Markdown)", () => downloadRaw(b.book), "ghost") : null,
-    b.book ? btn("تنزيل Word", () => downloadRaw(b.book.replace(/\.md$/, ".docx")), "ghost") : null);
+    b.book ? btn("اقرأ العمل كاملاً", () => showFile(b.book, pid), "gold") : null,
+    b.book ? btn("تنزيل Word", () => exportDoc(b.book, (b.title || "العمل"), true), "ghost") : null,
+    b.book ? btn("تنزيل نصي (.md)", () => downloadRaw(b.book), "ghost") : null);
   body.append(actions);
   if (ob.level === "full" && b.estimate && b.estimate.units) {
     const e = b.estimate;

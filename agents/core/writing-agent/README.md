@@ -28,6 +28,7 @@
 - `SKL-CLAIMTAG` وسم الادعاءات
 - `SKL-APA` التنسيق وفق APA 7
 - `SKL-TERMS` إدارة المصطلحات
+- `SKL-HUMANLANG` اللغة البشرية المحكمة
 
 ## الأدوات
 - `TL-FS` Repository File System — built_in

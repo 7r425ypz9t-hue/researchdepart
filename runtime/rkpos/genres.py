@@ -63,6 +63,8 @@ def profile_block(genre: str | None) -> str:
     if not g.get("author_voice", True):
         lines += ["ACADEMIC DISCIPLINE — لا تُطبَّق هنا البصمة الشخصية للمؤلف؛ الحاكم هو الانضباط العلمي:",
                   *[f"- {x}" for x in discipline()["rules"]]]
+    from . import sanitize
+    lines += ["HUMAN LANGUAGE — اللغة البشرية المحكمة (لكل الأجناس):", *[f"- {x}" for x in sanitize.rules()]]
     return "\n".join(lines) + "\n"
 
 

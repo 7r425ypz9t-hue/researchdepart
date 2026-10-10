@@ -9,11 +9,13 @@
 from __future__ import annotations
 import json
 import os
+import re
 import secrets
 import shutil
 import subprocess
 import sys
 import threading
+import time
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -170,7 +172,13 @@ def read_file(q) -> dict:
         raise ApiError("مسار غير مسموح بقراءته من اللوحة")
     if f.suffix.lower() not in (".md", ".txt", ".yaml", ".yml", ".json", ".jsonl", ".html", ".bib", ".csv"):
         return {"path": rel, "binary": True, "size": f.stat().st_size}
-    return {"path": rel, "text": f.read_text(encoding="utf-8", errors="replace")}
+    text = f.read_text(encoding="utf-8", errors="replace")
+    view = q.get("view")
+    if view in ("reading", "tagged") and f.suffix.lower() in (".md", ".txt"):   # عرض منقّى: عربية بلا علامات
+        from .. import sanitize
+        text, rep = sanitize.clean(text, view)
+        return {"path": rel, "text": text, "view": view, "sanitized": rep}
+    return {"path": rel, "text": text}
 
 
 def candidates(_q) -> dict:
@@ -297,7 +305,7 @@ def book_view(q) -> dict:
         ob = B.load(pid)
     except FileNotFoundError:
         return {"outline": None}
-    return {"outline": ob, "voice": B.voice_report(pid), "estimate": B.estimate(pid) if ob["level"] == "full" else None,
+    return {"outline": ob, "voice": B.voice_report(pid), "title": (_y(PROJECTS / pid / "manifest.yaml") or {}).get("title"), "estimate": B.estimate(pid) if ob["level"] == "full" else None,
             "job": (lambda j: j if j and j.get("kind") != "autopilot" else None)(_running(pid)), "book": str((PROJECTS / pid / "manuscript/book_full.md").relative_to(ROOT))
             if (PROJECTS / pid / "manuscript/book_full.md").exists() else None}
 
@@ -355,13 +363,57 @@ def docs_view(q) -> dict:
             out.append({"path": str(f.relative_to(ROOT)), "label": lbl, "group": "التسويق والتصميم"})
     for f in sorted((root / "manuscript/approved").glob("*.md")) if (root / "manuscript/approved").exists() else []:
         if not f.stem.startswith("U"):
-            out.append({"path": str(f.relative_to(ROOT)), "label": f"المعتمد: {f.name}", "group": "العمل"})
-    return {"items": out}
+            out.insert(0, {"path": str(f.relative_to(ROOT)), "label": "النص المعتمد", "group": "العمل"})
+    word = [str(f.relative_to(ROOT)) for f in sorted((root / "manuscript/approved").glob("*.docx"))] \
+        if (root / "manuscript/approved").exists() else []
+    return {"items": out, "word": word}
 
 
 def ST_plan(pid):
     from .. import state as ST
     return ST.plan(pid)
+
+
+DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+DOWNLOADS: dict[str, dict] = {}
+GENERIC_TITLES = {"", "العمل مجمّعاً", "العمل كاملاً", "النص المعتمد", "العمل"}
+
+
+def file_payload(q) -> tuple[bytes, str, str]:
+    """محتوى التنزيل: kind=word (Word منقّى بهوية الإدارة) أو raw (الملف كما هو)."""
+    f = (ROOT / q.get("path", "")).resolve()
+    if not any(f.is_relative_to((ROOT / r).resolve()) for r in READABLE) or not f.is_file():
+        raise ApiError("مسار غير مسموح")
+    if q.get("kind") == "raw":
+        return f.read_bytes(), "application/octet-stream", f.name
+    th, author, title = None, "", (q.get("title") or "").strip()
+    try:
+        pid = f.relative_to(PROJECTS.resolve()).parts[0]
+        man = _y(PROJECTS / pid / "manifest.yaml") or {}
+        th, author = INS.theme(INS.division_of_project(man)), man.get("author", "")
+        if title in GENERIC_TITLES:          # «العمل كاملاً» وأمثاله: العنوان الحقيقي من بيان المشروع
+            title = man.get("title") or title
+    except (ValueError, IndexError, KeyError):
+        pass
+    if f.suffix.lower() == ".docx":
+        return f.read_bytes(), DOCX, f.name
+    try:
+        from ..export import to_docx
+    except ImportError:
+        raise ApiError("مكتبة Word غير مثبتة؛ نفّذوا في مجلد البرنامج: py -m pip install -e .")
+    body = to_docx(f.read_text(encoding="utf-8", errors="replace"), title or None, clean=q.get("clean", "1") in ("1", True),
+                   theme=th, author=author)
+    return body, DOCX, (title or f.stem) + ".docx"
+
+
+def a_download_ticket(d):
+    """يُعدّ الملف الآن (فتظهر أي مشكلة رسالةً في اللوحة) ويعيد رابط تنزيل صالحاً دقيقتين لمرة واحدة."""
+    body, ctype, name = file_payload(d)
+    for k in [k for k, v in DOWNLOADS.items() if v["exp"] < time.time()]:
+        DOWNLOADS.pop(k, None)
+    t = secrets.token_urlsafe(16)
+    DOWNLOADS[t] = {"body": body, "ctype": ctype, "name": name, "exp": time.time() + 120}
+    return {"ticket": t, "name": name, "size": len(body)}
 
 
 GET = {"institution": institution_view, "live": live_view, "docs": docs_view, "labels": labels_view, "autopilot": autopilot_view, "genres": genres_view, "book": book_view, "book_unit": book_unit, "job": job_view, "overview": overview, "agents": agents, "agent": agent, "workflows": workflows, "project": project,
@@ -753,7 +805,7 @@ def a_claude_add_path(_d):
         raise ApiError(str(e)) from e
 
 
-POST = {"marketing": a_marketing, "stop_now": a_stop_now, "autopilot_note": a_autopilot_note, "autopilot_start": a_autopilot_start, "autopilot_answer": a_autopilot_answer, "autopilot_stop": a_autopilot_stop,
+POST = {"download_ticket": a_download_ticket, "marketing": a_marketing, "stop_now": a_stop_now, "autopilot_note": a_autopilot_note, "autopilot_start": a_autopilot_start, "autopilot_answer": a_autopilot_answer, "autopilot_stop": a_autopilot_stop,
         "claude_add_path": a_claude_add_path, "claude_login": a_claude_login, "book_skeleton": b_skeleton, "book_set_units": b_set_units, "book_propose": b_propose,
         "book_import_outline": b_import_outline, "book_approve_outline": b_approve_outline, "book_draft": b_draft,
         "book_record": b_record, "book_revise": b_revise, "book_align": b_align, "book_adopt_aligned": b_adopt_aligned,
@@ -762,7 +814,7 @@ POST = {"marketing": a_marketing, "stop_now": a_stop_now, "autopilot_note": a_au
         "adhoc": a_adhoc, "check_text": a_check_text, "verify_doi": a_verify_doi, "select": a_select,
         "validate": a_validate, "generate": a_generate, "eval": a_eval, "dashboard": a_dashboard,
         "security_scan": a_security_scan, "promote": a_promote, "amend": a_amend, "open_folder": a_open_folder}
-READ_ONLY_POST = {"stop_now", "autopilot_note", "check_text", "verify_doi", "select", "validate", "security_scan", "open_folder"}
+READ_ONLY_POST = {"download_ticket", "stop_now", "autopilot_note", "check_text", "verify_doi", "select", "validate", "security_scan", "open_folder"}
 
 
 # ------------------------------------------------------------------ HTTP
@@ -777,9 +829,13 @@ def make_handler(token: str, port_ref: dict):
             host = (self.headers.get("Host") or "").split(":")[0]
             return host in ("127.0.0.1", "localhost")
 
-        def _send(self, code: int, body: bytes, ctype: str = "application/json; charset=utf-8"):
+        def _send(self, code: int, body: bytes, ctype: str = "application/json; charset=utf-8", filename: str | None = None):
             self.send_response(code)
             self.send_header("Content-Type", ctype)
+            if filename:   # تنزيل أصيل باسم عربي سليم (RFC 5987)
+                from urllib.parse import quote
+                safe = re.sub(r'[\\/:*?"<>|\r\n]', "_", filename)
+                self.send_header("Content-Disposition", f"attachment; filename=\"download{Path(safe).suffix}\"; filename*=UTF-8''{quote(safe)}")
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")
@@ -810,29 +866,23 @@ def make_handler(token: str, port_ref: dict):
                 if not f.is_relative_to(STATIC.resolve()) or not f.is_file():
                     return self._send(404, b"not found", "text/plain")
                 return self._send(200, f.read_bytes(), MIME.get(f.suffix, "application/octet-stream"))
+            if u.path == "/api/dl":     # تذكرة تنزيل لمرة واحدة: تنزيل أصيل من المتصفح باسم الملف وامتداده
+                if not self._host_ok():
+                    return self._json(403, {"ok": False, "error": "host"})
+                t = DOWNLOADS.pop((parse_qs(u.query).get("ticket") or [""])[0], None)
+                if not t or t["exp"] < time.time():
+                    return self._send(410, "انتهت صلاحية رابط التنزيل؛ أعيدوا النقر على زر التنزيل.".encode("utf-8"), "text/plain; charset=utf-8")
+                return self._send(200, t["body"], t["ctype"], filename=t["name"])
             if not self._auth():
                 return
-            if u.path == "/api/export":
+            if u.path in ("/api/export", "/api/raw"):
                 q = {k: v[0] for k, v in parse_qs(u.query).items()}
-                f = (ROOT / q.get("path", "")).resolve()
-                if not any(f.is_relative_to((ROOT / r).resolve()) for r in READABLE) or not f.is_file():
-                    return self._json(400, {"ok": False, "error": "مسار غير مسموح"})
-                from ..export import to_docx
-                th = None
+                q["kind"] = "word" if u.path == "/api/export" else "raw"
                 try:
-                    pid = f.relative_to(PROJECTS.resolve()).parts[0]
-                    th = INS.theme(INS.division_of_project(_y(PROJECTS / pid / "manifest.yaml") or {}))
-                except (ValueError, IndexError, KeyError):
-                    pass
-                return self._send(200, to_docx(f.read_text(encoding="utf-8"), q.get("title") or None,
-                                               clean=q.get("clean", "1") == "1", theme=th),
-                                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-            if u.path == "/api/raw":
-                q = {k: v[0] for k, v in parse_qs(u.query).items()}
-                f = (ROOT / q.get("path", "")).resolve()
-                if not any(f.is_relative_to((ROOT / r).resolve()) for r in READABLE) or not f.is_file():
-                    return self._json(400, {"ok": False, "error": "مسار غير مسموح"})
-                return self._send(200, f.read_bytes(), "application/octet-stream")
+                    body, ctype, name = file_payload(q)
+                except ApiError as e:
+                    return self._json(400, {"ok": False, "error": str(e)})
+                return self._send(200, body, ctype, filename=name)
             fn = GET.get(u.path[5:])
             if not fn:
                 return self._json(404, {"ok": False, "error": "unknown endpoint"})

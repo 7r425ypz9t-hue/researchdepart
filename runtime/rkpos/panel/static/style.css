@@ -75,3 +75,9 @@ progress{accent-color:var(--gold);height:14px}
 .swatch{display:inline-block;width:20px;height:20px;border-radius:5px;margin-inline-end:4px;border:1px solid #fff;box-shadow:0 0 0 1px var(--line)}
 .proj-layout h2,.proj-layout h3{color:var(--blue)}
 .proj-layout h2{border-inline-start-color:var(--gold)}
+/* قارئ العمل: صفحة قراءة كاملة */
+.reader .reader-text{max-width:820px;margin:14px auto 0;padding:28px 36px;background:#fffefa;border:1px solid var(--line);border-radius:10px;
+  font-family:"Noto Naskh Arabic",serif;font-size:1.18rem;line-height:2.1;text-align:justify;max-height:75vh;overflow:auto}
+.reader .reader-text p{margin:0 0 1em}
+.reader .reader-text .side-h1{font-size:1.6rem;text-align:center;border-bottom:2px solid var(--gold);padding-bottom:.3em}
+.reader .reader-text .side-h2{font-size:1.3rem}

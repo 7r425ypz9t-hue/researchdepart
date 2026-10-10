@@ -34,6 +34,7 @@ skills:
 - SKL-APA
 - SKL-BIBCLEAN
 - SKL-META
+- SKL-CLEANOUT
 tools:
 - TL-PANDOC
 - TL-CSL

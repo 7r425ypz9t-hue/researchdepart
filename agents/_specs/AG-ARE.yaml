@@ -22,7 +22,7 @@ responsibilities:
   - Copy-editing نهائي قبل الإخراج
 inputs: [edited/chNN, glossary.yaml, MEM-AUTHOR (البصمة), style_guide.md]
 outputs: [language_edited/chNN.md, glossary_updates.yaml (مقترحة), copyedit_report.md]
-skills: [SKL-AREDIT, SKL-TERMS, SKL-STYLE]
+skills: [SKL-AREDIT, SKL-TERMS, SKL-STYLE, SKL-HUMANLANG, SKL-CLEANOUT]
 tools: [TL-FS, TL-MSG, TL-AUDIT, TL-LLM, TL-GDOCS]
 connectors: [Google Docs]
 memory:

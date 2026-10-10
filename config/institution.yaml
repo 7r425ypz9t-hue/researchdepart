@@ -16,7 +16,8 @@ general:
     - "البصمة الشخصية للمؤلف في مقال الرأي والكتابة الإبداعية وحدهما؛ وغيرهما يحكمه الانضباط الأكاديمي."
     - "سياسة المراجع الخاصة بالمؤلف (academic-integrity-sunni-sources-ar) سارية على كل الإدارات."
     - "كل مخرج يُسجَّل في سجل التدقيق، وكل قرار في سجل القرارات."
-  skills: [SKL-CLAIMTAG, SKL-TERMS, SKL-FACTCHECK, SKL-STYLE]
+    - "المخرج عربي بشري محكم: الملاحظات بالعربية بين قوسين، ولا علامات مائية ظاهرة ولا مخفية (SKL-CLEANOUT · SKL-HUMANLANG)."
+  skills: [SKL-CLAIMTAG, SKL-TERMS, SKL-FACTCHECK, SKL-STYLE, SKL-CLEANOUT, SKL-HUMANLANG]
   claude_skills: [source-integrity-ar, academic-integrity-sunni-sources-ar, council-orchestration-ar, project-runtime-protocol-ar]
 
 # ------------------------------------------------------------------ نظام التصميم المركزي

@@ -1,6 +1,8 @@
-"""تصدير النصوص إلى Word بالهوية البصرية (اتجاه من اليمين، Noto Naskh Arabic، عناوين زرقاء وخط ذهبي).
+"""تصدير النصوص إلى Word بالهوية البصرية (اتجاه من اليمين، Noto Naskh Arabic، عناوين بلون الإدارة وخط ذهبي).
 
-clean=True يحذف وسوم الادعاءات ومعرّفات الوحدات من نسخة القراءة؛ النسخة الأصلية (Markdown) تبقى بوسومها.
+clean=True نسخة القراءة: تُحذف وسوم التصنيف، وتُترجم مواضع النقص والقرار إلى العربية بين قوسين.
+clean=False نسخة المراجعة: كل الوسوم بالعربية بين قوسين. وفي الحالين تُنقّى العلامات المائية الظاهرة والمخفية
+(runtime/rkpos/sanitize.py)، والأصل (Markdown) يبقى بوسومه المعيارية.
 """
 from __future__ import annotations
 import io
@@ -12,10 +14,10 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
 
+from . import sanitize
+
 BLUE, GOLD = RGBColor(0x1F, 0x4E, 0x79), RGBColor(0xB8, 0x86, 0x0B)
 FONT = "Noto Naskh Arabic"
-TAGS = re.compile(r"\[(?:FACT|EBI|INTERP|HYP|AUTHOR)\]\s?")
-NEEDS = re.compile(r"\[NEEDS-EVIDENCE(?::[^\]]*)?\]")   # يبقى ظاهراً للمؤلف بعلامة عربية: موضع يحتاج توثيقاً
 
 
 def _rtl(par, align="both"):
@@ -23,29 +25,26 @@ def _rtl(par, align="both"):
     bidi = OxmlElement("w:bidi")
     ppr.append(bidi)
     jc = OxmlElement("w:jc")
-    jc.set(qn("w:val"), align)
+    jc.set(qn("w:val"), {"start": "both", "center": "center", "both": "both"}[align])
     ppr.append(jc)
 
 
 def _run(par, text, size=14, bold=False, color=None):
+    """مقطع نصي بخط عربي واتجاه من اليمين؛ تُدرج عناصر الخصائص في مواضعها من المخطط (يرفض Word الترتيب الخاطئ)."""
     r = par.add_run(text)
     r.font.name, r.font.size, r.bold = FONT, Pt(size), bold
     if color:
         r.font.color.rgb = color
     rpr = r._r.get_or_add_rPr()
     fonts = rpr.find(qn("w:rFonts"))
-    if fonts is None:
-        fonts = OxmlElement("w:rFonts")
-        rpr.append(fonts)
-    for k in ("w:ascii", "w:hAnsi", "w:cs"):
+    for k in ("w:ascii", "w:hAnsi", "w:cs", "w:eastAsia"):
         fonts.set(qn(k), FONT)
-    rtl = OxmlElement("w:rtl")
-    rpr.append(rtl)
+    if bold:
+        rpr.find(qn("w:b")).addnext(OxmlElement("w:bCs"))
     szcs = OxmlElement("w:szCs")
     szcs.set(qn("w:val"), str(size * 2))
-    rpr.append(szcs)
-    if bold:
-        rpr.append(OxmlElement("w:bCs"))
+    rpr.find(qn("w:sz")).addnext(szcs)
+    rpr.append(OxmlElement("w:rtl"))
     return r
 
 
@@ -61,16 +60,14 @@ def _rgb(hex_color: str) -> RGBColor:
     return RGBColor(int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
 
 
-def to_docx(markdown: str, title: str | None = None, clean: bool = True, theme: dict | None = None) -> bytes:
+def to_docx(markdown: str, title: str | None = None, clean: bool = True, theme: dict | None = None,
+            author: str = "") -> bytes:
     """theme: ألوان الإدارة من نظام التصميم المركزي (primary للعناوين، accent للخط الفاصل)."""
     blue = _rgb(theme["primary"]) if theme else BLUE
     gold = _rgb(theme["accent"]) if theme else GOLD
-    if clean:
-        markdown = TAGS.sub("", markdown)
-        markdown = NEEDS.sub(" ⟨يحتاج توثيقاً⟩", markdown)
-        markdown = re.sub(r"(?: ⟨يحتاج توثيقاً⟩)+", " ⟨يحتاج توثيقاً⟩", markdown)
-        markdown = re.sub(r"\A---\n.*?\n---\n", "", markdown, flags=re.S)
-        markdown = re.sub(r"\[@SRC-\d+[^\]]*\]", "", markdown)
+    markdown, _ = sanitize.clean(markdown, "reading" if clean else "tagged")
+    if title:   # لا يتكرر العنوان إن كان النص يبدأ به
+        markdown = re.sub(rf"\A#\s+{re.escape(title.strip())}\s*\n", "", markdown.lstrip())
     doc = Document()
     sec = doc.sections[0]
     sec.right_to_left = True
@@ -105,6 +102,7 @@ def to_docx(markdown: str, title: str | None = None, clean: bool = True, theme: 
             p.paragraph_format.space_after = Pt(6)
             p.paragraph_format.line_spacing = 1.4
             _inline(p, ("• " + bullet.group(1)) if bullet else line, 14)
+    sanitize.scrub_docx(doc, author=author, title=title or "")
     buf = io.BytesIO()
     doc.save(buf)
-    return buf.getvalue()
+    return sanitize.scrub_package(buf.getvalue())

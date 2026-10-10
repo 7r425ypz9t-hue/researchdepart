@@ -9,6 +9,7 @@ Idea → Research → Evidence → Analysis → Writing → Verification → Rev
 ```
 
 ## ابدأ من هنا
+- ✅ [جودة المخرج: التنقية من الملاحظات الإنجليزية والعلامات المائية، واللغة البشرية](documentation/phase-5/output-quality.md)
 - 🏛 [هيكل المؤسسة: الإدارات التخصصية والمساندة والتصميم المركزي](documentation/phase-5/institution.md)
 - 📘 [المخطط التنفيذي وفهرس المخرجات الأربعين](documentation/00-executive-blueprint.md)
 - 🖥 [لوحة التحكم وأيقونة سطح المكتب](documentation/phase-5/control-panel.md) — ويندوز: `launchers\install_windows.bat` · ماك: `launchers/install_mac.command`

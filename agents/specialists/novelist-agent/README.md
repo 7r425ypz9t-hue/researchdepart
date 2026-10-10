@@ -28,6 +28,7 @@
 - `SKL-CONTINUITY` حفظ الاتساق السردي
 - `SKL-SUFI` إذابة المادة الصوفية
 - `SKL-TERMS` إدارة المصطلحات
+- `SKL-HUMANLANG` اللغة البشرية المحكمة
 
 ## الأدوات
 - `TL-FS` Repository File System — built_in
