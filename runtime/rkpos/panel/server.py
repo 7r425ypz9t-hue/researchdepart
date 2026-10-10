@@ -23,6 +23,7 @@ import yaml
 
 from .. import registry as R
 from ..paths import ROOT, PROJECTS
+from .. import institution as INS
 from ..live import hidden as live_hidden
 
 STATIC = Path(__file__).parent / "static"
@@ -31,7 +32,8 @@ READABLE = ("projects", "workspace", "publishing/dashboard")
 WRITE_LOCK = threading.Lock()
 PROJECT_TYPES = ["intellectual_book", "academic_book", "policy_study", "systematic_review", "literature_review",
                  "foresight_study", "critical_edition", "journal_article", "op_ed", "strategic_report",
-                 "translation", "re_edition", "novel", "novella", "short_story", "essay_collection"]
+                 "translation", "re_edition", "novel", "novella", "short_story", "essay_collection",
+                 "play", "economic_study", "cultural_study", "development_study"]
 JOBS: dict[str, dict] = {}          # مهام الخلفية (الكتابة الكاملة) — في الذاكرة فقط
 MIME = {".html": "text/html; charset=utf-8", ".js": "application/javascript; charset=utf-8",
         ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".ico": "image/x-icon"}
@@ -112,8 +114,10 @@ def agents(_q) -> dict:
                     "department": a["department"], "tier": a["model_tier"], "mvp": bool(a.get("mvp")),
                     "mission": " ".join(str(a.get("mission", "")).split()), "version": a.get("version"),
                     "reads_author": "MEM-AUTHOR" in a["memory"]["read"], "modes": a.get("modes", []),
-                    "human_approval": a.get("human_approval", [])})
-    return {"items": out, "departments": {k: v.get("name_ar", k) for k, v in R.departments().items()}}
+                    "human_approval": a.get("human_approval", []),
+                    "divisions": [d["id"] for d in INS.divisions().values() if aid in d.get("lead_agents", [])]})
+    return {"items": out, "departments": {k: v.get("name_ar", k) for k, v in R.departments().items()},
+            "divisions": {k: {"name_ar": v["name_ar"], "theme": INS.theme(k)} for k, v in INS.divisions().items()}}
 
 
 def agent(q) -> dict:
@@ -151,9 +155,12 @@ def project(q) -> dict:
             if d.is_dir() and any(d.iterdir()):
                 runs.append({"id": d.name, "files": sorted(f.name for f in d.iterdir() if f.is_file())})
     files = sorted(str(f.relative_to(ROOT)) for f in p.rglob("*") if f.is_file() and "runs" not in f.relative_to(p).parts)
-    return {"manifest": _y(p / "manifest.yaml"), "state": _y(p / "state.yaml"), "plan": _y(p / "plan.yaml"),
+    m = _y(p / "manifest.yaml")
+    div = INS.division_of_project(m)
+    return {"manifest": m, "state": _y(p / "state.yaml"), "plan": _y(p / "plan.yaml"),
             "decisions": (_y(p / "decisions.yaml") or {}).get("decisions", []), "runs": runs, "files": files,
-            "cost": cost.report(p.name)}
+            "cost": cost.report(p.name), "division": {"id": div, "name_ar": INS.divisions()[div]["name_ar"], "theme": INS.theme(div)},
+            "marketing": sorted(str(f.relative_to(ROOT)) for f in (p / "marketing").glob("*.md")) if (p / "marketing").exists() else []}
 
 
 def read_file(q) -> dict:
@@ -209,6 +216,36 @@ def governance(_q) -> dict:
     return {"gates": R.load_yaml(g / "quality_gates.yaml")["gates"],
             "decision_rights": R.load_yaml(g / "decision_rights.yaml"),
             "council": R.load_yaml(g / "council.yaml")}
+
+
+def institution_view(_q) -> dict:
+    """لوحة المؤسسة: الإدارات بهوياتها ومؤشراتها (المشاريع، النشط منها، الأسئلة المعلّقة، الكلفة، الوكلاء)."""
+    from .. import autopilot as AP, cost, dashboard
+    c = INS.config()
+    rows = dashboard.collect()
+    qs = AP.pending_questions()
+    out = []
+    for did, d in INS.divisions().items():
+        mine = []
+        for r in rows:
+            m = _y(PROJECTS / r["id"] / "manifest.yaml") or {}
+            try:
+                if INS.division_of_project(m) == did:
+                    mine.append(r)
+            except ValueError:
+                pass
+        ids = {r["id"] for r in mine}
+        out.append({**{k: d.get(k) for k in ("id", "kind", "name_ar", "name_en", "mission", "project_types", "lead_agents",
+                                             "skills", "claude_skills", "traits", "central", "sub_units")},
+                    "theme": INS.theme(did),
+                    "stats": {"projects": len(mine), "active": sum(1 for r in mine if r["stage"] != "CLOSED"),
+                              "questions": sum(1 for q in qs if q["project"] in ids),
+                              "cost": round(sum(cost.report(i)["total_usd"] for i in ids), 2),
+                              "agents": len(d.get("lead_agents", []))},
+                    "projects": [{"id": r["id"], "title": r["title"], "stage": r["stage"], "pct": r["pct"]} for r in mine]})
+    return {"name_ar": c["name_ar"], "tagline_ar": c["tagline_ar"], "general": c["general"],
+            "design_system": c["design_system"], "divisions": out, "questions": qs,
+            "cross_cutting_agents": c.get("cross_cutting_agents", [])}
 
 
 def genres_view(_q) -> dict:
@@ -313,6 +350,9 @@ def docs_view(q) -> dict:
         f = root / "runs" / st["id"] / "output.md"
         if f.exists():
             out.append({"path": str(f.relative_to(ROOT)), "label": f"{st['id']} — {AP.task_ar(st['task'])}", "group": "مخرجات الخطوات"})
+    for f, lbl in ((root / "marketing/pack.md", "حزمة التسويق"), (root / "marketing/design_brief.md", "موجز التصميم")):
+        if f.exists():
+            out.append({"path": str(f.relative_to(ROOT)), "label": lbl, "group": "التسويق والتصميم"})
     for f in sorted((root / "manuscript/approved").glob("*.md")) if (root / "manuscript/approved").exists() else []:
         if not f.stem.startswith("U"):
             out.append({"path": str(f.relative_to(ROOT)), "label": f"المعتمد: {f.name}", "group": "العمل"})
@@ -324,7 +364,7 @@ def ST_plan(pid):
     return ST.plan(pid)
 
 
-GET = {"live": live_view, "docs": docs_view, "labels": labels_view, "autopilot": autopilot_view, "genres": genres_view, "book": book_view, "book_unit": book_unit, "job": job_view, "overview": overview, "agents": agents, "agent": agent, "workflows": workflows, "project": project,
+GET = {"institution": institution_view, "live": live_view, "docs": docs_view, "labels": labels_view, "autopilot": autopilot_view, "genres": genres_view, "book": book_view, "book_unit": book_unit, "job": job_view, "overview": overview, "agents": agents, "agent": agent, "workflows": workflows, "project": project,
        "file": read_file, "candidates": candidates, "memory": memory, "audit": audit_log, "cost": cost_report,
        "governance": governance, "engines": lambda q: engines(bool(q.get("fresh"))), "ping": lambda q: {"ok": True, "root": str(ROOT), "version": code_version(), "pid": os.getpid()}}
 
@@ -335,6 +375,8 @@ def a_new_project(d):
     _need(d, "title", "type")
     if d["type"] not in PROJECT_TYPES:
         raise ApiError("نوع مشروع غير معروف")
+    if d.get("division") and INS.division_for_type(d["type"]) != d["division"]:
+        raise ApiError("نوع العمل لا يتبع هذه الإدارة")
     m = P.new_project(d["title"], d["type"], domain=d.get("domain") or None, operating_model=d.get("model") or "A",
                       has_data=bool(d.get("has_data")), risk=d.get("risk") or "medium",
                       evidence_requirement=d.get("evidence") or "standard", publication_target=d.get("target") or None,
@@ -694,6 +736,15 @@ def a_autopilot_stop(d):
     return AP.request_stop(_proj(d["project"]).name)
 
 
+def a_marketing(d):
+    from .. import marketing
+    _need(d, "project")
+    try:
+        return marketing.pack(_proj(d["project"]).name, d.get("engine") or "manual")
+    except PermissionError as e:
+        raise ApiError(str(e)) from e
+
+
 def a_claude_add_path(_d):
     from ..adapters.claude_code_adapter import add_to_user_path, AdapterUnavailable
     try:
@@ -702,7 +753,7 @@ def a_claude_add_path(_d):
         raise ApiError(str(e)) from e
 
 
-POST = {"stop_now": a_stop_now, "autopilot_note": a_autopilot_note, "autopilot_start": a_autopilot_start, "autopilot_answer": a_autopilot_answer, "autopilot_stop": a_autopilot_stop,
+POST = {"marketing": a_marketing, "stop_now": a_stop_now, "autopilot_note": a_autopilot_note, "autopilot_start": a_autopilot_start, "autopilot_answer": a_autopilot_answer, "autopilot_stop": a_autopilot_stop,
         "claude_add_path": a_claude_add_path, "claude_login": a_claude_login, "book_skeleton": b_skeleton, "book_set_units": b_set_units, "book_propose": b_propose,
         "book_import_outline": b_import_outline, "book_approve_outline": b_approve_outline, "book_draft": b_draft,
         "book_record": b_record, "book_revise": b_revise, "book_align": b_align, "book_adopt_aligned": b_adopt_aligned,
@@ -717,7 +768,7 @@ READ_ONLY_POST = {"stop_now", "autopilot_note", "check_text", "verify_doi", "sel
 # ------------------------------------------------------------------ HTTP
 def make_handler(token: str, port_ref: dict):
     class H(BaseHTTPRequestHandler):
-        server_version = "MIDAD-Panel/1.0"
+        server_version = "Bahith-Panel/1.0"
 
         def log_message(self, fmt, *args):  # لا تُطبع الطلبات (قد تحمل نصوصاً خاصة)
             pass
@@ -767,8 +818,14 @@ def make_handler(token: str, port_ref: dict):
                 if not any(f.is_relative_to((ROOT / r).resolve()) for r in READABLE) or not f.is_file():
                     return self._json(400, {"ok": False, "error": "مسار غير مسموح"})
                 from ..export import to_docx
+                th = None
+                try:
+                    pid = f.relative_to(PROJECTS.resolve()).parts[0]
+                    th = INS.theme(INS.division_of_project(_y(PROJECTS / pid / "manifest.yaml") or {}))
+                except (ValueError, IndexError, KeyError):
+                    pass
                 return self._send(200, to_docx(f.read_text(encoding="utf-8"), q.get("title") or None,
-                                               clean=q.get("clean", "1") == "1"),
+                                               clean=q.get("clean", "1") == "1", theme=th),
                                   "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
             if u.path == "/api/raw":
                 q = {k: v[0] for k, v in parse_qs(u.query).items()}
@@ -853,6 +910,30 @@ def _existing() -> dict | None:
     return None
 
 
+def open_app_window(url: str) -> None:
+    """يفتح اللوحة نافذةَ تطبيق مستقلة (Edge أو Chrome بوضع --app) لا تبويب متصفح؛ وإن تعذّر فالمتصفح الافتراضي."""
+    cands = []
+    if sys.platform.startswith("win"):
+        for base in (os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"), os.environ.get("ProgramFiles", r"C:\Program Files"),
+                     os.environ.get("LOCALAPPDATA", "")):
+            cands += [Path(base) / "Microsoft/Edge/Application/msedge.exe", Path(base) / "Google/Chrome/Application/chrome.exe"]
+    elif sys.platform == "darwin":
+        cands += [Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
+                  Path("/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge")]
+    else:
+        cands += [Path(p) for p in (shutil.which("google-chrome") or "", shutil.which("chromium") or "",
+                                    shutil.which("microsoft-edge") or "") if p]
+    from ..live import hidden
+    for exe in cands:
+        if exe and exe.is_file():
+            try:
+                subprocess.Popen([str(exe), f"--app={url}", "--window-size=1440,920"], **hidden())
+                return
+            except OSError:
+                continue
+    webbrowser.open(url)
+
+
 def _say(msg: str) -> None:
     if sys.stdout is not None:  # pythonw (أيقونة ويندوز) بلا طرفية
         try:
@@ -866,7 +947,7 @@ def serve(port: int = 0, open_browser: bool = True, reuse: bool = True) -> None:
         url = f"http://127.0.0.1:{st['port']}/#t={st['token']}"
         _say(f"اللوحة تعمل مسبقاً: {url}")
         if open_browser:
-            webbrowser.open(url)
+            open_app_window(url)
         return
     token = secrets.token_urlsafe(24)
     port_ref: dict = {}
@@ -881,9 +962,9 @@ def serve(port: int = 0, open_browser: bool = True, reuse: bool = True) -> None:
     except OSError:
         pass
     url = f"http://127.0.0.1:{port}/#t={token}"
-    _say(f"لوحة «مِداد» تعمل على {url}\nأوقفها من الإعدادات في اللوحة أو بـ Ctrl+C.")
+    _say(f"لوحة «باحث» تعمل على {url}\nأوقفها من الإعدادات في اللوحة أو بـ Ctrl+C.")
     if open_browser:
-        threading.Timer(0.6, lambda: webbrowser.open(url)).start()
+        threading.Timer(0.6, lambda: open_app_window(url)).start()
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

@@ -69,6 +69,7 @@ handoffs:
   - AG-INT
   - AG-LRV
   - AG-POL
+  - AG-ECO
   sends_to:
   - AG-EVA
   - AG-SED

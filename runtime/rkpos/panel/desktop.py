@@ -1,4 +1,4 @@
-"""تثبيت أيقونة «مِداد» على سطح المكتب (ويندوز · ماك · لينكس).
+"""تثبيت أيقونة «باحث» على سطح المكتب (ويندوز · ماك · لينكس).
 
 يُشغَّل على جهاز المؤلف: `rkpos install-icon` (والإزالة: `rkpos install-icon --remove`).
 الأيقونة تشغّل `rkpos panel` بمفسّر بايثون الحالي، وتحفظ مسار Claude Code ومسار البحث (PATH)
@@ -16,7 +16,8 @@ from pathlib import Path
 from ..paths import ROOT
 
 STATIC = Path(__file__).parent / "static"
-NAME_AR = "مداد"
+NAME_AR = "باحث"
+OLD_NAME_AR = "مداد"   # الاسم السابق: تُزال اختصاراته عند التثبيت
 HOME_DIR = Path.home() / ".rkpos"
 
 
@@ -61,10 +62,10 @@ def _sh_launcher() -> Path:
     HOME_DIR.mkdir(parents=True, exist_ok=True)
     env = _env_lines()
     q = lambda s: "'" + s.replace("'", "'\\''") + "'"  # noqa: E731
-    body = "#!/bin/sh\n# مشغّل لوحة «مِداد» — أنشأه rkpos install-icon\n"
+    body = "#!/bin/sh\n# مشغّل لوحة «باحث» — أنشأه rkpos install-icon\n"
     body += "".join(f"export {k}={q(v)}\n" for k, v in env.items())
     body += f"exec {q(_python(False))} -m rkpos panel >> {q(str(HOME_DIR / 'panel.log'))} 2>&1\n"
-    p = HOME_DIR / "midad-launch.sh"
+    p = HOME_DIR / "bahith-launch.sh"
     p.write_text(body, encoding="utf-8")
     p.chmod(p.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
     return p
@@ -80,7 +81,7 @@ def shortcut_script(targets: list[Path], ico: Path) -> str:
             f"$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{q(t)}');"
             f"$s.TargetPath='{q(_python(True))}';$s.Arguments='-m rkpos panel';"
             f"$s.WorkingDirectory='{q(ROOT)}';$s.IconLocation='{q(ico)}';"
-            "$s.Description='MIDAD control panel';$s.Save();")
+            "$s.Description='Bahith control panel';$s.Save();")
     return "".join(parts)
 
 
@@ -93,14 +94,14 @@ def install_windows(remove: bool = False) -> list[str]:
         (HOME_DIR / "midad-launch.cmd").unlink(missing_ok=True)  # من إصدار سابق
         return [f"removed {lnk}", f"removed {start}"]
     HOME_DIR.mkdir(parents=True, exist_ok=True)
-    ico = HOME_DIR / "midad.ico"
-    shutil.copyfile(STATIC / "midad.ico", ico)
+    ico = HOME_DIR / "bahith.ico"
+    shutil.copyfile(STATIC / "bahith.ico", ico)
     subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", shortcut_script([lnk, start], ico)], check=True)
     return [str(lnk), str(start)]
 
 
 def install_macos(remove: bool = False) -> list[str]:
-    app = Path.home() / "Applications" / "Midad.app"
+    app = Path.home() / "Applications" / "Bahith.app"
     link = _desktop() / f"{NAME_AR}.app"
     if remove:
         if link.is_symlink() or link.exists():
@@ -112,13 +113,13 @@ def install_macos(remove: bool = False) -> list[str]:
     res = app / "Contents/Resources"
     macos.mkdir(parents=True, exist_ok=True)
     res.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(STATIC / "midad.icns", res / "midad.icns")
-    exe = macos / "midad"
+    shutil.copyfile(STATIC / "bahith.icns", res / "bahith.icns")
+    exe = macos / "bahith"
     exe.write_text(f"#!/bin/sh\nexec '{launcher}'\n", encoding="utf-8")
     exe.chmod(0o755)
     with open(app / "Contents/Info.plist", "wb") as f:
-        plistlib.dump({"CFBundleName": NAME_AR, "CFBundleDisplayName": NAME_AR, "CFBundleIdentifier": "org.midad.panel",
-                       "CFBundleExecutable": "midad", "CFBundleIconFile": "midad.icns", "CFBundlePackageType": "APPL",
+        plistlib.dump({"CFBundleName": NAME_AR, "CFBundleDisplayName": NAME_AR, "CFBundleIdentifier": "org.bahith.panel",
+                       "CFBundleExecutable": "bahith", "CFBundleIconFile": "bahith.icns", "CFBundlePackageType": "APPL",
                        "CFBundleShortVersionString": "1.0", "LSUIElement": True}, f)
     if link.is_symlink() or link.exists():
         link.unlink()
@@ -127,16 +128,16 @@ def install_macos(remove: bool = False) -> list[str]:
 
 
 def install_linux(remove: bool = False) -> list[str]:
-    apps = Path.home() / ".local/share/applications/midad.desktop"
-    desk = _desktop() / "midad.desktop"
+    apps = Path.home() / ".local/share/applications/bahith.desktop"
+    desk = _desktop() / "bahith.desktop"
     if remove:
         for p in (apps, desk):
             p.unlink(missing_ok=True)
         return [f"removed {apps}", f"removed {desk}"]
     launcher = _sh_launcher()
     HOME_DIR.mkdir(parents=True, exist_ok=True)
-    icon = HOME_DIR / "midad.png"
-    shutil.copyfile(STATIC / "midad.png", icon)
+    icon = HOME_DIR / "bahith.png"
+    shutil.copyfile(STATIC / "bahith.png", icon)
     entry = (f"[Desktop Entry]\nType=Application\nName={NAME_AR}\nName[ar]={NAME_AR}\n"
              f"Comment=لوحة تحكم إدارة البحوث والدراسات والنشر\nExec={launcher}\nIcon={icon}\nTerminal=false\n"
              "Categories=Office;Education;\n")
@@ -153,7 +154,25 @@ def install_linux(remove: bool = False) -> list[str]:
     return out
 
 
+def _remove_old_name() -> list[str]:
+    """تُزال اختصارات الاسم السابق «مداد» حتى لا تبقى أيقونتان."""
+    gone = []
+    olds = [_desktop() / f"{OLD_NAME_AR}.lnk", Path(os.environ.get("APPDATA", Path.home())) / "Microsoft/Windows/Start Menu/Programs" / f"{OLD_NAME_AR}.lnk",
+            _desktop() / f"{OLD_NAME_AR}.app", Path.home() / ".local/share/applications/midad.desktop", _desktop() / "midad.desktop",
+            HOME_DIR / "midad-launch.sh", HOME_DIR / "midad.ico", HOME_DIR / "midad.png"]
+    for p in olds:
+        try:
+            if p.is_symlink() or p.exists():
+                p.unlink()
+                gone.append(str(p))
+        except OSError:
+            pass
+    shutil.rmtree(Path.home() / "Applications" / "Midad.app", ignore_errors=True)
+    return gone
+
+
 def install(remove: bool = False) -> list[str]:
+    _remove_old_name()
     if sys.platform.startswith("win"):
         return install_windows(remove)
     if sys.platform == "darwin":

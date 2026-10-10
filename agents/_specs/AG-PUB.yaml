@@ -33,7 +33,7 @@ permissions:
   prohibited: [تعديل نص معتمد, النشر الخارجي, إصدار Release نهائي, البناء من نسخة غير معتمدة]
 human_approval: [الغلاف, البيانات الوصفية النهائية, الإطلاق (L4)]
 handoffs:
-  receives_from: [AG-ARE, AG-SUP-EDT, AG-ORC, AG-VIS]
+  receives_from: [AG-ARE, AG-SUP-EDT, AG-ORC, AG-VIS, AG-DSN]
   sends_to: [AG-SUP-PUB, AG-KNW, AG-VCS]
 consult:
   - {agent: AG-VIS, when: "جودة الأشكال أو الجداول في الإخراج"}

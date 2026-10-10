@@ -1,6 +1,6 @@
-# مِداد — وحدة ذكاء البحث والمعرفة والنشر
+# باحث — مؤسسة البحث والتطوير المعرفي
 
-**MIDAD — Research, Knowledge & Publishing Intelligence Unit (RKPIU) → Research & Knowledge Production Operating System (RKPOS)**
+**BAHITH — Research & Knowledge Development Institution (RKPIU) → Research & Knowledge Production Operating System (RKPOS)**
 
 إدارة بحوث ودراسات ونشر رقمية متعددة الوكلاء، محكومة ومُختبَرة وقابلة للتشغيل: من الفكرة إلى النشر والأرشفة والتعلم، مع بقاء **الفكر والأطروحة والقرار العلمي النهائي والاعتماد للنشر** تحت سلطة المؤلف.
 
@@ -9,6 +9,7 @@ Idea → Research → Evidence → Analysis → Writing → Verification → Rev
 ```
 
 ## ابدأ من هنا
+- 🏛 [هيكل المؤسسة: الإدارات التخصصية والمساندة والتصميم المركزي](documentation/phase-5/institution.md)
 - 📘 [المخطط التنفيذي وفهرس المخرجات الأربعين](documentation/00-executive-blueprint.md)
 - 🖥 [لوحة التحكم وأيقونة سطح المكتب](documentation/phase-5/control-panel.md) — ويندوز: `launchers\install_windows.bat` · ماك: `launchers/install_mac.command`
 - ✍️ [الأجناس الكتابية ومستويات الإنتاج](documentation/phase-2/genres-and-production-levels.md) — رواية · بحث · فكر · عمود؛ هيكل · تدرّجي · كامل

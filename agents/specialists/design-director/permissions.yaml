@@ -1,0 +1,19 @@
+# GENERATED from agents/_specs/AG-DSN.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-DSN
+rbac_role: role:specialist:design-director
+allowed:
+- اقتراح موجزات التصميم
+- تطبيق الهوية اللونية للإدارة
+prohibited:
+- تغيير نص معتمد
+- استعمال صورة أو خط محمي دون ترخيص
+- اعتماد الغلاف النهائي دون المؤلف
+human_approval_required:
+- الغلاف النهائي
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+write_path_allowlist:
+- publishing/<PID>/
+external_publish: false
+can_modify_own_prompt: false

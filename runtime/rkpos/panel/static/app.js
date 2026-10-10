@@ -49,7 +49,7 @@ function h(tag, props, ...kids) {
 }
 const $ = (s) => document.querySelector(s);
 const main = () => $("#main");
-function set(...nodes) { const m = main(); m.replaceChildren(...nodes); window.scrollTo(0, 0); }
+function set(...nodes) { const m = main(); m.replaceChildren(...nodes.flat(Infinity).filter((n) => n != null && n !== false)); window.scrollTo(0, 0); }
 function toast(msg, bad) {
   const t = $("#toast"); t.textContent = msg; t.className = "toast" + (bad ? " bad" : ""); t.hidden = false;
   clearTimeout(t._t); t._t = setTimeout(() => (t.hidden = true), bad ? 7000 : 3500);
@@ -75,6 +75,7 @@ const PTYPE_AR = {
   literature_review: "مراجعة أدبيات", foresight_study: "دراسة استشرافية", critical_edition: "تحقيق تراثي", journal_article: "بحث محكّم",
   op_ed: "مقال رأي", strategic_report: "تقرير استراتيجي", translation: "ترجمة", re_edition: "إعادة إصدار",
   novel: "رواية", novella: "رواية قصيرة (نوفيلا)", short_story: "قصة قصيرة", essay_collection: "مجموعة مقالات فكرية",
+  play: "مسرحية", economic_study: "دراسة اقتصادية", cultural_study: "دراسة ثقافية", development_study: "دراسة تنموية",
 };
 const FILE_AR = { "output.md": "المخرج", "prompt.md": "حزمة البرومبت", "warnings.txt": "التنبيهات", "author_task.md": "مهمة المؤلف",
   "refusal.txt": "سبب الامتناع", "output.prev.md": "المخرج السابق" };
@@ -169,34 +170,50 @@ function runView(res, ctx) {
 }
 
 // ---------- الرئيسة ----------
+const themeStyle = (t) => t ? `--blue:${t.primary};--gold:${t.accent};--light:${t.light}` : "";
+let INST = null;
 async function home() {
-  const o = await G("overview");
+  const [o, ins] = await Promise.all([G("overview"), G("institution")]);
+  INST = ins;
   const e = o.engines;
-  set(
-    h("h2", {}, "نظرة عامة"),
-    h("div", { class: "grid" },
-      h("div", { class: "card" }, h("div", { class: "kpi" }, o.agents), "وكيلاً معرّفاً"),
-      h("div", { class: "card" }, h("div", { class: "kpi" }, o.workflows), "سير عمل"),
-      h("div", { class: "card" }, h("div", { class: "kpi" }, o.projects.length), "مشروعاً"),
-      h("div", { class: "card click", onclick: () => go("governance") }, h("div", { class: "kpi" }, o.candidates), "مرشّحاً للذاكرة بانتظار الاعتماد"),
-      h("div", { class: "card" }, h("h4", {}, "المحرّكات"),
-        h("div", {}, pill("Claude Code: " + (!e.claude_code ? "غير مثبت" : e.claude_logged_in === false ? "غير مسجّل الدخول" : "جاهز"),
-          e.claude_code && e.claude_logged_in !== false ? "ok" : "warn"),
-          e.claude_code && e.claude_logged_in === false ? btn("سجّلوا الدخول", claudeLogin, "sm gold") : null),
-        h("div", {}, pill("مفتاح Anthropic: " + (e.api_keys.ANTHROPIC_API_KEY ? "موجود" : "غير موجود"), e.api_keys.ANTHROPIC_API_KEY ? "ok" : "")),
-        h("div", {}, pill("الذاكرة الخاصة: " + (e.private_memory ? "مستعادة" : "غير موجودة"), e.private_memory ? "ok" : "bad")))),
-    h("h2", {}, "إجراءات سريعة"),
+  const tot = ins.divisions.reduce((a, d) => ({ p: a.p + d.stats.projects, act: a.act + d.stats.active, c: a.c + d.stats.cost }), { p: 0, act: 0, c: 0 });
+  const divCard = (d) => h("div", { class: "card div-card", style: themeStyle(d.theme) },
+    h("div", { class: "div-head" }, h("span", { class: "emblem" }, d.theme.emblem || "§"),
+      h("div", {}, h("h4", {}, d.name_ar), h("div", { class: "small muted" }, d.name_en))),
+    h("p", { class: "small" }, d.mission),
+    d.kind === "specialized" ? h("div", { class: "row" },
+      pill(d.stats.projects + " مشروعاً"), pill(d.stats.active + " نشطاً", d.stats.active ? "gold" : ""),
+      d.stats.questions ? pill(d.stats.questions + " سؤالاً بانتظاركم", "bad") : null, pill("$" + d.stats.cost)) : null,
+    d.traits ? h("div", { class: "row" }, d.traits.map((t) => h("span", { class: "pill trait" }, t))) : null,
+    d.central ? h("div", { class: "row" }, h("span", { class: "small muted" }, "الهويات الفرعية: "),
+      ins.divisions.filter((x) => (d.sub_units || []).includes(x.id)).map((x) => h("span", { class: "swatch", title: x.name_ar, style: `background:${x.theme.primary}` }))) : null,
+    h("div", { class: "small muted" }, "الوكلاء: " + (d.lead_agents || []).map(agentAr).join("، ")),
     h("div", { class: "row" },
-      btn("مشروع جديد", () => newProjectForm(), "gold"), btn("تفعيل وكيل", () => go("agents")),
-      btn("فحص نص", () => go("tools")), btn("اعتماد مرشّحات الذاكرة", () => go("governance"), "ghost"),
-      btn("فحص سلامة المنظومة", () => go("tools"), "ghost")),
-    h("h2", {}, "بانتظار قراركم"),
-    o.questions.length ? h("div", { class: "grid" }, o.questions.map((q) => questionCard(q.project, q, true))) : null,
-    o.pending.length ? h("table", {}, h("tr", {}, h("th", {}, "المشروع"), h("th", {}, "المطلوب"), h("th", {}, "")),
-      o.pending.map((p) => h("tr", {}, h("td", {}, p.project, h("br"), h("span", { class: "small muted" }, p.title)),
-        h("td", {}, (p.items || []).join("، ") || p.next), h("td", {}, btn("افتح", () => openProject(p.project), "sm")))))
-      : (o.questions.length ? null : h("p", { class: "muted" }, "لا قرارات معلّقة.")),
-    h("h2", {}, "المشاريع"), projectsTable(o.projects),
+      d.kind === "specialized" ? btn("مشروع جديد", () => newProjectForm(d.id), "sm gold") : null,
+      d.projects && d.projects.length ? h("details", {}, h("summary", { class: "small" }, "مشاريع الإدارة"),
+        h("div", { class: "list" }, d.projects.map((p) => h("div", { class: "item small", onclick: () => openProject(p.id) }, p.id + " — " + p.title + " (" + (p.pct || 0) + "%)")))) : null));
+  set(
+    h("div", { class: "hero" }, h("div", {}, h("div", { class: "hero-name" }, ins.name_ar), h("div", { class: "hero-tag" }, ins.tagline_ar)),
+      h("div", { class: "row" },
+        h("div", { class: "kpi-box" }, h("div", { class: "kpi" }, tot.p), "مشروعاً"),
+        h("div", { class: "kpi-box" }, h("div", { class: "kpi" }, tot.act), "نشطاً"),
+        h("div", { class: "kpi-box" }, h("div", { class: "kpi" }, ins.questions.length), "سؤالاً بانتظاركم"),
+        h("div", { class: "kpi-box" }, h("div", { class: "kpi" }, o.agents), "وكيلاً"),
+        h("div", { class: "kpi-box" }, h("div", { class: "kpi" }, "$" + tot.c.toFixed(2)), "الكلفة"))),
+    ins.questions.length ? [h("h2", {}, "بانتظار قراركم"), h("div", { class: "grid" }, ins.questions.map((q) => questionCard(q.project, q, true)))] : null,
+    h("h2", {}, "الإدارات التخصصية"),
+    h("div", { class: "grid div-grid" }, ins.divisions.filter((d) => d.kind === "specialized").map(divCard)),
+    h("h2", {}, "الإدارات المساندة"),
+    h("div", { class: "grid div-grid" }, ins.divisions.filter((d) => d.kind === "support").map(divCard)),
+    h("h2", {}, "الضوابط العامة لكل الإدارات"),
+    h("div", { class: "card" }, h("ul", {}, ins.general.rules.map((r) => h("li", {}, r))),
+      h("div", { class: "row" }, h("span", { class: "small muted" }, "مهارات عامة: "), ins.general.skills.map((x) => pill(x)))),
+    h("h2", {}, "المحرّكات"),
+    h("div", { class: "row" },
+      pill("Claude Code: " + (!e.claude_code ? "غير مثبت" : e.claude_logged_in === false ? "غير مسجّل الدخول" : "جاهز"), e.claude_code && e.claude_logged_in !== false ? "ok" : "warn"),
+      e.claude_code && e.claude_logged_in === false ? btn("سجّلوا الدخول", claudeLogin, "sm gold") : null,
+      pill("الذاكرة الخاصة: " + (e.private_memory ? "مستعادة" : "غير موجودة"), e.private_memory ? "ok" : "bad"),
+      pill(o.candidates + " مرشّحاً للذاكرة", o.candidates ? "gold" : "")),
   );
 }
 function projectsTable(rows) {
@@ -212,12 +229,17 @@ async function projects() {
   const o = await G("overview");
   set(h("h2", {}, "المشاريع"), h("div", { class: "row" }, btn("مشروع جديد", () => newProjectForm(), "gold")), projectsTable(o.projects));
 }
-async function newProjectForm(preGenre, preType) {
-  const g = await genresData();
-  let genre = preGenre || "intellectual", level = null;
-  const typeBox = h("div"), levelBox = h("div", { class: "grid" }), sizeBox = h("div"), genreBox = h("div", { class: "grid" });
+async function newProjectForm(preDiv, preType) {
+  const [g, ins] = await Promise.all([genresData(), INST ? Promise.resolve(INST) : G("institution")]);
+  INST = ins;
+  const specs = ins.divisions.filter((d) => d.kind === "specialized");
+  let div = preDiv && specs.find((d) => d.id === preDiv) ? preDiv : (preType ? (specs.find((d) => d.project_types.includes(preType)) || specs[0]).id : specs[0].id);
+  let level = null;
+  const genreOf = (t) => Object.keys(g.genres).find((k) => g.genres[k].project_types.includes(t)) || g.cross_genre[t] || "research";
+  const divBox = h("div", { class: "grid div-grid" }), typeBox = h("div"), levelBox = h("div", { class: "grid" }), sizeBox = h("div");
+  const D = () => specs.find((d) => d.id === div);
   const paintSize = () => {
-    const gs = g.genres[genre];
+    const gs = g.genres[genreOf(val("np-type"))];
     if (gs.max_words) { sizeBox.replaceChildren(h("p", { class: "muted" }, "سقف الطول " + gs.max_words + " كلمة.")); return; }
     const calc = h("span", { class: "pill gold" }, "—");
     const upd = () => { const p = +val("np-pages"), w = +val("np-wpp") || 250; calc.textContent = p ? (p * w).toLocaleString("ar") + " كلمة تقريباً" : "حدّدوا عدد الصفحات"; };
@@ -228,33 +250,31 @@ async function newProjectForm(preGenre, preType) {
     upd();
   };
   const paintLevels = () => {
-    const allowed = g.genres[genre].levels;
-    if (!allowed.includes(level)) level = allowed.includes("staged") ? "staged" : allowed[0];
+    const allowed = g.genres[genreOf(val("np-type"))].levels;
+    if (!allowed.includes(level)) level = allowed.includes("full") ? "full" : allowed[0];
     levelBox.replaceChildren(...Object.entries(g.levels.levels).filter(([k]) => allowed.includes(k)).map(([k, L]) =>
       h("div", { class: "card click" + (k === level ? " sel" : ""), onclick: () => { level = k; paintLevels(); } },
         h("h4", {}, L.order + ". " + L.name_ar), h("p", { class: "small" }, L.summary))));
   };
   const paintTypes = () => {
-    const types = g.genres[genre].project_types.concat(Object.keys(g.cross_genre));
-    typeBox.replaceChildren(field("نوع المشروع", sel("np-type", types.map((t) => [t, PTYPE_AR[t] || t]), preType && types.includes(preType) ? preType : types[0])));
+    const types = D().project_types;
+    typeBox.replaceChildren(field("نوع العمل", h("select", { id: "np-type", onchange: () => { paintLevels(); paintSize(); } },
+      types.map((t) => h("option", { value: t, selected: t === preType }, PTYPE_AR[t] || t)))));
   };
-  const paintGenres = () => {
-    genreBox.replaceChildren(...Object.entries(g.genres).map(([k, G2]) =>
-      h("div", { class: "card click" + (k === genre ? " sel" : ""), onclick: () => { genre = k; preType = null; paintAll(); } },
-        h("h4", {}, G2.name_ar), h("p", { class: "small muted" }, G2.intellectual[0]),
-        h("div", { class: "row" }, pill(G2.register), pill(G2.lead_agent, "gold")))));
-  };
-  const paintAll = () => { paintGenres(); paintTypes(); paintLevels(); paintSize(); };
-  set(h("h2", {}, "مشروع جديد"),
-    h("h3", {}, "١. الجنس"), genreBox,
-    h("h3", {}, "٢. النوع والعنوان"), h("div", { class: "form" }, field("العنوان العامل", h("input", { id: "np-title" }), true)), typeBox,
+  const paintDivs = () => divBox.replaceChildren(...specs.map((d) =>
+    h("div", { class: "card click div-card" + (d.id === div ? " sel" : ""), style: themeStyle(d.theme), onclick: () => { div = d.id; preType = null; paintAll(); } },
+      h("div", { class: "div-head" }, h("span", { class: "emblem" }, d.theme.emblem), h("h4", {}, d.name_ar)),
+      h("p", { class: "small muted" }, d.project_types.map((t) => PTYPE_AR[t] || t).join("، ")))));
+  const paintAll = () => { paintDivs(); paintTypes(); paintLevels(); paintSize(); $("#np-wrap").setAttribute("style", themeStyle(D().theme)); };
+  set(h("div", { id: "np-wrap" },
+    h("h2", {}, "مشروع جديد"),
+    h("h3", {}, "١. الإدارة"), divBox,
+    h("h3", {}, "٢. نوع العمل والعنوان"), h("div", { class: "form" }, field("العنوان العامل", h("input", { id: "np-title" }), true)), typeBox,
     h("h3", {}, "٣. مستوى الإنتاج"), levelBox,
     h("h3", {}, "٤. الحجم"), sizeBox,
     h("h3", {}, "٥. التشغيل"),
-    h("label", { class: "confirm" }, h("input", { type: "checkbox", id: "np-auto", checked: true }),
-      " شغّل الوكلاء آلياً فور الإنشاء"),
-    h("div", { class: "form" }, field("طريقة العمل", sel("np-mode", [["direct", "مباشر — مسودة كاملة ثم مراجعتي (موصى به)"],
-      ["guided", "موجَّه — أعتمد كل مرحلة"]], "direct"))),
+    h("label", { class: "confirm" }, h("input", { type: "checkbox", id: "np-auto", checked: true }), " شغّل الوكلاء آلياً فور الإنشاء"),
+    h("div", { class: "form" }, field("طريقة العمل", sel("np-mode", [["direct", "مباشر — مسودة كاملة ثم مراجعتي (موصى به)"], ["guided", "موجَّه — أعتمد كل مرحلة"]], "direct"))),
     h("details", {}, h("summary", {}, "خيارات متقدمة"),
       h("div", { class: "form" },
         field("نموذج التشغيل", sel("np-model", [["A", "A — خفيف"], ["B", "B — قياسي"], ["C", "C — موسّع"]], "A")),
@@ -265,7 +285,7 @@ async function newProjectForm(preGenre, preType) {
         field("الموعد", h("input", { id: "np-deadline", type: "date" })),
         field("بيانات كمية؟", h("input", { id: "np-data", type: "checkbox" })))),
     h("div", { class: "row" }, btn("أنشئ المشروع", async () => {
-      const r = await api("new_project", { title: val("np-title"), type: val("np-type"), genre, level, pages: val("np-pages"), wpp: val("np-wpp"),
+      const r = await api("new_project", { title: val("np-title"), type: val("np-type"), division: div, level, pages: val("np-pages"), wpp: val("np-wpp"),
         model: val("np-model"), domain: val("np-domain"), risk: val("np-risk"), evidence: val("np-evidence"), target: val("np-target"),
         deadline: val("np-deadline"), has_data: val("np-data"), autopilot: val("np-auto"), mode: val("np-mode"), engine: engine() });
       if (val("np-auto") && engine() === "manual") toast("أُنشئ المشروع؛ التشغيل الآلي يحتاج محرّك Claude Code (أعلى الصفحة)", true);
@@ -275,7 +295,7 @@ async function newProjectForm(preGenre, preType) {
       const r = await api("select", { type: val("np-type"), model: val("np-model"), domain: val("np-domain"), risk: val("np-risk"),
         evidence: val("np-evidence"), target: val("np-target"), has_data: val("np-data") });
       $("#np-sim").replaceChildren(json(r));
-    }, "ghost")), h("div", { id: "np-sim" }));
+    }, "ghost")), h("div", { id: "np-sim" })));
   paintAll();
 }
 
@@ -285,7 +305,8 @@ async function openProject(pid) {
   const m = d.manifest, s = d.state, steps = d.plan.steps;
   const runBox = h("div", { id: "run-box" });
   set(
-    h("h2", {}, m.title), h("div", { class: "row" }, pill(pid), pill(PTYPE_AR[m.project_type] || m.project_type), pill(m.workflow),
+    h("h2", {}, m.title), h("div", { class: "row" }, h("span", { class: "pill div-pill" }, (d.division.theme.emblem || "") + " " + d.division.name_ar),
+      pill(pid), pill(PTYPE_AR[m.project_type] || m.project_type), pill(m.workflow),
       pill("نموذج " + m.operating_model), pill(stateAr(s.STATE), STATUS_CLS[s.STATE]), pill((s.COMPLETION_PCT || 0) + "%", "gold")),
     h("div", { class: "card" }, h("b", {}, "الإجراء التالي: "), nextAr(s.NEXT_ACTION), h("br"),
       h("span", { class: "muted small" }, "الوكيل الحالي: " + agentAr(s.CURRENT_AGENT) + " — بانتظار: " + (s.WAITING_FOR ? agentAr(s.WAITING_FOR) : "—")),
@@ -316,11 +337,17 @@ async function openProject(pid) {
       d.decisions.map((x) => h("tr", {}, h("td", {}, x.id), h("td", {}, x.step), h("td", {}, x.level || ""), h("td", {}, x.decision), h("td", {}, agentAr(x.approved_by)))))
       : h("p", { class: "muted" }, "لا قرارات."),
     h("h3", {}, "الكلفة"), h("p", {}, "$" + (d.cost.total_usd || 0).toFixed(4) + (m.budget_usd ? " من ميزانية $" + m.budget_usd : "")),
+    h("h3", {}, "التسويق والتصميم"),
+    h("div", { class: "card" }, h("p", { class: "small muted" }, "لإدارتي التسويق والتصميم: حزمة تعريفية صادقة (ملخص، نبذة غلاف، بيان صحفي، منشورات، خطة إطلاق) وموجز غلاف بهوية الإدارة — للأعمال المعتمدة وحدها."),
+      h("div", { class: "row" }, btn("أعدّ حزمة التسويق والتصميم", async () => {
+        const r = await busy("تعدّ إدارتا التسويق والتصميم الحزمة…", () => api("marketing", { project: pid, engine: engine() }));
+        toast("أُعدّت الحزمة: تجدونها في الشاشة الجانبية"); SIDE[pid] = { mode: "doc", path: r.pack, userPicked: true }; openProject(pid);
+      }, "gold"), d.marketing.length ? pill(d.marketing.length + " ملف جاهز", "ok") : null)),
   );
   // تخطيط بعمودين: المشروع، والشاشة الجانبية للنص
   const mainEl = main(), kids = [...mainEl.childNodes], wrap = h("div", { class: "proj-main" });
   wrap.append(...kids);
-  mainEl.replaceChildren(h("div", { class: "proj-layout" }, wrap, h("aside", { id: "side", class: "side" })));
+  mainEl.replaceChildren(h("div", { class: "proj-layout", style: themeStyle(d.division.theme) }, wrap, h("aside", { id: "side", class: "side" })));
   renderBook(pid);
   renderAutopilot(pid);
   renderSide(pid);
@@ -377,10 +404,10 @@ async function agentsView() {
   AGENTS = AGENTS || await G("agents");
   const grid = h("div", { class: "grid" });
   const paint = () => {
-    const q = val("ag-q"), t = val("ag-type"), dep = val("ag-dep"), mvp = val("ag-mvp");
-    grid.replaceChildren(...AGENTS.items.filter((a) => (!t || a.type === t) && (!dep || a.department === dep) && (!mvp || a.mvp) &&
+    const q = val("ag-q"), t = val("ag-type"), dep = val("ag-dep"), mvp = val("ag-mvp"), dv = val("ag-div");
+    grid.replaceChildren(...AGENTS.items.filter((a) => (!t || a.type === t) && (!dep || a.department === dep) && (!mvp || a.mvp) && (!dv || a.divisions.includes(dv)) &&
       (!q || (a.id + a.name_ar + a.name_en + a.mission).toLowerCase().includes(q.toLowerCase())))
-      .map((a) => h("div", { class: "card click", onclick: () => agentDetail(a.id) }, h("h4", {}, a.name_ar),
+      .map((a) => h("div", { class: "card click div-card", style: a.divisions[0] ? themeStyle(AGENTS.divisions[a.divisions[0]].theme) : "", onclick: () => agentDetail(a.id) }, h("h4", {}, a.name_ar),
         h("div", { class: "row" }, pill(a.id), pill(TYPE_AR[a.type] || a.type, "gold"), a.mvp ? pill("MVP", "ok") : null,
           a.reads_author ? pill("يقرأ البصمة") : null),
         h("p", { class: "small muted" }, a.mission.slice(0, 160) + (a.mission.length > 160 ? "…" : "")))));
@@ -389,7 +416,8 @@ async function agentsView() {
     h("div", { class: "note" }, "اختر وكيلاً لتفعيله مباشرة بتكليف منكم، داخل مشروع أو خارجه، بالمحرّك المختار أعلى الصفحة. يُحقن عقد أسلوبكم المعتمد للوكلاء الذين يقرؤون ذاكرتكم وحدهم."),
     h("div", { class: "row" }, h("input", { id: "ag-q", placeholder: "بحث…", oninput: paint }),
       h("select", { id: "ag-type", onchange: paint }, h("option", { value: "" }, "كل الأنواع"), Object.entries(TYPE_AR).map(([k, v]) => h("option", { value: k }, v))),
-      h("select", { id: "ag-dep", onchange: paint }, h("option", { value: "" }, "كل الإدارات"), Object.entries(AGENTS.departments).map(([k, v]) => h("option", { value: k }, v))),
+      h("select", { id: "ag-div", onchange: paint }, h("option", { value: "" }, "كل إدارات المؤسسة"), Object.entries(AGENTS.divisions).map(([k, v]) => h("option", { value: k }, v.name_ar))),
+      h("select", { id: "ag-dep", onchange: paint }, h("option", { value: "" }, "كل الوحدات الوظيفية"), Object.entries(AGENTS.departments).map(([k, v]) => h("option", { value: k }, v))),
       h("label", {}, h("input", { type: "checkbox", id: "ag-mvp", onchange: paint }), " نواة التشغيل (MVP) فقط")),
     grid);
   paint();
@@ -932,7 +960,7 @@ async function genresView() {
       h("b", { class: "small" }, "فكرياً"), h("ul", { class: "small" }, G2.intellectual.map((x) => h("li", {}, x))),
       h("b", { class: "small" }, "أسلوبياً"), h("ul", { class: "small" }, G2.stylistic.map((x) => h("li", {}, x))),
       h("p", { class: "small muted" }, G2.evidence),
-      h("div", { class: "row" }, btn("مشروع من هذا الجنس", () => newProjectForm(k), "sm gold"))))),
+      h("div", { class: "row" }, btn("مشروع من هذا الجنس", () => newProjectForm(null, G2.project_types[0]), "sm gold"))))),
     h("h2", {}, "مستويات الإنتاج"),
     h("div", { class: "grid" }, Object.entries(g.levels.levels).map(([k, L]) => h("div", { class: "card" },
       h("h4", {}, L.order + ". " + L.name_ar), h("p", { class: "small" }, L.summary),

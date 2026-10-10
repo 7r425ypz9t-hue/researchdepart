@@ -54,7 +54,7 @@ def render(rows: list[dict]) -> str:
 </article>""" for r in rows) or "<p>لا مشاريع نشطة بعد. ابدأ بـ <code>rkpos new-project</code>.</p>"
     pending_total = sum(len(r["pending"]) for r in rows)
     return f"""<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>لوحة مِداد</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>لوحة باحث</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{{--primary:{brand['primary']};--accent:{brand['accent']};--ink:{brand['ink']};--paper:{brand['paper']};--muted:{brand['muted']};--light:{brand['light']}}}
@@ -72,7 +72,7 @@ main{{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap
 dl{{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:.92rem}} dt{{color:var(--muted)}} dd{{margin:0}}
 .next{{border-top:1px dashed var(--muted);padding-top:8px}} .pending{{color:var(--accent)}} .blocker{{color:#B03A2E}}
 </style></head><body>
-<div class="top"><h1>مِداد — لوحة القيادة البحثية</h1>
+<div class="top"><h1>باحث — لوحة القيادة البحثية</h1>
 <div class="kpis"><span>المشاريع: {len(rows)}</span><span>قرارات بانتظار المؤلف: {pending_total}</span>
 <span>الكلفة الإجمالية: {sum(r['cost'] for r in rows):.2f} USD</span></div></div>
 <main>{cards}</main></body></html>"""

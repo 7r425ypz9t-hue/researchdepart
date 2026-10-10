@@ -1,0 +1,23 @@
+# GENERATED from agents/_specs/AG-ECO.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-ECO
+receives_from:
+- AG-ORC
+- AG-DAT
+- AG-POL
+- AG-CUL
+sends_to:
+- AG-WRT
+- AG-EVA
+consult:
+- agent: AG-DAT
+  when: تحليل كمي أو قياسي
+- agent: AG-CUL
+  when: معنى المؤشر في السياق الثقافي المحلي
+escalation:
+- trigger: نتيجة تخالف موقفاً معتمداً للمؤلف
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: AG-DAT
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

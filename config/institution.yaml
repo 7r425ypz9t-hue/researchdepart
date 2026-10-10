@@ -1,0 +1,126 @@
+# مؤسسة «باحث» للبحث والتطوير المعرفي — الهيكل الأعلى
+# المؤسسة ← الإدارات (تخصصية + مساندة) ← الوحدات الوظيفية (governance/departments.yaml) ← الوكلاء.
+# الإدارة تحدد: الاختصاص، وأنواع الأعمال، والوكلاء القائدين، والمهارات الخاصة، والهوية التصميمية.
+# الجنس (config/genres.yaml) يحدد قواعد الأسلوب؛ والإدارة تحدد البيت المؤسسي للعمل.
+version: 1.0.0
+name_ar: باحث
+name_en: Bahith
+tagline_ar: مؤسسة البحث والتطوير المعرفي
+author: د. ماجد بوشليبي
+
+# ------------------------------------------------------------------ الضوابط والمهارات العامة (لكل الإدارات)
+general:
+  rules:
+    - "صفر تلفيق: لا مصدر ولا رقم ولا اقتباس إلا ما له أثر قابل للتتبع؛ وما لا دليل عليه يُعلَّم [NEEDS-EVIDENCE]."
+    - "الوكيل يقترح، والمنظومة تقيس، والمؤلف يقرّر (L4): لا نص يدخل المخطوط المعتمد إلا بإقراره."
+    - "البصمة الشخصية للمؤلف في مقال الرأي والكتابة الإبداعية وحدهما؛ وغيرهما يحكمه الانضباط الأكاديمي."
+    - "سياسة المراجع الخاصة بالمؤلف (academic-integrity-sunni-sources-ar) سارية على كل الإدارات."
+    - "كل مخرج يُسجَّل في سجل التدقيق، وكل قرار في سجل القرارات."
+  skills: [SKL-CLAIMTAG, SKL-TERMS, SKL-FACTCHECK, SKL-STYLE]
+  claude_skills: [source-integrity-ar, academic-integrity-sunni-sources-ar, council-orchestration-ar, project-runtime-protocol-ar]
+
+# ------------------------------------------------------------------ نظام التصميم المركزي
+design_system:
+  owner: DIV-DESIGN
+  fonts: {arabic: "Noto Naskh Arabic", latin: "Noto Serif"}
+  base: {ink: "#1B1B1B", paper: "#FFFFFF", muted: "#5B6B7A"}
+  institution: {primary: "#1F4E79", accent: "#B8860B", light: "#EAF1F8"}
+  rule: "إدارة التصميم مركزية: تملك نظام الخطوط والقوالب، وتمنح كل إدارة لوناً مميزاً يظهر في اللوحة والأغلفة والمستندات."
+
+# ------------------------------------------------------------------ الإدارات
+divisions:
+
+  # ---------- الإدارات التخصصية
+  - id: DIV-CREATIVE
+    kind: specialized
+    name_ar: إدارة الكتابة الإبداعية
+    name_en: Creative Writing
+    mission: "الرواية والقصة القصيرة والمسرحية بصوت المؤلف السردي، وبصنعة المشهد والشخصية والحوار."
+    project_types: [novel, novella, short_story, play]
+    lead_agents: [AG-NOV, AG-ARE]
+    skills: [SKL-NARRATIVE, SKL-CONTINUITY, SKL-SUFI, SKL-STYLE]
+    claude_skills: [fiction-writer-agent-ar, literary-agent-orchestrator-ar, novel-continuity-ar, sufi-dissolution-ar, style-fingerprint-majed-ar]
+    traits: ["البصمة السردية للمؤلف مطبَّقة", "التوثيق في كرّاسة العمل لا في المتن", "الاتساق صارم في الشخصيات والأمكنة والزمن"]
+    theme: {primary: "#6B2D5C", accent: "#C9A227", light: "#F5ECF3", emblem: "✒"}
+
+  - id: DIV-ARTICLE
+    kind: specialized
+    name_ar: إدارة كتابة المقال
+    name_en: Articles & Columns
+    mission: "مقال الرأي والعمود الصحفي («رأي ثقافي»): فكرة واحدة حادة في وقتها، بصوت المؤلف المقالي."
+    project_types: [op_ed]
+    lead_agents: [AG-WRT, AG-ARE]
+    skills: [SKL-STYLE, SKL-FACTCHECK]
+    claude_skills: [op-ed-column-ar, style-fingerprint-majed-ar]
+    traits: ["البصمة المقالية للمؤلف مطبَّقة", "سقف 300 كلمة", "صفر تلفيق والتوثيق في ملف المراجعة"]
+    theme: {primary: "#B5452B", accent: "#E0A526", light: "#FBEDE8", emblem: "❝"}
+
+  - id: DIV-ACADEMIC
+    kind: specialized
+    name_ar: إدارة البحوث الأكاديمية المحكّمة
+    name_en: Peer-Reviewed Research
+    mission: "البحث المحكّم والكتاب الأكاديمي والمراجعات المنهجية والتحقيق، بانضباط علمي يقبله التحكيم."
+    project_types: [journal_article, academic_book, systematic_review, literature_review, critical_edition, translation]
+    lead_agents: [AG-WRT, AG-RQA, AG-MTH, AG-LRV, AG-PRV]
+    skills: [SKL-SCOPE, SKL-APA, SKL-ARGMAP, SKL-CLAIMTAG]
+    claude_skills: [grmm-master-manifest-ar, source-integrity-ar, academic-integrity-sunni-sources-ar]
+    traits: ["انضباط أكاديمي لا بصمة", "سؤال ومنهج معلنان", "كل ادعاء موسوم ومسند"]
+    theme: {primary: "#1F4E79", accent: "#B8860B", light: "#EAF1F8", emblem: "§"}
+
+  - id: DIV-ECOCULT
+    kind: specialized
+    name_ar: إدارة البحوث والدراسات الاقتصادية والثقافية
+    name_en: Economic & Cultural Studies
+    mission: "دراسات الاقتصاد الثقافي والسياسات الثقافية والصناعات الإبداعية والتقارير الاستراتيجية، بالمؤشر والدليل."
+    project_types: [economic_study, cultural_study, policy_study, strategic_report]
+    lead_agents: [AG-ECO, AG-CUL, AG-POL, AG-DAT, AG-WRT]
+    skills: [SKL-ECON, SKL-INDICATORS, SKL-CLAIMTAG]
+    claude_skills: [arabic-math-econ, ccap-project, source-integrity-ar]
+    traits: ["انضباط أكاديمي لا بصمة", "المؤشر قبل الرأي", "توصيات قابلة للتنفيذ ومسندة"]
+    theme: {primary: "#1E6B52", accent: "#C79A2E", light: "#E8F3EE", emblem: "◈"}
+
+  - id: DIV-THOUGHT
+    kind: specialized
+    name_ar: إدارة دراسات الفكر والتنمية
+    name_en: Thought & Development Studies
+    mission: "الكتاب الفكري ومجموعات المقالات الفكرية ودراسات التنمية والاستشراف، بحجة منضبطة ومفاهيم محررة."
+    project_types: [intellectual_book, essay_collection, development_study, foresight_study, re_edition]
+    lead_agents: [AG-WRT, AG-THR, AG-POL, AG-BKA]
+    skills: [SKL-CONCEPTMAP, SKL-ARGMAP, SKL-CLAIMTAG]
+    claude_skills: [grmm-master-manifest-ar, council-orchestration-ar, graphify-knowledge-graph]
+    traits: ["انضباط أكاديمي لا بصمة", "أطروحة وحجة واعتراض وترجيح", "مفاهيم معرّفة وتاريخها محرر"]
+    theme: {primary: "#3B3F8F", accent: "#B8860B", light: "#ECEDF7", emblem: "∴"}
+
+  # ---------- الإدارات المساندة
+  - id: DIV-TECH
+    kind: support
+    name_ar: إدارة الدعم الفني
+    name_en: Technical Support
+    mission: "تشغيل المحركات والأتمتة والأمن والإصدارات والكلفة والرصد، وصيانة اللوحة."
+    lead_agents: [AG-AUT, AG-SEC, AG-VCS, AG-CST, AG-WCH]
+    skills: [SKL-COSTTRACK]
+    theme: {primary: "#37474F", accent: "#00897B", light: "#ECEFF1", emblem: "⚙"}
+
+  - id: DIV-DESIGN
+    kind: support
+    central: true
+    name_ar: إدارة التصميم (مركزية)
+    name_en: Central Design
+    mission: "نظام التصميم الموحد للمؤسسة: الخطوط والقوالب والأغلفة والإنفوغرافيك، مع هوية لونية مميزة لكل إدارة."
+    lead_agents: [AG-DSN, AG-VIS, AG-PUB]
+    skills: [SKL-DESIGN]
+    sub_units: [DIV-CREATIVE, DIV-ARTICLE, DIV-ACADEMIC, DIV-ECOCULT, DIV-THOUGHT]
+    theme: {primary: "#8A5A00", accent: "#1F4E79", light: "#FBF4E6", emblem: "◐"}
+
+  - id: DIV-MARKETING
+    kind: support
+    name_ar: إدارة التسويق
+    name_en: Marketing & Outreach
+    mission: "التعريف بالأعمال المعتمدة: الملخصات التعريفية، والبيان الصحفي، ومنشورات التواصل، وخطة الإطلاق — بلا مبالغة ولا ادعاء."
+    lead_agents: [AG-MKT]
+    skills: [SKL-MARKETING]
+    theme: {primary: "#A0306B", accent: "#E8A33D", light: "#FBEAF2", emblem: "✦"}
+
+# الحوكمة والإشراف والمعرفة طبقة أفقية تخدم كل الإدارات (المنسق، المدير، المشرفون، النزاهة، الأرشيف)
+cross_cutting_agents: [AG-ORC, AG-DIR, AG-SUP-EDT, AG-SUP-EVD, AG-SUP-INT, AG-SUP-MTH, AG-SUP-PUB, AG-INT, AG-EVA,
+                       AG-SRC, AG-DSC, AG-KNW, AG-SED, AG-RED, AG-TMP, AG-TAH, AG-TRN]

@@ -1,0 +1,23 @@
+workflow_id: WF-APPLIED-STUDY
+name_ar: الدراسة التطبيقية (اقتصادية · ثقافية · تنموية)
+version: 0.1.0
+project_types: [economic_study, cultural_study, development_study]
+operating_model_min: A
+citation_style: APA7
+notes: "مسار إدارتي الدراسات الاقتصادية والثقافية والفكر والتنمية: إشكالية ← أدلة ← إطار ومؤشرات ← تحليل ← كتابة ← تدقيق ← اعتماد."
+steps:
+  - {id: S01, agent: AG-ORC, task: initialize_project, decision_level: L1}
+  - {id: S02, agent: AG-RQA, task: define_scope, gate: QG0, decision_level: L4, human_approval: true}
+  - {id: S03, agent: AG-DSC, task: discover_sources_incl_official_docs, decision_level: L1}
+  - {id: S04, agent: AG-SRC, task: verify_sources, decision_level: L1}
+  - {id: S05, agent: AG-LRV, task: evidence_synthesis, reviewer: AG-SUP-EVD, gate: QG1, decision_level: L2}
+  - {id: S06, agent: AG-ECO, task: build_indicator_framework, reviewer: AG-SUP-MTH, outputs: [indicators.yaml], gate: QG2, decision_level: L2}
+  - {id: S07, agent: AG-DAT, task: analyze_data, optional_if: "not project.has_data", decision_level: L1}
+  - {id: S08, agent: AG-CUL, task: domain_review, decision_level: L1}
+  - {id: S09, agent: AG-WRT, task: draft_study, reviewer: AG-SED, outputs: [study_draft.md], decision_level: L1}
+  - {id: S10, agent: AG-EVA, task: audit_claims_and_citations, decision_level: L1}
+  - {id: S11, agent: AG-INT, task: integrity_check, reviewer: AG-SUP-INT, gate: QG4, decision_level: L2}
+  - {id: S12, agent: AG-ARE, task: language_and_terminology, reviewer: AG-SUP-EDT, gate: QG5, decision_level: L2}
+  - {id: S13, agent: AG-ORC, task: request_final_approval, decision_level: L4, human_approval: true}
+  - {id: S14, agent: AG-PUB, task: prepare_final_files, gate: QG6, decision_level: L4, human_approval: true}
+  - {id: S15, uses: WF-PROJECT-CLOSE}

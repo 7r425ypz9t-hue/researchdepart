@@ -20,6 +20,10 @@ DEFAULT_DELIVERABLES = {
     "novella": ["كرّاسة العمل", "مخطوط معتمد", "سجل المشروع"],
     "short_story": ["قصة معتمدة", "سجل المشروع"],
     "essay_collection": ["مخطوط المجموعة المعتمد", "PDF", "EPUB", "سجل المشروع"],
+    "play": ["كرّاسة المسرحية", "نص المسرحية المعتمد", "سجل المشروع"],
+    "economic_study": ["دراسة معتمدة", "ملخص تنفيذي", "إطار المؤشرات", "سجل المشروع"],
+    "cultural_study": ["دراسة معتمدة", "ملخص تنفيذي", "إطار المؤشرات", "سجل المشروع"],
+    "development_study": ["دراسة معتمدة", "ملخص تنفيذي", "توصيات", "سجل المشروع"],
 }
 
 
@@ -30,7 +34,7 @@ def new_project(title: str, project_type: str, author: str = "د. ماجد بو�
                 governing_manifest: str | None = None, genre: str | None = None,
                 production_level: str | None = None, target_pages: int | None = None,
                 words_per_page: int | None = None) -> dict:
-    from . import genres as GN
+    from . import genres as GN, institution
     genre = GN.genre_for_type(project_type, genre)
     production_level = production_level or ("full" if genre == "op_ed" else "staged")
     GN.check_level(genre, production_level)
@@ -51,7 +55,7 @@ def new_project(title: str, project_type: str, author: str = "د. ماجد بو�
 
     manifest = {
         "project_id": pid, "slug": slugify(title), "title": title, "title_status": "WORKING",
-        "project_type": project_type, "genre": genre, "workflow": wid, "operating_model": operating_model, "author": author,
+        "project_type": project_type, "genre": genre, "division": institution.division_for_type(project_type), "workflow": wid, "operating_model": operating_model, "author": author,
         "governing_manifest": governing_manifest,
         "objectives": ["(تُستكمل في S02 بواسطة AG-RQA وتُعتمد عند QG0)"],
         "thesis": None,

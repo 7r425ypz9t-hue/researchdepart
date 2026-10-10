@@ -1,0 +1,20 @@
+# GENERATED from agents/_specs/AG-MKT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-MKT
+read:
+- id: ST-APPROVED
+  name_ar: النص المعتمد
+  path: projects/<PID>/manuscript/approved/
+  classification: CONFIDENTIAL
+- id: MEM-PROJECT
+  name_ar: ذاكرة المشروع
+  path: projects/<PID>/memory/
+  classification: CONFIDENTIAL
+write:
+- id: ST-PUBLISH
+  name_ar: مخرجات النشر
+  path: publishing/<PID>/
+  classification: INTERNAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

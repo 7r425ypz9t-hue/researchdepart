@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-rem ===== تثبيت لوحة «مداد» على ويندوز =====
+rem ===== تثبيت لوحة «باحث» على ويندوز =====
 rem المتطلبات: Python 3.10+ (python.org مع خيار Add to PATH) — واختيارياً Claude Code للتشغيل الآلي.
 cd /d "%~dp0\.."
 set PY=py -3
@@ -19,7 +19,7 @@ if exist "midad-private-backup.tar.gz" (
 echo [3/3] إنشاء الأيقونة على سطح المكتب...
 %PY% -m rkpos install-icon || goto :fail
 echo.
-echo تم. افتحوا أيقونة «مداد» من سطح المكتب.
+echo تم. افتحوا أيقونة «باحث» من سطح المكتب.
 pause
 exit /b 0
 :fail

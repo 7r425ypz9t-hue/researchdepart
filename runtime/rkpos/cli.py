@@ -1,4 +1,4 @@
-"""rkpos — واجهة سطر الأوامر لوحدة «مِداد».
+"""rkpos — واجهة سطر الأوامر لمؤسسة «باحث».
 
 أمثلة:
   rkpos validate
@@ -55,7 +55,7 @@ def load_env() -> None:
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(prog="rkpos", description="MIDAD Research & Knowledge Production OS")
+    ap = argparse.ArgumentParser(prog="rkpos", description="Bahith — Research & Knowledge Development Institution")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("validate", help="فحص سلامة المنظومة (المخططات والإحالات والصلاحيات)")
@@ -114,7 +114,7 @@ def main(argv=None) -> int:
     pa = sub.add_parser("panel", help="لوحة التحكم المحلية (127.0.0.1)")
     pa.add_argument("--port", type=int, default=0); pa.add_argument("--no-browser", action="store_true")
     pa.add_argument("--new", action="store_true", help="لا تُعِد استعمال لوحة تعمل مسبقاً")
-    ic = sub.add_parser("install-icon", help="أيقونة «مداد» على سطح المكتب"); ic.add_argument("--remove", action="store_true")
+    ic = sub.add_parser("install-icon", help="أيقونة «باحث» على سطح المكتب"); ic.add_argument("--remove", action="store_true")
     mp = sub.add_parser("memory-promote"); mp.add_argument("memory_id"); mp.add_argument("--layer", required=True); mp.add_argument("--approved-by", required=True)
 
     a = ap.parse_args(argv)

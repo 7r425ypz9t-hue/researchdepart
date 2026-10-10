@@ -9,7 +9,7 @@ genres:
   creative:
     name_ar: الإبداع الروائي والسردي
     name_en: Creative Fiction
-    project_types: [novel, novella, short_story]
+    project_types: [novel, novella, short_story, play]
     register: narrative                 # مرجع البصمة: style_reference_narrative
     author_voice: true
     lead_agent: AG-NOV
@@ -39,7 +39,7 @@ genres:
   research:
     name_ar: البحث العلمي والأكاديمي
     name_en: Academic Research
-    project_types: [academic_book, journal_article, systematic_review, literature_review, policy_study, foresight_study, critical_edition, strategic_report]
+    project_types: [academic_book, journal_article, systematic_review, literature_review, policy_study, foresight_study, critical_edition, strategic_report, economic_study, cultural_study, development_study]
     register: academic
     author_voice: false
     lead_agent: AG-WRT

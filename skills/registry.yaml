@@ -438,6 +438,42 @@ skills:
     realization: ["prompt", "claude_skill:sufi-dissolution-ar"]
     status: available_now
 
+  - id: SKL-ECON
+    name_ar: "التحليل الاقتصادي للثقافة"
+    name_en: "Cultural Economics Analysis"
+    purpose: "بناء الإطار الاقتصادي للظاهرة الثقافية وتفسير بياناتها ومؤشراتها بافتراضات معلنة."
+    procedure: ["تحديد الظاهرة ووحدة التحليل", "اختيار الإطار (القيمة، الأثر، السلسلة)", "تعريف المؤشرات", "التقدير مع الافتراضات", "الحساسية والحدود"]
+    outputs: ["economic_framework.md", "economic_analysis.md"]
+    realization: ["prompt", "claude_skill:arabic-math-econ"]
+    status: available_now
+
+  - id: SKL-INDICATORS
+    name_ar: "بناء المؤشرات"
+    name_en: "Indicator Design"
+    purpose: "مؤشرات قابلة للقياس لكل بعد: تعريف إجرائي، ومصدر بيانات، ووحدة، وحدود."
+    procedure: ["تفكيك المفهوم إلى أبعاد", "مؤشر أو أكثر لكل بعد", "تعريف إجرائي ومصدر ووحدة", "اختبار الصدق والحساسية"]
+    outputs: ["indicators.yaml"]
+    realization: ["prompt"]
+    status: available_now
+
+  - id: SKL-DESIGN
+    name_ar: "موجز التصميم والهوية"
+    name_en: "Design Brief & Identity"
+    purpose: "موجزات الغلاف والإخراج والإنفوغرافيك وفق نظام التصميم المركزي وهوية الإدارة."
+    procedure: ["قراءة ملخص العمل", "الفكرة البصرية", "ألوان الإدارة وخطوط المؤسسة", "التكوين والعناصر", "الحقوق"]
+    outputs: ["design/cover_brief.md", "design/layout_brief.md"]
+    realization: ["prompt", "code:runtime/rkpos/export.py"]
+    status: available_now
+
+  - id: SKL-MARKETING
+    name_ar: "التسويق الصادق للأعمال"
+    name_en: "Honest Marketing"
+    purpose: "مواد تعريفية تطابق مضمون العمل المعتمد بلا مبالغة: ملخص، نبذة، بيان صحفي، منشورات، خطة إطلاق."
+    procedure: ["استخلاص الفكرة المركزية من النص", "الجمهور المستهدف", "صياغة المواد", "مطابقة كل جملة للمضمون", "خطة الإطلاق"]
+    outputs: ["marketing/pack.md"]
+    realization: ["prompt"]
+    status: available_now
+
 existing_claude_skills:
   - {name: council-orchestration-ar, binds_to: [AG-ORC, AG-COUNCIL], note: "الأصوات الستة تقابل: Intake=AG-RQA، الإطار=AG-THR/AG-LRV، المنهج=AG-BKA/AG-MTH، المنفذ=AG-WRT، QA=AG-EVA/AG-INT، المحكّم=AG-RED/AG-PRV"}
   - {name: source-integrity-ar, binds_to: [AG-SRC, AG-EVA, AG-INT, AG-SUP-EVD, AG-SUP-INT]}

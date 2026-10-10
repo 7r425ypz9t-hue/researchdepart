@@ -133,4 +133,6 @@ def check_integrity() -> list[str]:
                 errs.append(f"{wid}/{st['id']}: L4 step must set human_approval: true")
             if st.get("gate") in ("QG0", "QG6") and st.get("decision_level") != "L4":
                 errs.append(f"{wid}/{st['id']}: {st['gate']} requires L4")
+    from . import institution
+    errs += [f"institution: {e}" for e in institution.check()]
     return errs

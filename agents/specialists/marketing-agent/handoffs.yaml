@@ -1,0 +1,19 @@
+# GENERATED from agents/_specs/AG-MKT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-MKT
+receives_from:
+- AG-ORC
+- AG-PUB
+sends_to:
+- AG-DSN
+- AG-ORC
+consult:
+- agent: AG-DSN
+  when: مادة بصرية مرافقة
+escalation:
+- trigger: نشر أي مادة
+  to: HUMAN-AUTHOR
+  level: L4
+fallback_agent: AG-PUB
+package_schema: schemas/handoff.schema.json
+message_schema: schemas/message.schema.json
+default_output_message: RESULT

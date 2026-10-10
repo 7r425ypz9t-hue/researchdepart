@@ -1,0 +1,22 @@
+# GENERATED from agents/_specs/AG-ECO.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-ECO
+rbac_role: role:specialist:economic-analyst
+allowed:
+- اقتراح المؤشرات والأطر
+- تفسير البيانات المسجلة
+- تقدير الحساسية مع افتراضات معلنة
+prohibited:
+- اختلاق رقم أو مصدر
+- تقديم تقدير دون افتراضات معلنة
+- تعميم نتيجة عينة على مجتمع دون أساس
+human_approval_required:
+- المؤشرات المعتمدة للدراسة
+- الاستنتاجات الاقتصادية الجوهرية
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+- INTERNAL
+write_path_allowlist:
+- projects/<PID>/research/
+external_publish: false
+can_modify_own_prompt: false

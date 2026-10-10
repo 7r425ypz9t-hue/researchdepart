@@ -10,14 +10,14 @@
 | `SKL-DOI` | التحقق من DOI | حل DOI عبر Crossref ومطابقة العنوان والسنة والمؤلفين، وفحص السحب. | code:runtime/rkpos/verify/doi.py، api | available_now | AG-SRC |
 | `SKL-CITEVERIFY` | التحقق من الاستشهاد | التأكد أن كل استشهاد في النص يقابل سجلاً متحققاً في MEM-SOURCE وأن بياناته متطابقة. | code:runtime/rkpos/verify/citations.py، prompt | available_now | AG-EVA, AG-INT, AG-SRC, AG-SUP-EVD |
 | `SKL-APA` | التنسيق وفق APA 7 | تنسيق الإحالات والقائمة وفق APA 7 افتراضياً، أو Chicago/Harvard/MLA عبر CSL. | code، prompt | available_now | AG-EVA, AG-PUB, AG-WRT |
-| `SKL-STATVAL` | التحقق الإحصائي | إعادة حساب الأرقام والاختبارات وفحص الافتراضات وملاءمة الاستدلال. | code، prompt، claude_skill:arabic-math-econ | needs_code | AG-DAT, AG-EVA, AG-MTH, AG-PRV, AG-SUP-MTH |
+| `SKL-STATVAL` | التحقق الإحصائي | إعادة حساب الأرقام والاختبارات وفحص الافتراضات وملاءمة الاستدلال. | code، prompt، claude_skill:arabic-math-econ | needs_code | AG-DAT, AG-ECO, AG-EVA, AG-MTH, AG-PRV, AG-SUP-MTH |
 | `SKL-AREDIT` | التحرير العربي الأكاديمي | ضبط النحو والإملاء والترقيم والأسلوب مع حفظ السجل الفصيح. | prompt، claude_skill:style-fingerprint-majed-ar | available_now | AG-ARE, AG-SED, AG-SUP-EDT |
 | `SKL-OUTLINE` | بناء هيكل الكتاب | هيكل فصول بوظائف وأسئلة وأدلة وموازنة كلمات. | prompt | available_now | AG-BKA |
 | `SKL-ARGMAP` | رسم خرائط الحجاج | تفكيك الحجة إلى دعاوى ومقدمات وأدلة واعتراضات وردود (نموذج تولمين معدّل). | prompt | available_now | AG-BKA, AG-CUL, AG-LRV, AG-POL, AG-PRV, AG-RED, AG-SED, AG-THR, AG-WRT |
-| `SKL-CLAIMTAG` | وسم الادعاءات | وسم كل ادعاء بـ FACT/EBI/INTERP/HYP/AUTHOR وربطه بالدليل. | prompt، code:runtime/rkpos/verify/claims.py | available_now | AG-EVA, AG-INT, AG-LRV, AG-SUP-INT, AG-WRT |
+| `SKL-CLAIMTAG` | وسم الادعاءات | وسم كل ادعاء بـ FACT/EBI/INTERP/HYP/AUTHOR وربطه بالدليل. | prompt، code:runtime/rkpos/verify/claims.py | available_now | AG-ECO, AG-EVA, AG-INT, AG-LRV, AG-SUP-INT, AG-WRT |
 | `SKL-FACTCHECK` | تدقيق الوقائع | مطابقة كل ادعاء وقائعي مع نص مصدره وحكمه. | prompt، claude_skill:source-integrity-ar | available_now | AG-EVA, AG-INT, AG-SUP-EVD |
 | `SKL-TABLE` | توليد الجداول | جداول دقيقة من البيانات مع مصدر وسكربت. | code | needs_code | AG-DAT, AG-VIS |
-| `SKL-VIZ` | التصوير البياني بالهوية البصرية | أشكال SVG/PDF بالألوان #1F4E79/#B8860B وخط Noto Naskh Arabic. | code | needs_code | AG-VIS |
+| `SKL-VIZ` | التصوير البياني بالهوية البصرية | أشكال SVG/PDF بالألوان #1F4E79/#B8860B وخط Noto Naskh Arabic. | code | needs_code | AG-DSN, AG-VIS |
 | `SKL-BIBCLEAN` | تنظيف الببليوغرافيا | إزالة التكرار وتوحيد الأسماء والحقول وكشف النواقص. | code:runtime/rkpos/verify/bibclean.py | available_now | AG-PUB, AG-SRC |
 | `SKL-OCRVAL` | التحقق من التفريغ الضوئي | قياس دقة OCR على عينة مرجعية (CER/WER) وتعليم المقاطع الضعيفة. | code | needs_code | AG-TAH |
 | `SKL-META` | استخلاص البيانات الوصفية | استخلاص وتطبيع البيانات الوصفية للمصادر والمخرجات (Dublin Core + حقول المشروع). | code، api | needs_code | AG-AUT, AG-DSC, AG-KNW, AG-PUB, AG-SRC, AG-SUP-PUB, AG-TAH, AG-WCH |
@@ -49,3 +49,7 @@
 | `SKL-NARRATIVE` | صنعة السرد | بناء المشهد والشخصية والحوار والإيقاع في العمل الروائي بصوت المؤلف. | prompt، claude_skill:fiction-writer-agent-ar، claude_skill:literary-agent-orchestrator-ar | available_now | AG-NOV |
 | `SKL-CONTINUITY` | حفظ الاتساق السردي | مطابقة كل مشهد جديد لكرّاسة الرواية والفصول المعتمدة: الأسماء والأمكنة والزمن والألفاظ. | prompt، claude_skill:novel-continuity-ar | available_now | AG-NOV |
 | `SKL-SUFI` | إذابة المادة الصوفية | إدخال المعنى الصوفي في السرد ذوباناً من الدرجة الأولى، مع توثيق الأصل خارج المتن. | prompt، claude_skill:sufi-dissolution-ar | available_now | AG-NOV |
+| `SKL-ECON` | التحليل الاقتصادي للثقافة | بناء الإطار الاقتصادي للظاهرة الثقافية وتفسير بياناتها ومؤشراتها بافتراضات معلنة. | prompt، claude_skill:arabic-math-econ | available_now | AG-ECO |
+| `SKL-INDICATORS` | بناء المؤشرات | مؤشرات قابلة للقياس لكل بعد: تعريف إجرائي، ومصدر بيانات، ووحدة، وحدود. | prompt | available_now | AG-ECO |
+| `SKL-DESIGN` | موجز التصميم والهوية | موجزات الغلاف والإخراج والإنفوغرافيك وفق نظام التصميم المركزي وهوية الإدارة. | prompt، code:runtime/rkpos/export.py | available_now | AG-DSN |
+| `SKL-MARKETING` | التسويق الصادق للأعمال | مواد تعريفية تطابق مضمون العمل المعتمد بلا مبالغة: ملخص، نبذة، بيان صحفي، منشورات، خطة إطلاق. | prompt | available_now | AG-MKT |

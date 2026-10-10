@@ -1,0 +1,19 @@
+# GENERATED from agents/_specs/AG-MKT.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-MKT
+rbac_role: role:specialist:marketing-agent
+allowed:
+- صياغة المواد التعريفية للأعمال المعتمدة
+prohibited:
+- وصف ما ليس في العمل
+- ادعاء جوائز أو أرقام مبيعات أو شهادات غير موثقة
+- نشر أي مادة دون موافقة المؤلف
+- تسويق عمل لم يُعتمد
+human_approval_required:
+- كل مادة تسويقية قبل نشرها
+max_autonomous_level: L1
+data_classes_readable:
+- CONFIDENTIAL
+write_path_allowlist:
+- publishing/<PID>/
+external_publish: false
+can_modify_own_prompt: false

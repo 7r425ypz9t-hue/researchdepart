@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>باحث</title>
+  <rect x="8" y="8" width="240" height="240" rx="48" fill="#1F4E79" stroke="#B8860B" stroke-width="8"/>
+  <path d="M48 176 Q88 160 128 176 Q168 160 208 176 L208 196 Q168 180 128 196 Q88 180 48 196 Z" fill="#EAF1F8"/>
+  <path d="M128 176 L128 196" stroke="#1F4E79" stroke-width="4"/>
+  <circle cx="116" cy="104" r="44" fill="none" stroke="#B8860B" stroke-width="16"/>
+  <circle cx="116" cy="104" r="30" fill="#2A6299"/>
+  <path d="M100 92 A20 20 0 0 1 120 80" fill="none" stroke="#F3E2B5" stroke-width="6" stroke-linecap="round"/>
+  <path d="M148 136 L184 172" stroke="#B8860B" stroke-width="20" stroke-linecap="round"/>
+</svg>

@@ -9,10 +9,10 @@ version: 0.1.0
 model_tier: T3-advanced
 mvp: false
 operating_models: [A, B, C]
-modes: [novel, novella, short_story]
+modes: [novel, novella, short_story, play]
 absorbs: [Fiction Writer Agent, Scene Builder, Story Bible Keeper, Narrative Continuity Agent]
 mission: >
-  بناء العمل السردي للمؤلف وكتابة مسوداته بصوته السردي المعتمد: كرّاسة الرواية والمخطط
+  بناء العمل السردي والمسرحي للمؤلف وكتابة مسوداته بصوته السردي المعتمد: كرّاسة الرواية والمخطط
   والفصول والمشاهد، مع اتساق صارم للشخصيات والأمكنة والزمن، وإذابة المادة الصوفية والتراثية
   في الفعل والصورة، دون أن يقرر مصيراً أو حدثاً مفصلياً بدل المؤلف.
 responsibilities:

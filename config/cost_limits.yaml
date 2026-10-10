@@ -19,6 +19,10 @@ defaults_by_project_type:
   novella: 200
   short_story: 40
   essay_collection: 200
+  play: 150
+  economic_study: 150
+  cultural_study: 150
+  development_study: 150
 per_chapter_soft_limit: 40
 monthly_unit_limit: 1500
 pricing_source: "يُحدَّث جدول الأسعار في config/pricing.yaml من صفحات المزودين الرسمية؛ لا تُفترض أسعار من الذاكرة"

@@ -5,10 +5,10 @@
 |---|---|
 | أساسي دائم (Core) | 12 |
 | خدمي (Utility) | 5 |
-| متخصص (Specialist) | 9 |
+| متخصص (Specialist) | 12 |
 | إشرافي (Supervisory) | 7 |
 | عند الطلب (On-Demand) | 3 |
-| **المجموع** | **36** (منها قالب مؤقت واحد) |
+| **المجموع** | **39** (منها قالب مؤقت واحد) |
 
 | المعرّف | الاسم | English | الإدارة | التصنيف | النموذج | MVP | A/B/C | يستوعب |
 |---|---|---|---|---|---|---|---|---|
@@ -20,10 +20,13 @@
 | `AG-DAT` | وكيل تحليل البيانات | Data Analysis Agent | المناهج والتحليل | specialist | T3-advanced |  | BC | Statistical Analysis Agent، Data Science Agent، Python/R Agent، Network Analysis Agent، Simulation Agent |
 | `AG-DIR` | مدير البحوث والبرامج | Research Director Agent | مكتب مدير الإدارة والبرامج وإدارة المشاريع | supervisory | T3-advanced |  | BC | Chief Knowledge Officer (الشق الاستراتيجي)، Research Program Manager (البرامج) |
 | `AG-DSC` | وكيل الاستكشاف العلمي | Scientific Discovery Agent | الاستكشاف العلمي والمصادر | core | T3-advanced | ✅ | ABC | Research Librarian Agent، Bibliometric Agent |
+| `AG-DSN` | وكيل التصميم والهوية البصرية | Design Director | النشر والإنتاج والتصميم | specialist | T2-standard |  | ABC | Cover Designer، Layout Designer، Brand Steward |
+| `AG-ECO` | الباحث الاقتصادي | Economic Analyst | السياسات والاستشراف | specialist | T3-advanced |  | ABC | Cultural Economist، Creative Industries Analyst، Economic Impact Analyst |
 | `AG-EVA` | وكيل تدقيق الأدلة والوقائع والاستشهادات | Evidence & Fact Audit Agent | النزاهة والملكية الفكرية | core | T4-independent |  | BC | Fact Checker، Citation Auditor، Evidence Quality Agent، Statistics Auditor |
 | `AG-INT` | وكيل النزاهة البحثية والملكية الفكرية | Research Integrity Agent | النزاهة والملكية الفكرية | core | T4-independent | ✅ | ABC | Plagiarism Risk Agent، Copyright Agent، Evidence Quality (الشق الأخلاقي) |
 | `AG-KNW` | أمين المعرفة والأرشيف | Knowledge Steward Agent | المعرفة والأرشيف | core | T2-standard | ✅ | ABC | Chief Knowledge Officer (التشغيلي)، Knowledge Base Architect (التشغيل)، Metadata Agent، Archive Agent |
 | `AG-LRV` | وكيل مراجعة الأدبيات | Literature Review Agent | الاستكشاف العلمي والمصادر | core | T3-advanced |  | BC | Systematic Review Agent (وضع PRISMA) |
+| `AG-MKT` | وكيل التسويق والانتشار | Marketing & Outreach Agent | التسويق والانتشار | specialist | T2-standard |  | ABC | Copywriter، PR Writer، Social Media Planner |
 | `AG-MTH` | وكيل المناهج البحثية | Research Methods Agent | المناهج والتحليل | specialist | T3-advanced |  | BC | Quantitative Methods Agent، Qualitative Methods Agent، Mixed Methods Agent، Causal Analysis Agent |
 | `AG-NOV` | الكاتب الروائي | Novelist Agent | التأليف والكتابة | specialist | T3-advanced |  | ABC | Fiction Writer Agent، Scene Builder، Story Bible Keeper، Narrative Continuity Agent |
 | `AG-ORC` | المنسّق البحثي | Research Orchestrator | مكتب مدير الإدارة والبرامج وإدارة المشاريع | supervisory | T3-advanced | ✅ | ABC | Research Program Manager، Project Management Agent |

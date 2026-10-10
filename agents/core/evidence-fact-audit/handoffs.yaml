@@ -5,6 +5,7 @@ receives_from:
 - AG-ORC
 - AG-SRC
 - AG-VIS
+- AG-ECO
 sends_to:
 - AG-WRT
 - AG-SUP-EVD

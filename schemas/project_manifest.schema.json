@@ -55,7 +55,11 @@
         "novel",
         "novella",
         "short_story",
-        "essay_collection"
+        "essay_collection",
+        "play",
+        "economic_study",
+        "cultural_study",
+        "development_study"
       ]
     },
     "workflow": {
@@ -281,6 +285,15 @@
           "minimum": 50
         }
       }
+    },
+    "division": {
+      "enum": [
+        "DIV-CREATIVE",
+        "DIV-ARTICLE",
+        "DIV-ACADEMIC",
+        "DIV-ECOCULT",
+        "DIV-THOUGHT"
+      ]
     }
   },
   "additionalProperties": false

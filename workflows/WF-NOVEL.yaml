@@ -1,7 +1,7 @@
 workflow_id: WF-NOVEL
 name_ar: العمل الروائي والسردي
 version: 0.1.0
-project_types: [novel, novella, short_story]
+project_types: [novel, novella, short_story, play]
 operating_model_min: A
 citation_style: none
 notes: "الجنس الإبداعي: كرّاسة ← مخطط ← وحدات بحسب مستوى الإنتاج (هيكل/تدرّجي/كامل) ← اتساق ← تحرير لغوي ← صوت المؤلف ← اعتماد. لا وسوم ادعاءات في المتن؛ التوثيق في الكرّاسة."

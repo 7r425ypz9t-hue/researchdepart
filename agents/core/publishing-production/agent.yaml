@@ -66,6 +66,7 @@ handoffs:
   - AG-SUP-EDT
   - AG-ORC
   - AG-VIS
+  - AG-DSN
   sends_to:
   - AG-SUP-PUB
   - AG-KNW

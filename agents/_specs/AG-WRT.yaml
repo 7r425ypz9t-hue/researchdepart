@@ -33,7 +33,7 @@ permissions:
   prohibited: [إضافة مرجع غير موجود في سجل المصادر, "صياغة موقف [AUTHOR] غير معتمد", تغيير الأطروحة أو الاستنتاجات الجوهرية, اقتباس حرفي غير متحقق]
 human_approval: [أي صياغة جديدة لموقف المؤلف, الاستنتاجات الجوهرية]
 handoffs:
-  receives_from: [AG-BKA, AG-ORC, AG-SED, AG-PRV, AG-RED, AG-CUL, AG-DAT, AG-EVA, AG-INT, AG-LRV, AG-POL]
+  receives_from: [AG-BKA, AG-ORC, AG-SED, AG-PRV, AG-RED, AG-CUL, AG-DAT, AG-EVA, AG-INT, AG-LRV, AG-POL, AG-ECO]
   sends_to: [AG-EVA, AG-SED]
 consult:
   - {agent: AG-THR, when: "استعمال مفهوم نظري خارج تعريفه العامل"}

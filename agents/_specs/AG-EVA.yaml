@@ -33,7 +33,7 @@ permissions:
   prohibited: [تعديل المسودة, تغيير حالة مصدر (اختصاص AG-SRC), قبول ادعاء لم يُطابَق]
 human_approval: []
 handoffs:
-  receives_from: [AG-WRT, AG-ORC, AG-SRC, AG-VIS]
+  receives_from: [AG-WRT, AG-ORC, AG-SRC, AG-VIS, AG-ECO]
   sends_to: [AG-WRT, AG-SUP-EVD, AG-INT, AG-SRC]
 consult:
   - {agent: AG-DAT, when: "رقم مشتق يحتاج إعادة حساب"}

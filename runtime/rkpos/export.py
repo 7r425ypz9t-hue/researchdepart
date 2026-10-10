@@ -56,7 +56,15 @@ def _inline(par, text, size):
             _run(par, chunk, size=size, bold=bool(i % 2))
 
 
-def to_docx(markdown: str, title: str | None = None, clean: bool = True) -> bytes:
+def _rgb(hex_color: str) -> RGBColor:
+    h = hex_color.lstrip("#")
+    return RGBColor(int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
+
+
+def to_docx(markdown: str, title: str | None = None, clean: bool = True, theme: dict | None = None) -> bytes:
+    """theme: ألوان الإدارة من نظام التصميم المركزي (primary للعناوين، accent للخط الفاصل)."""
+    blue = _rgb(theme["primary"]) if theme else BLUE
+    gold = _rgb(theme["accent"]) if theme else GOLD
     if clean:
         markdown = TAGS.sub("", markdown)
         markdown = NEEDS.sub(" ⟨يحتاج توثيقاً⟩", markdown)
@@ -71,10 +79,10 @@ def to_docx(markdown: str, title: str | None = None, clean: bool = True) -> byte
     if title:
         p = doc.add_paragraph()
         _rtl(p, "center")
-        _run(p, title, size=24, bold=True, color=BLUE)
+        _run(p, title, size=24, bold=True, color=blue)
         line = doc.add_paragraph()
         _rtl(line, "center")
-        _run(line, "━━━━━━━━", size=12, color=GOLD)
+        _run(line, "━━━━━━━━", size=12, color=gold)
     for block in re.split(r"\n\s*\n", markdown.strip()):
         block = block.strip()
         if not block or block.startswith(("```", "===")):
@@ -85,7 +93,7 @@ def to_docx(markdown: str, title: str | None = None, clean: bool = True) -> byte
             p = doc.add_paragraph()
             _rtl(p, "start")
             p.paragraph_format.space_before = Pt(14)
-            _run(p, m.group(2).strip(), size={1: 20, 2: 17, 3: 15}.get(level, 14), bold=True, color=BLUE)
+            _run(p, m.group(2).strip(), size={1: 20, 2: 17, 3: 15}.get(level, 14), bold=True, color=blue)
             continue
         for line in block.split("\n"):
             line = line.rstrip()

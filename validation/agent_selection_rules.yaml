@@ -32,7 +32,10 @@ rules:
   - {when: {risk: [high, critical]}, add: [AG-RED, AG-SUP-INT, AG-SUP-EVD], why: "مخاطر عالية تستلزم فريقاً أحمر وإشرافاً مستقلاً"}
   - {when: {evidence_requirement: [high, systematic]}, add: [AG-SUP-EVD, AG-EVA], why: "متطلبات أدلة مرتفعة"}
   - {when: {project_type: [intellectual_book, academic_book, policy_study, foresight_study]}, add: [AG-RED], why: "Red Team إلزامي قبل اعتماد الفصول المهمة"}
-  - {when: {project_type: [novel, novella, short_story]}, add: [AG-NOV, AG-ARE], why: "الجنس الإبداعي: كاتب روائي بصوت المؤلف السردي ومحرر لغوي للصوت"}
+  - {when: {project_type: [economic_study]}, add: [AG-ECO, AG-DAT, AG-RQA, AG-CUL], why: "دراسة اقتصادية: باحث اقتصادي وتحليل بيانات وخبير المجال الثقافي"}
+  - {when: {project_type: [cultural_study]}, add: [AG-ECO, AG-CUL, AG-RQA], why: "دراسة ثقافية: خبير السياسات الثقافية ومؤشرات الأثر"}
+  - {when: {project_type: [development_study]}, add: [AG-ECO, AG-POL, AG-THR, AG-RQA], why: "دراسة تنموية: سياسات واستشراف وإطار مفاهيمي"}
+  - {when: {project_type: [novel, novella, short_story, play]}, add: [AG-NOV, AG-ARE], why: "الجنس الإبداعي: كاتب روائي بصوت المؤلف السردي ومحرر لغوي للصوت"}
   - {when: {project_type: [essay_collection]}, add: [AG-RQA, AG-BKA], why: "مجموعة مقالات فكرية تحتاج خيطاً جامعاً وعمارة"}
   - {when: {project_type: [translation]}, add: [AG-TRN], why: "إصدار مترجم"}
   - {when: {project_type: [critical_edition]}, add: [AG-TAH], why: "تحقيق مخطوط"}

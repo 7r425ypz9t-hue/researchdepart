@@ -1,5 +1,5 @@
 #!/bin/bash
-# ===== تثبيت لوحة «مداد» على لينكس =====
+# ===== تثبيت لوحة «باحث» على لينكس =====
 # المتطلبات: Python 3.10+ (python.org أو Homebrew) — واختيارياً Claude Code للتشغيل الآلي.
 cd "$(dirname "$0")/.." || exit 1
 PY=python3
@@ -11,5 +11,5 @@ for f in "midad-private-backup.tar.gz" "$HOME/Downloads/midad-private-backup.tar
 done
 echo "[3/3] إنشاء الأيقونة على سطح المكتب..."
 "$PY" -m rkpos install-icon || { echo "تعذّر إنشاء الأيقونة"; read -r; exit 1; }
-echo "تم. افتحوا أيقونة «مداد» من سطح المكتب (أو من قائمة التطبيقات)."
+echo "تم. افتحوا أيقونة «باحث» من سطح المكتب (أو من قائمة التطبيقات)."
 read -r -p "اضغط Enter للإغلاق"

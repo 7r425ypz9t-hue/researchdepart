@@ -1,0 +1,32 @@
+# GENERATED from agents/_specs/AG-ECO.yaml by `rkpos generate` — do not edit by hand.
+agent_id: AG-ECO
+read:
+- id: MEM-RESEARCH
+  name_ar: الذاكرة البحثية
+  path: knowledge-base/research/
+  classification: INTERNAL
+- id: MEM-SOURCE
+  name_ar: ذاكرة المصادر
+  path: knowledge-base/sources/sources.jsonl
+  classification: INTERNAL
+- id: ST-EVIDENCE
+  name_ar: سجل الأدلة (claims ledger)
+  path: projects/<PID>/evidence/claims.jsonl
+  classification: INTERNAL
+- id: ST-DATA
+  name_ar: البيانات
+  path: projects/<PID>/data/
+  classification: CONFIDENTIAL
+- id: MEM-PROJECT
+  name_ar: ذاكرة المشروع
+  path: projects/<PID>/memory/
+  classification: CONFIDENTIAL
+write:
+- id: ST-RESEARCH-NOTES
+  name_ar: ملاحظات البحث
+  path: projects/<PID>/research/
+  classification: INTERNAL
+propose_only:
+- ST-KB-CANDIDATES
+- ST-IMPROVEMENT
+policy: Least Privilege — كل وصول خارج هذه القائمة مرفوض ويُسجل كخرق.

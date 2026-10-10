@@ -12,4 +12,5 @@ departments:
   - {id: DEP-08, name_ar: النشر والإنتاج والتصميم, name_en: Publishing & Design, merges: ["11 النشر والإنتاج", "12 التصميم والإخراج"], head: AG-PUB}
   - {id: DEP-09, name_ar: المعرفة والأرشيف, name_en: Knowledge & Archives, merges: ["14 الأرشيف وإدارة المعرفة"], head: AG-KNW}
   - {id: DEP-10, name_ar: التقنية والأمن والكلفة, name_en: Technology, Security & Cost, merges: ["15 التقنية والأتمتة", "16 الأمن والحوكمة (الشق التقني)"], head: AG-AUT}
+  - {id: DEP-12, name_ar: التسويق والانتشار, name_en: Marketing & Outreach, merges: [], head: AG-MKT}
   - {id: DEP-11, name_ar: طبقة الضمان الإشرافية, name_en: Assurance Layer, merges: ["16 الأمن والحوكمة (الشق الرقابي)"], head: AG-COUNCIL, independent: true, reports_to: DEP-00}
