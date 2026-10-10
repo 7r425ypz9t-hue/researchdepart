@@ -175,9 +175,11 @@ def read_file(q) -> dict:
     text = f.read_text(encoding="utf-8", errors="replace")
     view = q.get("view")
     if view in ("reading", "tagged") and f.suffix.lower() in (".md", ".txt"):   # عرض منقّى: عربية بلا علامات
-        from .. import sanitize
+        from .. import footnotes as FN, sanitize
+        text, notes = FN.collect(text, FN.project_sources(FN.pid_of(f)))     # الإحالات مرقّمة كما في Word
         text, rep = sanitize.clean(text, view)
-        return {"path": rel, "text": text, "view": view, "sanitized": rep}
+        text = FN.to_superscript(text)
+        return {"path": rel, "text": text, "view": view, "sanitized": rep, "notes": notes}
     return {"path": rel, "text": text}
 
 
@@ -401,8 +403,9 @@ def file_payload(q) -> tuple[bytes, str, str]:
         from ..export import to_docx
     except ImportError:
         raise ApiError("مكتبة Word غير مثبتة؛ نفّذوا في مجلد البرنامج: py -m pip install -e .")
+    from .. import footnotes as FN
     body = to_docx(f.read_text(encoding="utf-8", errors="replace"), title or None, clean=q.get("clean", "1") in ("1", True),
-                   theme=th, author=author)
+                   theme=th, author=author, sources=FN.project_sources(FN.pid_of(f)))
     return body, DOCX, (title or f.stem) + ".docx"
 
 

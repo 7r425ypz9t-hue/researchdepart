@@ -414,12 +414,15 @@ def answer(pid: str, qid: str, choice_id: str, note: str = "") -> dict:
         res = B.assemble(pid)
         from .export import to_docx
         m = GN.manifest(pid)
-        from . import institution as INS, sanitize as SZ
+        from . import institution as INS
         out = PROJECTS / pid / "manuscript/approved" / f"{m.get('slug') or pid}.docx"
         out.parent.mkdir(parents=True, exist_ok=True)
         full = (PROJECTS / pid / "manuscript/book_full.md").read_text(encoding="utf-8")
-        out.write_bytes(to_docx(full, m["title"], theme=INS.theme(INS.division_of_project(m)), author=m.get("author", "")))
-        out.with_suffix(".md").write_text(SZ.clean(full)[0], encoding="utf-8")   # النص المعتمد منقّى للقراءة
+        from .footnotes import project_sources
+        out.write_bytes(to_docx(full, m["title"], theme=INS.theme(INS.division_of_project(m)), author=m.get("author", ""),
+                                sources=project_sources(pid)))
+        from .footnotes import reading_text
+        out.with_suffix(".md").write_text(reading_text(full, project_sources(pid)), encoding="utf-8")   # منقّى بإحالاته
         ap["final_approved"] = True
         runner.complete(pid, step["id"], "HUMAN-AUTHOR", f"الاعتماد النهائي للنص ({res['words']} كلمة): {decision}")
     elif act == "polish_all":

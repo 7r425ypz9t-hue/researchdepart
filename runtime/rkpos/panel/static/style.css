@@ -81,3 +81,6 @@ progress{accent-color:var(--gold);height:14px}
 .reader .reader-text p{margin:0 0 1em}
 .reader .reader-text .side-h1{font-size:1.6rem;text-align:center;border-bottom:2px solid var(--gold);padding-bottom:.3em}
 .reader .reader-text .side-h2{font-size:1.3rem}
+/* الأقواس وما بينها بالأحمر، والإحالات */
+.paren{color:#FF0000}
+ol.footnotes{font-size:.92em;line-height:1.8;padding-inline-start:1.6em;margin:.4em 0 0;border-top:1px solid var(--line);padding-top:.6em}

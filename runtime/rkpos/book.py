@@ -538,7 +538,9 @@ def assemble(pid: str) -> dict:
         from . import institution as INS
         from .export import to_docx
         docx = out.with_suffix(".docx")
-        docx.write_bytes(to_docx(text, m["title"], theme=INS.theme(INS.division_of_project(m)), author=m.get("author", "")))
+        from .footnotes import project_sources
+        docx.write_bytes(to_docx(text, m["title"], theme=INS.theme(INS.division_of_project(m)), author=m.get("author", ""),
+                                 sources=project_sources(pid)))
         res["docx"] = str(docx.relative_to(ROOT))
     except ImportError:
         pass

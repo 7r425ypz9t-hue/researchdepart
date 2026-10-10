@@ -14,7 +14,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
 
-from . import sanitize
+from . import footnotes as FN, sanitize
 
 BLUE, GOLD = RGBColor(0x1F, 0x4E, 0x79), RGBColor(0xB8, 0x86, 0x0B)
 FONT = "Noto Naskh Arabic"
@@ -48,11 +48,114 @@ def _run(par, text, size=14, bold=False, color=None):
     return r
 
 
-def _inline(par, text, size):
-    """**غامق** داخل الفقرة."""
-    for i, chunk in enumerate(re.split(r"\*\*(.+?)\*\*", text)):
-        if chunk:
-            _run(par, chunk, size=size, bold=bool(i % 2))
+def _segments(text: str) -> list[tuple]:
+    """تقطيع السطر: الغامق (**…**)، وما بين الأقواس مع الأقواس نفسها (يُلوَّن بالأحمر)، ومواضع الحواشي."""
+    segs, buf, bold, depth, i = [], [], False, 0, 0
+
+    def flush(red: bool):
+        if buf:
+            segs.append(("t", "".join(buf), bold, red))
+            buf.clear()
+    while i < len(text):
+        if text.startswith("**", i):
+            flush(depth > 0)
+            bold = not bold
+            i += 2
+            continue
+        c = text[i]
+        if c == FN.PH_OPEN and (j := text.find(FN.PH_CLOSE, i)) > i:
+            flush(depth > 0)
+            segs.append(("n", int(text[i + 1:j])))
+            i = j + 1
+            continue
+        if c == "(":
+            flush(depth > 0)
+            depth += 1
+        buf.append(c)
+        if c == ")" and depth:
+            flush(True)
+            depth -= 1
+        i += 1
+    flush(depth > 0)
+    return segs
+
+
+def _note_ref(par, n: int, footnote_text: bool = False):
+    """علامة الحاشية المرفوعة: في المتن تحيل إلى الحاشية n، وفي نص الحاشية رقمها."""
+    r = par.add_run()
+    rpr = r._r.get_or_add_rPr()
+    va = OxmlElement("w:vertAlign")
+    va.set(qn("w:val"), "superscript")
+    rpr.append(va)
+    rpr.append(OxmlElement("w:rtl"))
+    if footnote_text:
+        r._r.append(OxmlElement("w:footnoteRef"))
+    else:
+        ref = OxmlElement("w:footnoteReference")
+        ref.set(qn("w:id"), str(n))
+        r._r.append(ref)
+
+
+def _inline(par, text, size, color=None, bold=False):
+    """الغامق، والأقواس وما بينها بالأحمر، ومواضع الحواشي."""
+    for seg in _segments(text):
+        if seg[0] == "n":
+            _note_ref(par, seg[1])
+        else:
+            _run(par, seg[1], size=size, bold=bold or seg[2], color=_red() if seg[3] else color)
+
+
+def _red() -> RGBColor:
+    return _rgb((sanitize.cfg().get("typography") or {}).get("brackets_color", "#FF0000"))
+
+
+FOOTNOTES_NS = ('xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" '
+                'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"')
+SEPARATORS = ('<w:footnote w:type="separator" w:id="-1"><w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/>'
+              '</w:pPr><w:r><w:separator/></w:r></w:p></w:footnote>'
+              '<w:footnote w:type="continuationSeparator" w:id="0"><w:p><w:pPr><w:spacing w:after="0" w:line="240" '
+              'w:lineRule="auto"/></w:pPr><w:r><w:continuationSeparator/></w:r></w:p></w:footnote>')
+
+
+def _footnotes_xml(notes: list[str]) -> bytes:
+    """جزء الحواشي: كل حاشية فقرة من اليمين بخط أصغر، والأقواس فيها بالأحمر كذلك."""
+    from lxml import etree
+    tmp = Document()
+    items = []
+    for n, note in enumerate(notes, 1):
+        p = tmp.add_paragraph()
+        _rtl(p, "both")
+        p.paragraph_format.space_after = Pt(0)
+        _note_ref(p, n, footnote_text=True)
+        _run(p, " ", size=11)
+        _inline(p, note, 11)
+        xml = etree.tostring(p._p, encoding="unicode")
+        xml = re.sub(r'\sxmlns:\w+="[^"]*"', "", xml)
+        items.append(f'<w:footnote w:id="{n}">{xml}</w:footnote>')
+    return (f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:footnotes {FOOTNOTES_NS}>'
+            f'{SEPARATORS}{"".join(items)}</w:footnotes>').encode("utf-8")
+
+
+def _attach_footnotes(data: bytes, notes: list[str]) -> bytes:
+    """يضيف جزء الحواشي إلى الحزمة مع علاقته ونوع محتواه وإعداد الفواصل."""
+    import zipfile
+    src = zipfile.ZipFile(io.BytesIO(data))
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as out:
+        for item in src.infolist():
+            body = src.read(item.filename)
+            if item.filename == "word/_rels/document.xml.rels":
+                body = body.replace(b"</Relationships>", b'<Relationship Id="rIdFootnotes" Type="http://schemas.openxmlformats.org/'
+                                    b'officeDocument/2006/relationships/footnotes" Target="footnotes.xml"/></Relationships>')
+            elif item.filename == "[Content_Types].xml":
+                body = body.replace(b"</Types>", b'<Override PartName="/word/footnotes.xml" ContentType="application/'
+                                    b'vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml"/></Types>')
+            elif item.filename == "word/settings.xml":
+                body = body.replace(b"<w:compat>", b'<w:footnotePr><w:footnote w:id="-1"/><w:footnote w:id="0"/>'
+                                    b"</w:footnotePr><w:compat>", 1)
+            out.writestr(item, body)
+        out.writestr("word/footnotes.xml", _footnotes_xml(notes))
+    return buf.getvalue()
 
 
 def _rgb(hex_color: str) -> RGBColor:
@@ -61,10 +164,14 @@ def _rgb(hex_color: str) -> RGBColor:
 
 
 def to_docx(markdown: str, title: str | None = None, clean: bool = True, theme: dict | None = None,
-            author: str = "") -> bytes:
-    """theme: ألوان الإدارة من نظام التصميم المركزي (primary للعناوين، accent للخط الفاصل)."""
+            author: str = "", sources: list[dict] | None = None) -> bytes:
+    """theme: ألوان الإدارة من نظام التصميم المركزي (primary للعناوين، accent للخط الفاصل).
+    sources: سجل المصادر لبناء نصوص الحواشي؛ والاستشهادات تصير حواشي مرقّمة أسفل الصفحة."""
     blue = _rgb(theme["primary"]) if theme else BLUE
     gold = _rgb(theme["accent"]) if theme else GOLD
+    notes: list[str] = []
+    if (sanitize.cfg().get("typography") or {}).get("footnotes", True):
+        markdown, notes = FN.collect(markdown, sources)
     markdown, _ = sanitize.clean(markdown, "reading" if clean else "tagged")
     if title:   # لا يتكرر العنوان إن كان النص يبدأ به
         markdown = re.sub(rf"\A#\s+{re.escape(title.strip())}\s*\n", "", markdown.lstrip())
@@ -90,7 +197,7 @@ def to_docx(markdown: str, title: str | None = None, clean: bool = True, theme: 
             p = doc.add_paragraph()
             _rtl(p, "start")
             p.paragraph_format.space_before = Pt(14)
-            _run(p, m.group(2).strip(), size={1: 20, 2: 17, 3: 15}.get(level, 14), bold=True, color=blue)
+            _inline(p, m.group(2).strip(), {1: 20, 2: 17, 3: 15}.get(level, 14), color=blue, bold=True)
             continue
         for line in block.split("\n"):
             line = line.rstrip()
@@ -105,4 +212,5 @@ def to_docx(markdown: str, title: str | None = None, clean: bool = True, theme: 
     sanitize.scrub_docx(doc, author=author, title=title or "")
     buf = io.BytesIO()
     doc.save(buf)
-    return sanitize.scrub_package(buf.getvalue())
+    data = sanitize.scrub_package(buf.getvalue())
+    return _attach_footnotes(data, notes) if notes else data

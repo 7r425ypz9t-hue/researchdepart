@@ -667,11 +667,27 @@ function liveLabel(meta) {
   const m = String(meta.label).match(/^(S[\d.A-Z]+)/);
   return agentAr(meta.agent) + " — " + meta.label.replace(/^BOOK-/, "الوحدة ").replace(/^VOICE-/, "مواءمة صوت ");
 }
+function parenNodes(text) {   // الأقواس وما بينها بالأحمر (كما في ملف Word)
+  const out = []; let buf = "", depth = 0;
+  const flush = (red) => { if (buf) out.push(red ? h("span", { class: "paren" }, buf) : buf); buf = ""; };
+  for (const c of String(text)) {
+    if (c === "(") { flush(depth > 0); depth++; }
+    buf += c;
+    if (c === ")" && depth) { flush(true); depth--; }
+  }
+  flush(depth > 0);
+  return out;
+}
+function notesBlock(notes) {   // حواشي القارئ: مرقّمة تحت «الإحالات»
+  if (!notes || !notes.length) return [];
+  return [h("div", { class: "side-h2" }, "الإحالات"),
+    h("ol", { class: "footnotes" }, notes.map((n) => h("li", {}, parenNodes(n))))];
+}
 function readable(md) {   // عرض قرائي آمن: العناوين بارزة، والنص كما هو (بلا innerHTML)
   return String(md).replace(/^---\n[\s\S]*?\n---\n/, "").split(/\n{2,}/).map((blk) => {
     const m = blk.match(/^(#{1,4})\s+(.*)/);
-    if (m) return h("div", { class: "side-h" + m[1].length }, m[2].replace(/\*\*/g, ""));
-    return h("p", {}, blk.replace(/\*\*/g, ""));
+    if (m) return h("div", { class: "side-h" + m[1].length }, parenNodes(m[2].replace(/\*\*/g, "")));
+    return h("p", {}, parenNodes(blk.replace(/\*\*/g, "")));
   });
 }
 const cleanLive = (t) => String(t || "").replace(/===BEGIN_TEXT===\s*/g, "").replace(/\s*===END_TEXT===\s*/g, "\n\n— ملاحظات الوكيل —\n");
@@ -734,7 +750,7 @@ async function renderSide(pid) {
       const b2 = $("#side .live-btn"); if (b2) b2.textContent = (on ? "● " : "") + "الكتابة الآن";
     }, 3000);
     const f = await G("file", { path: st.path, view: "reading" });
-    textBox.replaceChildren(...readable(f.text || ""));
+    textBox.replaceChildren(...readable(f.text || ""), ...notesBlock(f.notes));
     const name = (docs.items.find((d) => d.path === st.path) || {}).label || "";
     status.textContent = name;
     tools.append(
@@ -754,7 +770,7 @@ async function readerCard(path, title, pid) {
   const info = h("div", { class: "small muted" });
   const load = async () => {
     const f = await G("file", { path, view: st.view });
-    body.replaceChildren(...readable(f.text || ""));
+    body.replaceChildren(...readable(f.text || ""), ...notesBlock(f.notes));
     const s = f.sanitized || {};
     info.textContent = [s.hidden_chars ? "أزيل " + s.hidden_chars + " محرفاً خفياً" : "",
       s.translated ? "تُرجم " + s.translated + " وسماً إلى العربية" : "",
