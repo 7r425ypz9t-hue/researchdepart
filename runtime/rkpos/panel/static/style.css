@@ -65,6 +65,7 @@ progress{accent-color:var(--gold);height:14px}
 .hero-name{font-size:2.2rem;font-weight:700;line-height:1.2}.hero-tag{color:#f3e2b5}
 .kpi-box{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:6px 14px;text-align:center;min-width:92px;color:#dfe8f1;font-size:.85rem}
 .kpi-box .kpi{color:#fff;font-size:1.5rem}
+.kpi-box.light{background:#fff;border-color:var(--line);color:var(--muted)}.kpi-box.light .kpi{color:var(--blue)}
 .div-grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
 .div-card{border-top:5px solid var(--blue);background:linear-gradient(180deg,var(--light),#fff 70%)}
 .div-card h4{color:var(--blue)}

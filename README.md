@@ -28,6 +28,11 @@ rkpos status RKP-2026-0001         # STATE · NEXT_ACTION · CURRENT_AGENT · WA
 rkpos dashboard
 rkpos panel                        # لوحة التحكم المحلية (كل إجراءات تفعيل الوكلاء)
 rkpos activate AG-WRT "…" --register essay --engine claude_code
+rkpos vault add وثيقة.pdf --project RKP-2026-0001 --provenance "…" --rights "…"   # خزنة الأصول
+rkpos vault verify · rkpos vault list · rkpos backup                              # السلامة والنسخ الاحتياطي
+rkpos triangulate RKP-2026-0001    # تثليث الأدلة واستقلال أصولها
+rkpos kpis                         # مؤشرات المؤسسة وخط الأساس
+rkpos skills-gen                   # مهارات Claude Code في .claude/skills
 ```
 
 ## البنية
@@ -43,6 +48,8 @@ rkpos activate AG-WRT "…" --register essay --engine claude_code
 | `memory/` · `knowledge-base/` | الذاكرة بطبقاتها الست |
 | `projects/` | المشاريع (RKP-YYYY-NNNN) |
 | `runtime/rkpos/` | طبقة التشغيل (Python) |
+| `.claude/skills/` | مولَّد: مهارات Claude Code من سجل المهارات (`rkpos skills-gen`) |
+| `workspace/vault/` | خزنة الأصول وسجلها (محلية غير متتبعة) |
 | `templates/` · `publishing/` · `validation/` · `logs/` · `tests/` · `scripts/` | القوالب والنشر والتحقق والسجلات |
 | `documentation/` | المراحل 1–5 |
 

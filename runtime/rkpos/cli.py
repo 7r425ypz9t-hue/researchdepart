@@ -19,6 +19,12 @@
   rkpos activate AG-WRT "اكتب مسودة عمود عن…" [--register essay] [--project RKP-…] [--engine claude_code]
   rkpos panel                 # لوحة التحكم المحلية
   rkpos install-icon [--remove]
+  rkpos vault add path/to/file.pdf [--project RKP-…] [--provenance "…"] [--rights "…"]
+  rkpos vault verify | rkpos vault list [--project RKP-…]
+  rkpos backup [--out مجلد]
+  rkpos skills-gen [--check]   # مهارات Claude Code في .claude/skills
+  rkpos triangulate RKP-2026-0001
+  rkpos kpis [--set-baseline --actor HUMAN-AUTHOR --decision "…"]
 """
 from __future__ import annotations
 import argparse
@@ -115,6 +121,17 @@ def main(argv=None) -> int:
     pa.add_argument("--port", type=int, default=0); pa.add_argument("--no-browser", action="store_true")
     pa.add_argument("--new", action="store_true", help="لا تُعِد استعمال لوحة تعمل مسبقاً")
     ic = sub.add_parser("install-icon", help="أيقونة «باحث» على سطح المكتب"); ic.add_argument("--remove", action="store_true")
+    va = sub.add_parser("vault", help="خزنة الأصول: إيداع وفحص سلامة وقائمة")
+    vs = va.add_subparsers(dest="vcmd", required=True)
+    vaa = vs.add_parser("add"); vaa.add_argument("file"); vaa.add_argument("--project"); vaa.add_argument("--provenance", default="")
+    vaa.add_argument("--rights", default=""); vaa.add_argument("--depositor", default="HUMAN-AUTHOR")
+    vs.add_parser("verify")
+    val_ = vs.add_parser("list"); val_.add_argument("--project")
+    bu = sub.add_parser("backup", help="نسخة احتياطية للخزنة على نمط BagIt"); bu.add_argument("--out")
+    sg = sub.add_parser("skills-gen", help="توليد مهارات Claude Code من سجل المهارات"); sg.add_argument("--check", action="store_true")
+    tr = sub.add_parser("triangulate", help="تثليث الأدلة واستقلال أصولها في سجل ادعاءات المشروع"); tr.add_argument("project")
+    kp = sub.add_parser("kpis", help="مؤشرات المؤسسة وخط الأساس")
+    kp.add_argument("--set-baseline", action="store_true"); kp.add_argument("--actor"); kp.add_argument("--decision", default="")
     mp = sub.add_parser("memory-promote"); mp.add_argument("memory_id"); mp.add_argument("--layer", required=True); mp.add_argument("--approved-by", required=True)
 
     a = ap.parse_args(argv)
@@ -167,6 +184,8 @@ def main(argv=None) -> int:
         text = Path(a.file).read_text(encoding="utf-8")
         srcs = sources.load(PROJECTS / a.project / "research/sources.jsonl") + sources.load()
         rep = {"claims": claims.audit(text), "citations": citations.audit(text, srcs), "terminology": terms.check(text)}
+        if (PROJECTS / a.project / "manifest.yaml").exists():   # تثليث سجل الادعاءات: تنبيه لا يحجب البوابة
+            rep["triangulation"] = claims.triangulate_project(a.project)["summary"]
         from . import stylometry
         reg = stylometry.register_for(a.project)
         from .genres import VOICE_REGISTERS, discipline_report
@@ -256,6 +275,43 @@ def main(argv=None) -> int:
     if a.cmd == "install-icon":
         from .panel import desktop
         _p({"installed" if not a.remove else "removed": desktop.install(remove=a.remove)}); return 0
+    if a.cmd == "vault":
+        from . import vault
+        if a.vcmd == "add":
+            r = vault.add(a.file, project=a.project, provenance=a.provenance, rights=a.rights, depositor=a.depositor)
+            _p({"id": r["id"], "sha256": r["sha256"], "kind": r["kind"], "size": r["size"],
+                "duplicate": bool(r.get("duplicate")), "vault_path": r["vault_path"]}); return 0
+        if a.vcmd == "verify":
+            r = vault.verify_all()
+            _p(r); return 0 if not (r["missing"] or r["altered"]) else 2
+        rows = [r for r in vault.load() if not a.project or r.get("project") == a.project]
+        _p([{k: r.get(k) for k in ("id", "filename", "kind", "size", "project", "integrity", "last_verified")} for r in rows]
+           or "الخزنة فارغة."); return 0
+    if a.cmd == "backup":
+        from . import vault
+        _p(f"→ {vault.backup(Path(a.out) if a.out else None)}"); return 0
+    if a.cmd == "skills-gen":
+        from . import skillgen
+        changed = skillgen.generate(check=a.check)
+        if a.check and changed:
+            _p("stale:\n" + "\n".join(map(str, changed))); return 1
+        _p(f"{len(changed)} skill file(s) {'stale' if a.check else 'written'} ({len(skillgen.build())} available_now)"); return 0
+    if a.cmd == "triangulate":
+        from .verify import claims
+        r = claims.triangulate_project(a.project)
+        _p({"project": r["project"], "summary": r["summary"],
+            "flagged": [{k: i[k] for k in ("claim_id", "status", "independent_origins", "type_labels", "best_tier", "flags_ar")}
+                        for i in r["flagged"]]})
+        return 0 if r["summary"]["passes"] else 2
+    if a.cmd == "kpis":
+        from . import dashboard
+        if a.set_baseline:
+            if not a.actor:
+                _p("تثبيت خط الأساس قرار للمؤلف: أضيفوا --actor HUMAN-AUTHOR"); return 1
+            _p(dashboard.set_baseline(a.actor, a.decision)); return 0
+        k = dashboard.kpis()
+        _p({**({"note": k["note"]} if k["note"] else {"baseline_at": k["baseline_at"]}),
+            "items": [{x: i[x] for x in ("label", "value", "baseline", "delta")} for i in k["items"]]}); return 0
     if a.cmd == "memory-promote":
         from . import knowledge
         _p(knowledge.promote(a.memory_id, a.layer, a.approved_by)); return 0

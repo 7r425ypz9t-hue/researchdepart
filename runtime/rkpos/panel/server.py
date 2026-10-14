@@ -483,7 +483,68 @@ def file_payload(q) -> tuple[bytes, str, str]:
 
 def a_download_ticket(d):
     """يُعدّ الملف الآن (فتظهر أي مشكلة رسالةً في اللوحة) ويعيد رابط تنزيل صالحاً دقيقتين لمرة واحدة."""
-    body, ctype, name = file_payload(d)
+    return a_download_ticket_bytes(*file_payload(d))
+
+
+# ------------------------------------------------------------------ الخزنة والمؤشرات والتثليث
+PANEL_UPLOAD_MAX = 64 * 1024 * 1024
+
+
+def vault_view(q) -> dict:
+    from .. import vault
+    rows = [r for r in vault.load() if not q.get("project") or r.get("project") == q["project"]]
+    return {"items": list(reversed(rows)), "summary": vault.summary(), "kinds": vault.KIND_AR,
+            "integrity_labels": vault.INTEGRITY_AR, "location": str(vault.vault_dir())}
+
+
+def kpis_view(_q) -> dict:
+    from .. import dashboard
+    return dashboard.kpis()
+
+
+def triangulation_view(q) -> dict:
+    from ..verify import claims
+    _proj(q.get("project", ""))
+    return claims.triangulate_project(q["project"])
+
+
+def a_vault_upload(d):
+    """إيداع ملف في الخزنة من اللوحة: المحتوى بترميز base64، ويُحفظ للقراءة فقط بمسار بصمته."""
+    import base64
+    import binascii
+    from .. import vault
+    _need(d, "filename", "data")
+    if d.get("project"):
+        _proj(d["project"])
+    try:
+        data = base64.b64decode(d["data"], validate=True)
+    except (binascii.Error, ValueError) as e:
+        raise ApiError("محتوى الملف غير صالح") from e
+    if len(data) > PANEL_UPLOAD_MAX:
+        raise ApiError("الملف أكبر من حد الرفع من اللوحة (64 ميغابايت)؛ استعملوا الأمر rkpos vault add")
+    return vault.add_bytes(d["filename"], data, project=d.get("project") or None, provenance=d.get("provenance") or "",
+                           rights=d.get("rights") or "", depositor="HUMAN-AUTHOR")
+
+
+def a_vault_verify(_d):
+    from .. import vault
+    return vault.verify_all()
+
+
+def a_vault_backup(_d):
+    """ينشئ النسخة الاحتياطية في مجلد الخزنة، ويعيد تذكرة تنزيل لمرة واحدة."""
+    from .. import vault
+    out = vault.backup()
+    return {**a_download_ticket_bytes(out.read_bytes(), "application/zip", out.name), "path": str(out)}
+
+
+def a_kpi_baseline(d):
+    from .. import dashboard
+    _author(d)
+    return dashboard.set_baseline("HUMAN-AUTHOR", d.get("decision") or "")
+
+
+def a_download_ticket_bytes(body: bytes, ctype: str, name: str) -> dict:
     for k in [k for k, v in DOWNLOADS.items() if v["exp"] < time.time()]:
         DOWNLOADS.pop(k, None)
     t = secrets.token_urlsafe(16)
@@ -491,7 +552,7 @@ def a_download_ticket(d):
     return {"ticket": t, "name": name, "size": len(body)}
 
 
-GET = {"progress": progress_view, "institution": institution_view, "live": live_view, "docs": docs_view, "labels": labels_view, "autopilot": autopilot_view, "genres": genres_view, "book": book_view, "book_unit": book_unit, "job": job_view, "overview": overview, "agents": agents, "agent": agent, "workflows": workflows, "project": project,
+GET = {"vault": vault_view, "kpis": kpis_view, "triangulation": triangulation_view, "progress": progress_view, "institution": institution_view, "live": live_view, "docs": docs_view, "labels": labels_view, "autopilot": autopilot_view, "genres": genres_view, "book": book_view, "book_unit": book_unit, "job": job_view, "overview": overview, "agents": agents, "agent": agent, "workflows": workflows, "project": project,
        "file": read_file, "candidates": candidates, "memory": memory, "audit": audit_log, "cost": cost_report,
        "governance": governance, "engines": lambda q: engines(bool(q.get("fresh"))), "ping": lambda q: {"ok": True, "root": str(ROOT), "version": code_version(), "pid": os.getpid()}}
 
@@ -880,7 +941,8 @@ def a_claude_add_path(_d):
         raise ApiError(str(e)) from e
 
 
-POST = {"download_ticket": a_download_ticket, "marketing": a_marketing, "stop_now": a_stop_now, "autopilot_note": a_autopilot_note, "autopilot_start": a_autopilot_start, "autopilot_answer": a_autopilot_answer, "autopilot_stop": a_autopilot_stop,
+POST = {"vault_upload": a_vault_upload, "vault_verify": a_vault_verify, "vault_backup": a_vault_backup, "kpi_baseline": a_kpi_baseline,
+        "download_ticket": a_download_ticket, "marketing": a_marketing, "stop_now": a_stop_now, "autopilot_note": a_autopilot_note, "autopilot_start": a_autopilot_start, "autopilot_answer": a_autopilot_answer, "autopilot_stop": a_autopilot_stop,
         "claude_add_path": a_claude_add_path, "claude_login": a_claude_login, "book_skeleton": b_skeleton, "book_set_units": b_set_units, "book_propose": b_propose,
         "book_import_outline": b_import_outline, "book_approve_outline": b_approve_outline, "book_draft": b_draft,
         "book_record": b_record, "book_revise": b_revise, "book_align": b_align, "book_adopt_aligned": b_adopt_aligned,

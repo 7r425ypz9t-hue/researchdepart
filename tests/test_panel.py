@@ -336,3 +336,31 @@ for t in ["سأقرأ الملفات أولاً.", "<invo", 'ke name="Bash">', "
         ClaudeCodeAdapter("m").complete("s", "u")
     assert time.time() - t0 < 5
     assert "TEXT ONLY" in router.TEXT_ONLY and "لا تكتب استدعاءات أدوات" in router.TEXT_ONLY
+
+
+def test_panel_vault_and_kpi_baseline(panel):
+    import base64
+    data = base64.b64encode("مخطوطة رقمية".encode("utf-8")).decode()
+    code, r = panel("vault_upload", {"filename": "مخطوطة.txt", "data": data, "provenance": "إهداء", "rights": "داخلي"})
+    assert code == 200 and r["data"]["id"].startswith("AST-") and r["data"]["integrity"] == "ok"
+    code, r2 = panel("vault_upload", {"filename": "نسخة.txt", "data": data})
+    assert r2["data"]["duplicate"] and r2["data"]["id"] == r["data"]["id"]
+    assert panel("vault_upload", {"filename": "x.txt", "data": "@@not-base64@@"})[0] == 400
+    assert panel("vault_upload", {"filename": "x.txt", "data": data, "project": "RKP-1999-0001"})[0] == 400
+    code, v = panel("vault")
+    assert v["data"]["summary"]["total"] == 1 and v["data"]["items"][0]["provenance"] == "إهداء"
+    code, rep = panel("vault_verify", {})
+    assert rep["data"]["ok"] == 1
+    code, b = panel("vault_backup", {})
+    assert code == 200 and b["data"]["ticket"] and b["data"]["name"].endswith(".zip")
+    assert panel("vault", token="wrong")[0] == 401
+    # خط أساس المؤشرات: الملاحظة قبله، وإقرار المؤلف شرط لتثبيته
+    code, k = panel("kpis")
+    assert k["data"]["note"] == "لا تُعتمد مستهدفات رقمية قبل تأسيس خط أساس تجريبي" and not k["data"]["baseline_set"]
+    code, r = panel("kpi_baseline", {})
+    assert code == 400 and "L4" in r["error"]
+    code, r = panel("kpi_baseline", {"confirm_author": True})
+    assert code == 200 and r["data"]["by"] == "HUMAN-AUTHOR"
+    code, k = panel("kpis")
+    assert k["data"]["baseline_set"] and k["data"]["note"] is None
+    assert next(i for i in k["data"]["items"] if i["key"] == "vault_integrity")["baseline"] == 100.0

@@ -178,7 +178,7 @@ function runView(res, ctx) {
 const themeStyle = (t) => t ? `--blue:${t.primary};--gold:${t.accent};--light:${t.light}` : "";
 let INST = null;
 async function home() {
-  const [o, ins] = await Promise.all([G("overview"), G("institution")]);
+  const [o, ins, kp] = await Promise.all([G("overview"), G("institution"), G("kpis")]);
   INST = ins;
   const e = o.engines;
   const tot = ins.divisions.reduce((a, d) => ({ p: a.p + d.stats.projects, act: a.act + d.stats.active, c: a.c + d.stats.cost }), { p: 0, act: 0, c: 0 });
@@ -206,6 +206,7 @@ async function home() {
         h("div", { class: "kpi-box" }, h("div", { class: "kpi" }, o.agents), "وكيلاً"),
         h("div", { class: "kpi-box" }, h("div", { class: "kpi" }, "$" + tot.c.toFixed(2)), "الكلفة"))),
     ins.questions.length ? [h("h2", {}, "بانتظار قراركم"), h("div", { class: "grid" }, ins.questions.map((q) => questionCard(q.project, q, true)))] : null,
+    kpiSection(kp),
     h("h2", {}, "الإدارات التخصصية"),
     h("div", { class: "grid div-grid" }, ins.divisions.filter((d) => d.kind === "specialized").map(divCard)),
     h("h2", {}, "الإدارات المساندة"),
@@ -603,6 +604,98 @@ async function toolsView() {
         window.open(URL.createObjectURL(new Blob([f.text], { type: "text/html" })), "_blank");
       }, "ghost")),
     out);
+}
+
+// ---------- الخزنة ----------
+const INTEGRITY_CLS = { ok: "ok", missing: "bad", altered: "bad" };
+function fmtSize(n) {
+  if (n == null) return "—";
+  const u = ["بايت", "ك.ب", "م.ب", "ج.ب"]; let i = 0;
+  while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
+  return (i ? n.toFixed(1) : n) + " " + u[i];
+}
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1] || "");
+    r.onerror = () => reject(new Error("تعذّرت قراءة الملف"));
+    r.readAsDataURL(file);
+  });
+}
+async function vaultView() {
+  const [v, ov] = await Promise.all([G("vault"), G("overview")]);
+  const s = v.summary, lab = v.integrity_labels;
+  const out = h("div", { id: "vault-out" });
+  const upload = async () => {
+    const f = $("#va-file").files[0];
+    if (!f) return toast("اختاروا ملفاً أولاً", true);
+    if (f.size > 64 * 1024 * 1024) return toast("الملف أكبر من حد الرفع من اللوحة (64 ميغابايت)؛ استعملوا الأمر rkpos vault add", true);
+    const data = await fileToBase64(f);
+    const r = await busy("يُودَع الملف ويُحسب بصمته…", () => api("vault_upload",
+      { filename: f.name, data, project: val("va-proj"), provenance: val("va-prov"), rights: val("va-rights") }));
+    toast(r.duplicate ? "الملف مودع مسبقاً بالمعرّف " + r.id : "أُودع الملف بالمعرّف " + r.id);
+    vaultView();
+  };
+  set(
+    h("h2", {}, "خزنة الأصول"),
+    h("p", { class: "muted small" }, "تُحفظ الأصول الأصلية للقراءة فقط بمسار مشتق من بصمتها (SHA-256)، ولا تُكرَّر النسخة نفسها، ويكشف فحص السلامة كل أصل مفقود أو معدَّل."),
+    h("div", { class: "row" },
+      h("div", { class: "kpi-box light" }, h("div", { class: "kpi" }, s.total), "أصلاً"),
+      h("div", { class: "kpi-box light" }, h("div", { class: "kpi" }, fmtSize(s.size)), "الحجم"),
+      h("div", { class: "kpi-box light" }, h("div", { class: "kpi" }, s.integrity_pct == null ? "—" : s.integrity_pct + "%"), "سلامة الأصول"),
+      s.integrity.missing ? pill(s.integrity.missing + " مفقوداً", "bad") : null,
+      s.integrity.altered ? pill(s.integrity.altered + " معدَّلاً", "bad") : null),
+    h("h3", {}, "إيداع أصل"),
+    h("div", { class: "form" },
+      field("الملف", h("input", { id: "va-file", type: "file" })),
+      field("المشروع", sel("va-proj", [["", "— بلا مشروع —"], ...ov.projects.map((p) => [p.id, p.id + " " + p.title])], "")),
+      field("المصدر والأصل (من أين جاء؟)", h("input", { id: "va-prov", placeholder: "مثال: أرشيف المؤسسة، إهداء من…" })),
+      field("الحقوق", h("input", { id: "va-rights", placeholder: "مثال: للاستعمال البحثي الداخلي" }))),
+    h("div", { class: "row" },
+      btn("أودِع في الخزنة", upload, "gold"),
+      btn("افحص السلامة", async () => {
+        const r = await busy("يُعاد حساب البصمات…", () => api("vault_verify", {}));
+        const bad = r.missing.length + r.altered.length;
+        toast(bad ? "نتيجة الفحص: " + r.missing.length + " مفقوداً و" + r.altered.length + " معدَّلاً" : "كل الأصول سليمة (" + r.ok + ")", bad > 0);
+        vaultView();
+      }),
+      btn("نسخة احتياطية", async () => {
+        const r = await busy("تُعدّ النسخة الاحتياطية…", () => api("vault_backup", {}));
+        let fr = $("#dl-frame");
+        if (!fr) { fr = h("iframe", { id: "dl-frame", style: "display:none" }); document.body.append(fr); }
+        fr.src = "/api/dl?ticket=" + encodeURIComponent(r.ticket);
+        out.replaceChildren(h("div", { class: "note small" }, "أُعدّت النسخة الاحتياطية «" + r.name + "» (" + fmtSize(r.size) + ") وحُفظت في: " + r.path));
+      }, "ghost")),
+    out,
+    h("h3", {}, "الأصول المودعة"),
+    v.items.length ? h("table", {},
+      h("tr", {}, ["المعرّف", "الملف", "النوع", "الحجم", "المشروع", "المصدر والحقوق", "السلامة", "آخر فحص"].map((x) => h("th", {}, x))),
+      v.items.map((a) => h("tr", {},
+        h("td", {}, a.id), h("td", {}, a.filename, h("div", { class: "small muted", dir: "ltr", title: a.sha256 }, a.sha256.slice(0, 16) + "…")),
+        h("td", {}, v.kinds[a.kind] || a.kind), h("td", { class: "small" }, fmtSize(a.size)), h("td", { class: "small" }, a.project || "—"),
+        h("td", { class: "small" }, [a.provenance, a.rights].filter(Boolean).join(" · ") || "—"),
+        h("td", {}, pill(lab[a.integrity] || a.integrity, INTEGRITY_CLS[a.integrity])),
+        h("td", { class: "small" }, (a.last_verified || "").replace("T", " ").slice(0, 16)))))
+      : h("p", { class: "muted" }, "الخزنة فارغة بعد."),
+    h("p", { class: "muted small" }, "موضع الخزنة: " + v.location));
+}
+
+// ---------- مؤشرات المؤسسة ----------
+function kpiSection(k) {
+  const fmt = (v, u) => v == null ? "—" : v + (u === "%" ? "%" : u ? " " + u : "");
+  const body = h("div", { class: "card" },
+    k.note ? h("div", { class: "note" }, k.note) : h("p", { class: "small muted" }, "خط الأساس مثبّت في " + String(k.baseline_at || "").replace("T", " ").slice(0, 16) + " بقرار المؤلف."),
+    h("table", {},
+      h("tr", {}, ["المؤشر", "القيمة الحالية", ...(k.baseline_set ? ["خط الأساس", "الفرق"] : [])].map((x) => h("th", {}, x))),
+      k.items.map((i) => h("tr", {}, h("td", {}, i.label), h("td", {}, fmt(i.value, i.unit)),
+        k.baseline_set ? [h("td", {}, fmt(i.baseline, i.unit)),
+          h("td", {}, i.delta == null ? "—" : pill((i.delta > 0 ? "+" : "") + i.delta, i.trend === "up" ? "ok" : i.trend === "down" ? "bad" : ""))] : null))),
+    h("div", { class: "row" }, authorBox("kpi-author"),
+      btn(k.baseline_set ? "أعِد تثبيت خط الأساس" : "ثبّت خط الأساس التجريبي", async () => {
+        await api("kpi_baseline", { confirm_author: val("kpi-author") === true });
+        toast("ثُبّت خط الأساس بقراركم"); home();
+      }, "sm gold")));
+  return [h("h2", {}, "مؤشرات المؤسسة"), body];
 }
 
 // ---------- السجل والكلفة ----------
@@ -1093,7 +1186,7 @@ async function genresView() {
 }
 
 // ---------- التنقل ----------
-const VIEWS = { home, projects, agents: agentsView, genres: genresView, workflows: workflowsView, governance: governanceView, tools: toolsView, log: () => logView(), settings: settingsView };
+const VIEWS = { home, projects, agents: agentsView, genres: genresView, workflows: workflowsView, governance: governanceView, vault: vaultView, tools: toolsView, log: () => logView(), settings: settingsView };
 function go(tab, noRender) {
   document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
   if (!noRender) VIEWS[tab]().catch((e) => console.error(e));
