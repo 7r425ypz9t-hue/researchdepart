@@ -13,6 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from .. import appicon
 from ..paths import ROOT
 
 STATIC = Path(__file__).parent / "static"
@@ -95,8 +96,14 @@ def install_windows(remove: bool = False) -> list[str]:
         return [f"removed {lnk}", f"removed {start}"]
     HOME_DIR.mkdir(parents=True, exist_ok=True)
     ico = HOME_DIR / "bahith.ico"
-    shutil.copyfile(STATIC / "bahith.ico", ico)
+    shutil.copyfile(appicon.paths()["ico"], ico)
+    for p in (lnk, start):   # يُعاد إنشاء الاختصار من جديد كي لا يبقى رسم الأيقونة القديم
+        p.unlink(missing_ok=True)
     subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", shortcut_script([lnk, start], ico)], check=True)
+    try:   # تحديث ذاكرة الأيقونات في ويندوز حتى تظهر الأيقونة المعتمدة فوراً
+        subprocess.run(["ie4uinit.exe", "-show"], timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        pass
     return [str(lnk), str(start)]
 
 
@@ -113,7 +120,7 @@ def install_macos(remove: bool = False) -> list[str]:
     res = app / "Contents/Resources"
     macos.mkdir(parents=True, exist_ok=True)
     res.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(STATIC / "bahith.icns", res / "bahith.icns")
+    shutil.copyfile(appicon.paths()["icns"], res / "bahith.icns")
     exe = macos / "bahith"
     exe.write_text(f"#!/bin/sh\nexec '{launcher}'\n", encoding="utf-8")
     exe.chmod(0o755)
@@ -124,6 +131,7 @@ def install_macos(remove: bool = False) -> list[str]:
     if link.is_symlink() or link.exists():
         link.unlink()
     link.symlink_to(app)
+    os.utime(app)   # يحمل Finder على قراءة الأيقونة من جديد
     return [str(app), str(link)]
 
 
@@ -137,7 +145,7 @@ def install_linux(remove: bool = False) -> list[str]:
     launcher = _sh_launcher()
     HOME_DIR.mkdir(parents=True, exist_ok=True)
     icon = HOME_DIR / "bahith.png"
-    shutil.copyfile(STATIC / "bahith.png", icon)
+    shutil.copyfile(appicon.paths()["png"], icon)
     entry = (f"[Desktop Entry]\nType=Application\nName={NAME_AR}\nName[ar]={NAME_AR}\n"
              f"Comment=لوحة تحكم إدارة البحوث والدراسات والنشر\nExec={launcher}\nIcon={icon}\nTerminal=false\n"
              "Categories=Office;Education;\n")

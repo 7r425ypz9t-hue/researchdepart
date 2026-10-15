@@ -19,3 +19,8 @@ projects/RKP-*/
 knowledge-base/institutional/items.jsonl
 workspace/
 midad-private-backup.tar.gz
+# خط الهوية «أضواء السلف» مرخَّص تجارياً: لا يُرفع إلى المستودع العام (يُودَع في ~/.rkpos/fonts)
+*.ttf
+*.otf
+*.woff
+*.woff2

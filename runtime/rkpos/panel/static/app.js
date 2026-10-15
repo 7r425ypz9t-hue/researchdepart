@@ -741,6 +741,8 @@ async function settingsView() {
     h("p", {}, "جذر المستودع: ", h("code", {}, o.root)),
     h("p", { class: "small muted" }, "نسخة الشيفرة الجارية: " + o.version + " — تتجدد تلقائياً بعد كل تحديث عند فتح اللوحة من الأيقونة."),
     h("div", { class: "row" }, pill("الذاكرة الخاصة: " + (e.private_memory ? "مستعادة" : "غير موجودة — استعيدوا النسخة الاحتياطية إلى memory/author/private"), e.private_memory ? "ok" : "bad")),
+    h("h2", {}, "خط الهوية «أضواء السلف»"), h("div", { id: "font-card" }, "…"),
+    h("h2", {}, "أيقونة البرنامج"), h("div", { id: "icon-card" }, "…"),
     h("h2", {}, "الخصوصية"),
     h("ul", {}, h("li", {}, "اللوحة تعمل على هذا الجهاز وحده (127.0.0.1) وبرمز يتجدد عند كل تشغيل."),
       h("li", {}, "مخرجات التشغيل وحزم البرومبت لا تُرفع إلى GitHub لأنها قد تحمل عقد أسلوبكم."),
@@ -749,6 +751,42 @@ async function settingsView() {
       if (!confirm("إيقاف خادم اللوحة؟ تعيد تشغيله الأيقونة.")) return;
       await api("shutdown", {}); set(h("div", { class: "note" }, "أُوقفت اللوحة. افتحوها من الأيقونة متى شئتم."));
     }, "danger")));
+  identityCards();
+}
+
+// خط الهوية وأيقونة البرنامج (منقولان من «تراث»)
+async function identityCards() {
+  const [f, ic] = await Promise.all([G("fonts"), G("icon")]);
+  const ok = f.regular && f.bold, sys = f.system && f.system.regular && f.system.bold;
+  const pick = (accept, multiple, onfiles) => {
+    const inp = h("input", { type: "file", accept, hidden: "" });
+    if (multiple) inp.multiple = true;
+    inp.onchange = () => onfiles([...inp.files]);
+    return inp;
+  };
+  const fontIn = pick(".ttf,.otf", true, async (files) => {
+    for (const file of files) await busy("يُثبَّت " + file.name + "…", async () => api("fonts_upload", { filename: file.name, data: await fileToBase64(file) }));
+    toast("ثُبّت الخط؛ أعيدوا فتح Word وPowerPoint"); location.reload();
+  });
+  const iconIn = pick(".png,.jpg,.jpeg,.webp", false, async (files) => {
+    if (!files[0]) return;
+    await busy("تُعتمد الأيقونة ويُحدَّث الاختصار…", async () => api("icon_upload", { data: await fileToBase64(files[0]) }));
+    toast("اعتُمدت الأيقونة وحُدّث اختصار سطح المكتب"); location.reload();
+  });
+  $("#font-card").replaceChildren(
+    h("div", { class: "row" }, pill("العادي: " + (f.regular ? "مثبت" : "غير مثبت"), f.regular ? "ok" : "warn"),
+      pill("العريض: " + (f.bold ? "مثبت" : "غير مثبت"), f.bold ? "ok" : "warn"),
+      pill("في نظام التشغيل (Word وPowerPoint): " + (sys ? "مثبت" : "غير مثبت"), sys ? "ok" : "warn")),
+    h("p", { style: "font-family:'Adwa Assalaf';font-size:1.5rem;margin:.3em 0" }, "مؤسسة البحث والتطوير المعرفي · باحث"),
+    h("p", { class: "small muted" }, "يُحفظ الملفان في ", h("span", { dir: "ltr" }, f.folder), " ولا يُرفعان إلى المستودع لأن الخط مرخَّص. وبدونه تعمل اللوحة وملفات Word بخط Noto Naskh Arabic."),
+    h("div", { class: "row" }, fontIn, btn("اختيار ملفّي الخط", () => fontIn.click(), "gold"),
+      ok && !sys ? btn("تثبيته في نظام التشغيل", async () => { await api("fonts_system", {}); toast("ثُبّت في النظام؛ أعيدوا فتح Word وPowerPoint"); identityCards(); }, "ghost") : null));
+  $("#icon-card").replaceChildren(
+    h("div", { class: "row" }, h("img", { src: "app-icon.png?" + Date.now(), alt: "", style: "width:84px;height:84px;border-radius:18px" }),
+      h("div", {}, h("b", {}, ic.custom ? "الأيقونة التي اعتمدتموها" : "الأيقونة المضمَّنة"),
+        h("p", { class: "small muted" }, "تظهر على سطح المكتب وفي قائمة البرامج وفي هذه اللوحة. يُفضَّل PNG مربع بمقاس 512 بكسل فأكثر، وتُحفظ في ", h("span", { dir: "ltr" }, ic.folder), " فتبقى بعد التحديثات."))),
+    h("div", { class: "row" }, iconIn, btn("اعتماد صورة أيقونة", () => iconIn.click(), "gold"),
+      ic.custom ? btn("العودة إلى المضمَّنة", async () => { await api("icon_reset", {}); location.reload(); }, "ghost") : null));
 }
 
 

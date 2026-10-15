@@ -19,6 +19,8 @@
   rkpos activate AG-WRT "اكتب مسودة عمود عن…" [--register essay] [--project RKP-…] [--engine claude_code]
   rkpos panel                 # لوحة التحكم المحلية
   rkpos install-icon [--remove]
+  rkpos icon set صورة.png | rkpos icon reset | rkpos icon status   # أيقونة يعتمدها المؤلف
+  rkpos fonts install adwa-assalaf.ttf adwa-assalaf_B.ttf | rkpos fonts system | rkpos fonts status | rkpos fonts remove
   rkpos vault add path/to/file.pdf [--project RKP-…] [--provenance "…"] [--rights "…"]
   rkpos vault verify | rkpos vault list [--project RKP-…]
   rkpos backup [--out مجلد]
@@ -121,6 +123,10 @@ def main(argv=None) -> int:
     pa.add_argument("--port", type=int, default=0); pa.add_argument("--no-browser", action="store_true")
     pa.add_argument("--new", action="store_true", help="لا تُعِد استعمال لوحة تعمل مسبقاً")
     ic = sub.add_parser("install-icon", help="أيقونة «باحث» على سطح المكتب"); ic.add_argument("--remove", action="store_true")
+    ai = sub.add_parser("icon", help="أيقونة البرنامج: set صورة.png · reset · status")
+    ai.add_argument("action", choices=["set", "reset", "status"]); ai.add_argument("file", nargs="?")
+    fo = sub.add_parser("fonts", help="خط الهوية «أضواء السلف»: install · system · status · remove")
+    fo.add_argument("action", choices=["install", "system", "status", "remove"]); fo.add_argument("files", nargs="*")
     va = sub.add_parser("vault", help="خزنة الأصول: إيداع وفحص سلامة وقائمة")
     vs = va.add_subparsers(dest="vcmd", required=True)
     vaa = vs.add_parser("add"); vaa.add_argument("file"); vaa.add_argument("--project"); vaa.add_argument("--provenance", default="")
@@ -275,6 +281,31 @@ def main(argv=None) -> int:
     if a.cmd == "install-icon":
         from .panel import desktop
         _p({"installed" if not a.remove else "removed": desktop.install(remove=a.remove)}); return 0
+    if a.cmd == "icon":
+        from . import appicon
+        from .panel import desktop
+        out = {}
+        if a.action == "set":
+            if not a.file:
+                raise SystemExit("حدّدوا صورة الأيقونة: rkpos icon set icon.png")
+            appicon.adopt(Path(a.file).read_bytes())
+        elif a.action == "reset":
+            appicon.reset()
+        if a.action in ("set", "reset"):
+            out["shortcuts"] = desktop.install()
+        _p(appicon.status() | out); return 0
+    if a.cmd == "fonts":
+        from . import fonts
+        if a.action == "install":
+            if not a.files:
+                raise SystemExit("حدّدوا ملفّي الخط: rkpos fonts install adwa-assalaf.ttf adwa-assalaf_B.ttf")
+            for f in a.files:
+                fonts.install(Path(f).name, Path(f).read_bytes())
+        if a.action in ("install", "system"):
+            fonts.install_system()
+        elif a.action == "remove":
+            fonts.remove()
+        _p(fonts.status() | {"system": fonts.system_status(), "system_folder": str(fonts.system_folder())}); return 0
     if a.cmd == "vault":
         from . import vault
         if a.vcmd == "add":

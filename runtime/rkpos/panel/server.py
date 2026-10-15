@@ -38,7 +38,8 @@ PROJECT_TYPES = ["intellectual_book", "academic_book", "policy_study", "systemat
                  "play", "economic_study", "cultural_study", "development_study"]
 JOBS: dict[str, dict] = {}          # مهام الخلفية (الكتابة الكاملة) — في الذاكرة فقط
 MIME = {".html": "text/html; charset=utf-8", ".js": "application/javascript; charset=utf-8",
-        ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".ico": "image/x-icon"}
+        ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".ico": "image/x-icon",
+        ".ttf": "font/ttf"}
 
 
 class ApiError(Exception):
@@ -941,6 +942,72 @@ def a_claude_add_path(_d):
         raise ApiError(str(e)) from e
 
 
+# ---------- خط الهوية وأيقونة البرنامج (منقولان من «تراث») ----------
+def _b64(d, limit: int) -> bytes:
+    import base64
+    import binascii
+    _need(d, "data")
+    try:
+        data = base64.b64decode(d["data"], validate=True)
+    except (binascii.Error, ValueError) as e:
+        raise ApiError("محتوى الملف غير صالح") from e
+    if not data or len(data) > limit:
+        raise ApiError("حجم الملف غير مقبول")
+    return data
+
+
+def fonts_view(q):
+    from .. import fonts
+    return fonts.status() | {"system": fonts.system_status()}
+
+
+def a_fonts_upload(d):
+    """إيداع ملف من ملفَّي «أضواء السلف» ثم تثبيته في النظام ليراه Word وPowerPoint."""
+    from .. import fonts
+    w = fonts.install(d.get("filename") or "font.ttf", _b64(d, fonts.MAX))
+    try:
+        fonts.install_system()
+    except OSError:
+        pass
+    return {"installed": w} | fonts_view({})
+
+
+def a_fonts_system(d):
+    from .. import fonts
+    if not fonts.install_system():
+        raise ApiError("أودعوا ملفَّي الخط أولاً")
+    return fonts_view({})
+
+
+def icon_view(q):
+    from .. import appicon
+    return appicon.status()
+
+
+def a_icon_upload(d):
+    """اعتماد صورة أيقونة يختارها المؤلف، وإعادة إنشاء اختصار سطح المكتب بها."""
+    from .. import appicon
+    from . import desktop
+    st = appicon.adopt(_b64(d, appicon.MAX))
+    try:
+        st["shortcuts"] = desktop.install()
+    except Exception as e:  # noqa: BLE001 — الأيقونة اعتُمدت وإن تعذّر تحديث الاختصار الآن
+        st["shortcuts"], st["warning"] = [], str(e)
+    return st
+
+
+def a_icon_reset(d):
+    from .. import appicon
+    from . import desktop
+    appicon.reset()
+    try:
+        desktop.install()
+    except Exception:  # noqa: BLE001
+        pass
+    return appicon.status()
+
+
+GET.update({"fonts": fonts_view, "icon": icon_view})
 POST = {"vault_upload": a_vault_upload, "vault_verify": a_vault_verify, "vault_backup": a_vault_backup, "kpi_baseline": a_kpi_baseline,
         "download_ticket": a_download_ticket, "marketing": a_marketing, "stop_now": a_stop_now, "autopilot_note": a_autopilot_note, "autopilot_start": a_autopilot_start, "autopilot_answer": a_autopilot_answer, "autopilot_stop": a_autopilot_stop,
         "claude_add_path": a_claude_add_path, "claude_login": a_claude_login, "book_skeleton": b_skeleton, "book_set_units": b_set_units, "book_propose": b_propose,
@@ -950,7 +1017,8 @@ POST = {"vault_upload": a_vault_upload, "vault_verify": a_vault_verify, "vault_b
         "new_project": a_new_project, "run_step": a_run_step, "record_output": a_record_output, "complete": a_complete,
         "adhoc": a_adhoc, "check_text": a_check_text, "verify_doi": a_verify_doi, "select": a_select,
         "validate": a_validate, "generate": a_generate, "eval": a_eval, "dashboard": a_dashboard,
-        "security_scan": a_security_scan, "promote": a_promote, "amend": a_amend, "open_folder": a_open_folder}
+        "security_scan": a_security_scan, "promote": a_promote, "amend": a_amend, "open_folder": a_open_folder,
+        "fonts_upload": a_fonts_upload, "fonts_system": a_fonts_system, "icon_upload": a_icon_upload, "icon_reset": a_icon_reset}
 READ_ONLY_POST = {"download_ticket", "stop_now", "autopilot_note", "check_text", "verify_doi", "select", "validate", "security_scan", "open_folder"}
 
 
@@ -998,6 +1066,16 @@ def make_handler(token: str, port_ref: dict):
             if not u.path.startswith("/api/"):
                 if not self._host_ok():
                     return self._json(403, {"ok": False, "error": "host"})
+                if u.path.startswith("/fonts/"):   # خط الهوية من ~/.rkpos/fonts (لا يُوزَّع مع البرنامج)
+                    from .. import fonts
+                    fname = u.path.rsplit("/", 1)[-1]
+                    f = fonts.folder() / fname
+                    if fname not in fonts.FILES.values() or not f.is_file():
+                        return self._send(404, b"", "font/ttf")
+                    return self._send(200, f.read_bytes(), "font/ttf")
+                if u.path == "/app-icon.png":   # الأيقونة المعتمدة إن وُجدت، وإلا المضمَّنة
+                    from .. import appicon
+                    return self._send(200, appicon.paths()["png"].read_bytes(), "image/png")
                 name = "index.html" if u.path in ("/", "/index.html") else u.path.lstrip("/")
                 f = (STATIC / name).resolve()
                 if not f.is_relative_to(STATIC.resolve()) or not f.is_file():

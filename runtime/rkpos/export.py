@@ -1,4 +1,4 @@
-"""تصدير النصوص إلى Word بالهوية البصرية (اتجاه من اليمين، Noto Naskh Arabic، عناوين بلون الإدارة وخط ذهبي).
+"""تصدير النصوص إلى Word بالهوية البصرية (اتجاه من اليمين، «أضواء السلف» إن ثُبّت وإلا Noto Naskh Arabic، عناوين بلون الإدارة وخط ذهبي).
 
 clean=True نسخة القراءة: تُحذف وسوم التصنيف، وتُترجم مواضع النقص والقرار إلى العربية بين قوسين.
 clean=False نسخة المراجعة: كل الوسوم بالعربية بين قوسين. وفي الحالين تُنقّى العلامات المائية الظاهرة والمخفية
@@ -30,21 +30,31 @@ def _rtl(par, align="both"):
 
 
 def _run(par, text, size=14, bold=False, color=None):
-    """مقطع نصي بخط عربي واتجاه من اليمين؛ تُدرج عناصر الخصائص في مواضعها من المخطط (يرفض Word الترتيب الخاطئ)."""
-    r = par.add_run(text)
-    r.font.name, r.font.size, r.bold = FONT, Pt(size), bold
-    if color:
-        r.font.color.rgb = color
-    rpr = r._r.get_or_add_rPr()
-    fonts = rpr.find(qn("w:rFonts"))
-    for k in ("w:ascii", "w:hAnsi", "w:cs", "w:eastAsia"):
-        fonts.set(qn(k), FONT)
-    if bold:
-        rpr.find(qn("w:b")).addnext(OxmlElement("w:bCs"))
-    szcs = OxmlElement("w:szCs")
-    szcs.set(qn("w:val"), str(size * 2))
-    rpr.find(qn("w:sz")).addnext(szcs)
-    rpr.append(OxmlElement("w:rtl"))
+    """مقاطع نصية بخط عربي واتجاه من اليمين؛ تُدرج عناصر الخصائص في مواضعها من المخطط (يرفض Word الترتيب الخاطئ).
+    إن كان خط الهوية «أضواء السلف» في متناول Word فالعربي به مكبَّراً درجتين، وكل تتابع لاتيني أو رقمي في مقطع
+    مستقل بخط Noto Naskh؛ لأن الخط بلا أرقام لاتينية فتتفرق الأرقام إن بقيت في المقطع العربي (منقول من «تراث»)."""
+    from . import fonts as IDF
+    identity = IDF.available()
+    pieces = [x for x in IDF.LATIN_RUN.split(text) if x] if identity else [text]
+    r = None
+    for piece in pieces or [text]:
+        latin = not identity or bool(IDF.LATIN_RUN.fullmatch(piece))
+        r = par.add_run(piece)
+        r.font.name, r.font.size, r.bold = FONT, Pt(size), bold
+        if color:
+            r.font.color.rgb = color
+        rpr = r._r.get_or_add_rPr()
+        fonts = rpr.find(qn("w:rFonts"))
+        for k in ("w:ascii", "w:hAnsi", "w:cs", "w:eastAsia"):
+            fonts.set(qn(k), FONT)
+        if not latin:
+            fonts.set(qn("w:cs"), IDF.FAMILY)
+        if bold:
+            rpr.find(qn("w:b")).addnext(OxmlElement("w:bCs"))
+        szcs = OxmlElement("w:szCs")
+        szcs.set(qn("w:val"), str(int((size if latin else size + 2) * 2)))
+        rpr.find(qn("w:sz")).addnext(szcs)
+        rpr.append(OxmlElement("w:rtl"))
     return r
 
 
