@@ -73,3 +73,22 @@ def test_word_export_uses_identity_font_and_keeps_digits_whole(home):
 def test_font_files_never_in_repository():
     out = subprocess.run(["git", "ls-files"], cwd=REPO, capture_output=True, text=True).stdout.lower()
     assert not [ln for ln in out.splitlines() if ln.endswith((".ttf", ".otf", ".woff", ".woff2"))]
+
+
+def test_shortcut_icon_path_changes_with_content(home):
+    dest = home / "sc"
+    a = appicon.stamped("ico", dest, "bahith")
+    assert a.exists() and a.name.startswith("bahith-") and appicon.stamped("ico", dest, "bahith") == a
+    appicon.adopt(_png(300))
+    b = appicon.stamped("ico", dest, "bahith")
+    assert b != a and b.exists() and not a.exists()       # مسار جديد يُجبر ويندوز على رسم جديد، والقديم يُحذف
+
+
+def test_png_icon_without_pillow_gets_all_sizes(home, monkeypatch):
+    import io
+    monkeypatch.setitem(sys.modules, "PIL", None)
+    appicon.adopt(_png(600))
+    ico = appicon.paths()["ico"].read_bytes()
+    count = struct.unpack("<H", ico[4:6])[0]
+    sizes = sorted(ico[6 + 16 * i] or 256 for i in range(count))
+    assert sizes == [16, 24, 32, 48, 64, 128, 256]

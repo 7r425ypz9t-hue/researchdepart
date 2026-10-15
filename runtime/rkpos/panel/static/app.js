@@ -770,7 +770,8 @@ async function identityCards() {
   });
   const iconIn = pick(".png,.jpg,.jpeg,.webp", false, async (files) => {
     if (!files[0]) return;
-    await busy("تُعتمد الأيقونة ويُحدَّث الاختصار…", async () => api("icon_upload", { data: await fileToBase64(files[0]) }));
+    const r = await busy("تُعتمد الأيقونة ويُحدَّث الاختصار…", async () => api("icon_upload", { data: await fileToBase64(files[0]) }));
+    if (r.warning) { toast("اعتُمدت الأيقونة في اللوحة، وتعذّر تحديث اختصار سطح المكتب: " + r.warning, true); return identityCards(); }
     toast("اعتُمدت الأيقونة وحُدّث اختصار سطح المكتب"); location.reload();
   });
   $("#font-card").replaceChildren(
@@ -786,6 +787,10 @@ async function identityCards() {
       h("div", {}, h("b", {}, ic.custom ? "الأيقونة التي اعتمدتموها" : "الأيقونة المضمَّنة"),
         h("p", { class: "small muted" }, "تظهر على سطح المكتب وفي قائمة البرامج وفي هذه اللوحة. يُفضَّل PNG مربع بمقاس 512 بكسل فأكثر، وتُحفظ في ", h("span", { dir: "ltr" }, ic.folder), " فتبقى بعد التحديثات."))),
     h("div", { class: "row" }, iconIn, btn("اعتماد صورة أيقونة", () => iconIn.click(), "gold"),
+      btn("تحديث أيقونة سطح المكتب", async () => {
+        await busy("يُعاد إنشاء الاختصار…", () => api("icon_refresh", {}));
+        toast("حُدّث اختصار سطح المكتب. إن بقي الرسم القديم فأعيدوا تسجيل الدخول إلى ويندوز مرة.");
+      }, "ghost"),
       ic.custom ? btn("العودة إلى المضمَّنة", async () => { await api("icon_reset", {}); location.reload(); }, "ghost") : null));
 }
 

@@ -95,15 +95,16 @@ def install_windows(remove: bool = False) -> list[str]:
         (HOME_DIR / "midad-launch.cmd").unlink(missing_ok=True)  # من إصدار سابق
         return [f"removed {lnk}", f"removed {start}"]
     HOME_DIR.mkdir(parents=True, exist_ok=True)
-    ico = HOME_DIR / "bahith.ico"
-    shutil.copyfile(appicon.paths()["ico"], ico)
+    ico = appicon.stamped("ico", HOME_DIR, "bahith")   # اسم من بصمة المحتوى: لا يبقى رسم ويندوز المخزَّن القديم
+    (HOME_DIR / "bahith.ico").unlink(missing_ok=True)   # الاسم الثابت من الإصدارات السابقة
     for p in (lnk, start):   # يُعاد إنشاء الاختصار من جديد كي لا يبقى رسم الأيقونة القديم
         p.unlink(missing_ok=True)
     subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", shortcut_script([lnk, start], ico)], check=True)
-    try:   # تحديث ذاكرة الأيقونات في ويندوز حتى تظهر الأيقونة المعتمدة فوراً
-        subprocess.run(["ie4uinit.exe", "-show"], timeout=30)
-    except (OSError, subprocess.SubprocessError):
-        pass
+    for flag in ("-show", "-ClearIconCache"):   # تحديث ذاكرة الأيقونات (ويندوز 10 و11، ثم 7 و8)
+        try:
+            subprocess.run(["ie4uinit.exe", flag], timeout=30, capture_output=True)
+        except (OSError, subprocess.SubprocessError):
+            pass
     return [str(lnk), str(start)]
 
 
@@ -120,13 +121,13 @@ def install_macos(remove: bool = False) -> list[str]:
     res = app / "Contents/Resources"
     macos.mkdir(parents=True, exist_ok=True)
     res.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(appicon.paths()["icns"], res / "bahith.icns")
+    icns = appicon.stamped("icns", res, "bahith")
     exe = macos / "bahith"
     exe.write_text(f"#!/bin/sh\nexec '{launcher}'\n", encoding="utf-8")
     exe.chmod(0o755)
     with open(app / "Contents/Info.plist", "wb") as f:
         plistlib.dump({"CFBundleName": NAME_AR, "CFBundleDisplayName": NAME_AR, "CFBundleIdentifier": "org.bahith.panel",
-                       "CFBundleExecutable": "bahith", "CFBundleIconFile": "bahith.icns", "CFBundlePackageType": "APPL",
+                       "CFBundleExecutable": "bahith", "CFBundleIconFile": icns.name, "CFBundlePackageType": "APPL",
                        "CFBundleShortVersionString": "1.0", "LSUIElement": True}, f)
     if link.is_symlink() or link.exists():
         link.unlink()
@@ -144,8 +145,8 @@ def install_linux(remove: bool = False) -> list[str]:
         return [f"removed {apps}", f"removed {desk}"]
     launcher = _sh_launcher()
     HOME_DIR.mkdir(parents=True, exist_ok=True)
-    icon = HOME_DIR / "bahith.png"
-    shutil.copyfile(appicon.paths()["png"], icon)
+    icon = appicon.stamped("png", HOME_DIR, "bahith")
+    (HOME_DIR / "bahith.png").unlink(missing_ok=True)
     entry = (f"[Desktop Entry]\nType=Application\nName={NAME_AR}\nName[ar]={NAME_AR}\n"
              f"Comment=لوحة تحكم إدارة البحوث والدراسات والنشر\nExec={launcher}\nIcon={icon}\nTerminal=false\n"
              "Categories=Office;Education;\n")

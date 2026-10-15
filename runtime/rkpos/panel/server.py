@@ -996,6 +996,15 @@ def a_icon_upload(d):
     return st
 
 
+def a_icon_refresh(d):
+    """إعادة إنشاء اختصار سطح المكتب بالأيقونة الحالية؛ والخطأ يُعاد ظاهراً لا يُبتلع."""
+    from . import desktop
+    try:
+        return {"shortcuts": desktop.install()}
+    except Exception as e:  # noqa: BLE001
+        raise ApiError(f"تعذّر تحديث اختصار سطح المكتب: {e}") from e
+
+
 def a_icon_reset(d):
     from .. import appicon
     from . import desktop
@@ -1018,7 +1027,7 @@ POST = {"vault_upload": a_vault_upload, "vault_verify": a_vault_verify, "vault_b
         "adhoc": a_adhoc, "check_text": a_check_text, "verify_doi": a_verify_doi, "select": a_select,
         "validate": a_validate, "generate": a_generate, "eval": a_eval, "dashboard": a_dashboard,
         "security_scan": a_security_scan, "promote": a_promote, "amend": a_amend, "open_folder": a_open_folder,
-        "fonts_upload": a_fonts_upload, "fonts_system": a_fonts_system, "icon_upload": a_icon_upload, "icon_reset": a_icon_reset}
+        "fonts_upload": a_fonts_upload, "fonts_system": a_fonts_system, "icon_upload": a_icon_upload, "icon_reset": a_icon_reset, "icon_refresh": a_icon_refresh}
 READ_ONLY_POST = {"download_ticket", "stop_now", "autopilot_note", "check_text", "verify_doi", "select", "validate", "security_scan", "open_folder"}
 
 
