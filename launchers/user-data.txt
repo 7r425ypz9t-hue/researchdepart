@@ -1,0 +1,13 @@
+# ما يخصّ المؤلف داخل مجلد «باحث»: ينقله المثبّت من التثبيت السابق إلى الجديد كما هو، ولا يستبدله أبداً.
+# سطر لكل مسار نسبي من جذر البرنامج، ويُقبل النجم (*) في أي مقطع. ويقرأ المثبّت هذه القائمة من الإصدار الجديد.
+.env
+midad-private-backup.tar.gz
+projects/RKP-*
+workspace
+logs/*
+memory/author
+knowledge-base/*/*.jsonl
+knowledge-base/editorial/glossary.yaml
+publishing/dashboard
+publishing/*/book.*
+validation/reports

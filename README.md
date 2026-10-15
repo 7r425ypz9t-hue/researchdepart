@@ -13,6 +13,7 @@ Idea → Research → Evidence → Analysis → Writing → Verification → Rev
 - 🏛 [هيكل المؤسسة: الإدارات التخصصية والمساندة والتصميم المركزي](documentation/phase-5/institution.md)
 - 📘 [المخطط التنفيذي وفهرس المخرجات الأربعين](documentation/00-executive-blueprint.md)
 - 🖥 [لوحة التحكم وأيقونة سطح المكتب](documentation/phase-5/control-panel.md) — ويندوز: `launchers\install_windows.bat` · ماك: `launchers/install_mac.command`
+- ⬇ **التثبيت والتحديث بسطر واحد** (يحفظ مشاريعكم وذاكرتكم): ويندوز `launchers/install_windows.ps1` · ماك ولينكس `launchers/install_unix.sh` — السطر كاملاً في [دليل اللوحة](documentation/phase-5/control-panel.md)
 - ✍️ [الأجناس الكتابية ومستويات الإنتاج](documentation/phase-2/genres-and-production-levels.md) — رواية · بحث · فكر · عمود؛ هيكل · تدرّجي · كامل
 - 🛠 [دليل تشغيل الإدارة](documentation/phase-5/operations-manual.md)
 - 👥 [سجل الوكلاء](documentation/phase-1/04-agent-registry.md)
