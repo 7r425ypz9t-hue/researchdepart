@@ -141,3 +141,10 @@ table.units .uid{display:inline-block;min-width:2.6em;margin-inline-end:6px;padd
 table.units .row.acts{flex-wrap:nowrap}
 .mini-meter{height:6px;width:90px;background:#E8EDF2;border-radius:3px;overflow:hidden;margin-top:4px}
 .mini-meter>div{height:100%;background:linear-gradient(90deg,var(--blue),var(--gold))}
+/* الشاشات الضيقة: الجداول العريضة تتمرر داخل صندوقها، ولا تدفع الصفحة كلها جانبياً */
+@media (max-width:700px){
+  main table{display:block;overflow-x:auto;max-width:100%}
+  .proj-layout{grid-template-columns:minmax(0,1fr)}
+  .proj-layout>*{min-width:0}
+  .pill{white-space:normal;overflow-wrap:anywhere}
+}

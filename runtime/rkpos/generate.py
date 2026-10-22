@@ -14,7 +14,7 @@ from pathlib import Path
 import yaml
 
 from . import registry as R
-from .paths import AGENTS, DOCS, ROOT, TYPE_DIRS
+from .paths import AGENTS, DOCS, TYPE_DIRS
 
 HEADER = "# GENERATED from agents/_specs/{id}.yaml by `rkpos generate` — do not edit by hand.\n"
 MD_HEADER = "<!-- GENERATED from agents/_specs/{id}.yaml by `rkpos generate` — do not edit by hand. -->\n"

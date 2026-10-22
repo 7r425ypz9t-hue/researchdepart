@@ -1,4 +1,4 @@
-"""لوحة تحكم «مِداد» — خادم محلي على جهاز المؤلف (127.0.0.1 فقط).
+"""لوحة تحكم «باحث» — خادم محلي على جهاز المؤلف (127.0.0.1 فقط).
 
 - يفتح من أيقونة سطح المكتب (`rkpos panel`)، ويعرض كل إجراءات تفعيل الوكلاء.
 - محمي برمز عشوائي يتولّد عند كل تشغيل ويُمرَّر في جزء الرابط (#) فلا يظهر في سجلات الخادم؛
@@ -324,8 +324,7 @@ def progress_view(q) -> dict:
                 u = next(x for x in B.load(pid)["units"] if x["id"] == m.group(1))
                 target = int(u.get("target_words") or u.get("words") or EXPECTED_WORDS)
                 if m.group(2):
-                    k, n = int(m.group(2)), int(m.group(3))
-                    target = max(1, target // n)
+                    target = max(1, target // int(m.group(3)))     # البث يبدأ من جديد مع كل جزء
             except (FileNotFoundError, StopIteration):
                 target = EXPECTED_WORDS
         else:
@@ -475,7 +474,7 @@ def file_payload(q) -> tuple[bytes, str, str]:
     try:
         from ..export import to_docx
     except ImportError:
-        raise ApiError("مكتبة Word غير مثبتة؛ نفّذوا في مجلد البرنامج: py -m pip install -e .")
+        raise ApiError("مكتبة Word غير مثبتة؛ نفّذوا في مجلد البرنامج: py -m pip install -e .") from None
     from .. import footnotes as FN
     body = to_docx(f.read_text(encoding="utf-8", errors="replace"), title or None, clean=q.get("clean", "1") in ("1", True),
                    theme=th, author=author, sources=FN.project_sources(FN.pid_of(f)))

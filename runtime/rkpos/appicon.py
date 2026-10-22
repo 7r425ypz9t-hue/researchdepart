@@ -67,12 +67,12 @@ def _renditions(data: bytes) -> dict[int, bytes]:
         from PIL import Image
     except ImportError:
         if data[:8] != PNG_SIG:
-            raise ValueError("احفظوا الأيقونة بصيغة PNG (أو ثبّتوا مكتبة Pillow لقبول JPEG)")
+            raise ValueError("احفظوا الأيقونة بصيغة PNG (أو ثبّتوا مكتبة Pillow لقبول JPEG)") from None
         return _pure_renditions(data)
     try:
         im = Image.open(io.BytesIO(data)).convert("RGBA")
     except Exception:
-        raise ValueError("الملف ليس صورة يمكن قراءتها")
+        raise ValueError("الملف ليس صورة يمكن قراءتها") from None
     side = min(im.size)
     if im.size[0] != im.size[1]:   # قصّ المربع الأوسط
         x, y = (im.size[0] - side) // 2, (im.size[1] - side) // 2
